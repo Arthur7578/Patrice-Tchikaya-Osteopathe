@@ -37,13 +37,18 @@ export function Faq({ content }: { content: SiteContent }) {
 
   return (
     <Section id="faq" labelledBy="faq-title">
-      <div className="grid gap-10 lg:grid-cols-12">
+      <div className="max-w-2xl">
+        <Eyebrow>{COPY.faq.eyebrow}</Eyebrow>
+        <h2 id="faq-title" className="mt-3 text-3xl font-bold tracking-tight text-balance text-ink md:text-4xl">
+          {COPY.faq.title}
+        </h2>
+      </div>
+      <div className="mt-10 grid gap-10 lg:grid-cols-12">
+        <div className="lg:col-span-8">
+          <FaqList items={faq} />
+        </div>
         <div className="lg:sticky lg:top-24 lg:col-span-4 lg:self-start">
-          <Eyebrow>{COPY.faq.eyebrow}</Eyebrow>
-          <h2 id="faq-title" className="mt-3 text-3xl font-bold tracking-tight text-balance text-ink md:text-4xl">
-            {COPY.faq.title}
-          </h2>
-          <div className="mt-6 rounded-2xl border border-slate-200/80 bg-white p-6">
+          <div className="rounded-2xl border border-slate-200/80 bg-white p-6">
             <p className="font-semibold text-ink">{COPY.faq.helpTitle}</p>
             <p className="mt-2 text-sm text-slate-600">{COPY.faq.helpText}</p>
             <a
@@ -57,9 +62,6 @@ export function Faq({ content }: { content: SiteContent }) {
               {COPY.cta.bookShort}
             </BookingLink>
           </div>
-        </div>
-        <div className="lg:col-span-8">
-          <FaqList items={faq} />
         </div>
       </div>
     </Section>
