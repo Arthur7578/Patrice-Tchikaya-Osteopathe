@@ -22,6 +22,9 @@ export const FALLBACK_CONTENT: SiteContent = {
     countryCode: "LU",
     phoneDisplay: "+352 51 92 92",
     phoneE164: "+352519292",
+    // Vérifiées le 27/09/2026 (clic droit sur le bâtiment, Google Maps) : 49°28'52.3"N 6°05'03.7"E.
+    geo: { latitude: 49.481194, longitude: 6.084361 },
+    email: null,
   },
   booking: {
     url: "https://cal.eu/patrice-tchikaya-pro/consultation",
@@ -143,4 +146,5 @@ export const FALLBACK_CONTENT: SiteContent = {
     },
   },
   sameAs: ["https://g.page/r/CY0QxWkj7WfJEBM"],
+  legal: { authorizationNumber: null, vatStatus: null },
 };

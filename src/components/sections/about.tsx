@@ -17,16 +17,7 @@ export function About({ content }: { content: SiteContent }) {
   return (
     <Section id="a-propos" labelledBy="about-title">
       <div className="grid gap-6 lg:grid-cols-12">
-        <div className="lg:col-span-5">
-          <div className="aspect-[4/5] overflow-hidden rounded-3xl bg-sage-100">
-            <SiteImage
-              image={images.portrait}
-              sizes="(min-width: 1024px) 40vw, 100vw"
-              placeholder={<ImagePlaceholder />}
-            />
-          </div>
-        </div>
-        <div className="flex flex-col justify-center rounded-3xl bg-sage-700 p-8 text-white md:p-12 lg:col-span-7">
+        <div className="flex flex-col justify-center rounded-3xl bg-sage-700 p-8 text-white md:p-12 lg:order-2 lg:col-span-7">
           <Eyebrow className="text-sage-100">{COPY.about.eyebrow}</Eyebrow>
           <h2 id="about-title" className="mt-3 text-3xl font-bold tracking-tight text-balance md:text-4xl">
             {about.title}
@@ -43,6 +34,15 @@ export function About({ content }: { content: SiteContent }) {
               {about.education}
             </p>
           )}
+        </div>
+        <div className="lg:order-1 lg:col-span-5">
+          <div className="aspect-[4/5] overflow-hidden rounded-3xl bg-sage-100">
+            <SiteImage
+              image={images.portrait}
+              sizes="(min-width: 1024px) 40vw, 100vw"
+              placeholder={<ImagePlaceholder />}
+            />
+          </div>
         </div>
       </div>
 

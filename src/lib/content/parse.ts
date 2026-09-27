@@ -1,4 +1,4 @@
-import type { Booking, OpeningHoursRange } from "./types";
+import type { Booking, Geo, OpeningHoursRange } from "./types";
 
 /** "[Mettre le tarif ex: 90 €]" ou vide => valeur non renseignée. */
 export function isPlaceholder(value: string | null | undefined): boolean {
@@ -49,6 +49,17 @@ export function parseBookingUrl(value: string): Booking | null {
   }
   const calOrigin = host === "cal.eu" || host === "app.cal.eu" ? "https://app.cal.eu" : "https://app.cal.com";
   return { url: url.toString(), provider: "cal", calLink, calOrigin };
+}
+
+/** "49.481194, 6.084361" -> { latitude, longitude } ; hors bornes ou illisible -> null */
+export function parseGeo(value: string | null | undefined): Geo | null {
+  if (isPlaceholder(value)) return null;
+  const m = value!.trim().match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);
+  if (!m) return null;
+  const latitude = Number(m[1]);
+  const longitude = Number(m[2]);
+  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
+  return { latitude, longitude };
 }
 
 /** "5 / 5" | "4,5" | "5" -> 5 | 4.5 ; hors [0,5] ou illisible -> null */
