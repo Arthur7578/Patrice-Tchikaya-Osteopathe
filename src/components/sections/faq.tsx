@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Phone } from "lucide-react";
 import { BookingLink } from "@/components/booking/booking-link";
 import { buttonVariants } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
@@ -48,11 +48,12 @@ export function Faq({ content }: { content: SiteContent }) {
             <p className="mt-2 text-sm text-slate-600">{COPY.faq.helpText}</p>
             <a
               href={`tel:${contact.phoneE164}`}
-              className="mt-4 block font-semibold text-sage-700 underline underline-offset-4"
+              className="mt-4 flex items-center gap-2 font-semibold text-sage-700 underline underline-offset-4"
             >
+              <Phone aria-hidden="true" className="size-4 shrink-0" />
               {contact.phoneDisplay}
             </a>
-            <BookingLink booking={booking} className={cn(buttonVariants({ variant: "ghost" }), "mt-4 w-full")}>
+            <BookingLink booking={booking} className={cn(buttonVariants({ variant: "secondary" }), "mt-4 w-full")}>
               {COPY.cta.bookShort}
             </BookingLink>
           </div>
