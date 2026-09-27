@@ -1,4 +1,5 @@
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { CookieConsent } from "@/components/analytics/cookie-consent";
@@ -54,6 +55,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <MobileActionBar booking={c.booking} phoneE164={c.contact.phoneE164} phoneDisplay={c.contact.phoneDisplay} />
         <CookieConsent />
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
