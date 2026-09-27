@@ -12,6 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ConfidentialitePage() {
   const c = await getSiteContent();
+  const gtmEnabled = /^GTM-[A-Z0-9]+$/.test(process.env.NEXT_PUBLIC_GTM_ID ?? "");
 
   return (
     <main id="contenu">
@@ -22,10 +23,25 @@ export default async function ConfidentialitePage() {
           <section>
             <h2 className="text-xl font-semibold text-ink">Données collectées par ce site</h2>
             <p className="mt-2">
-              Ce site ne comporte aucun formulaire et ne dépose aucun cookie. Il ne collecte donc directement aucune
-              donnée personnelle des visiteurs.
+              Ce site ne comporte aucun formulaire. Il ne dépose aucun cookie sans votre accord explicite.
             </p>
           </section>
+
+          {gtmEnabled && (
+            <section id="cookies">
+              <h2 className="text-xl font-semibold text-ink">Google Tag Manager (avec votre accord)</h2>
+              <p className="mt-2">
+                Ce site utilise Google Tag Manager, chargé uniquement si vous l&apos;acceptez via la bannière
+                affichée lors de votre première visite. Tant que vous n&apos;avez pas donné votre accord (ou si vous
+                le refusez), aucun cookie lié à cet outil n&apos;est déposé et aucun script correspondant
+                n&apos;est chargé.
+              </p>
+              <p className="mt-2">
+                Vous pouvez revenir sur votre choix à tout moment via le lien « Gérer les cookies » en pied de page,
+                qui rouvre la bannière de consentement.
+              </p>
+            </section>
+          )}
 
           <section>
             <h2 className="text-xl font-semibold text-ink">Prise de rendez-vous en ligne</h2>
@@ -38,10 +54,10 @@ export default async function ConfidentialitePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-ink">Mesure d&apos;audience</h2>
+            <h2 className="text-xl font-semibold text-ink">Mesure d&apos;audience sans cookie</h2>
             <p className="mt-2">
-              Si une mesure d&apos;audience est activée, elle fonctionne sans cookie et sans donnée personnelle
-              identifiable, à des fins statistiques uniquement.
+              Si une mesure d&apos;audience Vercel est activée en complément, elle fonctionne sans cookie et sans
+              donnée personnelle identifiable, à des fins statistiques uniquement.
             </p>
           </section>
 

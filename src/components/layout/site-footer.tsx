@@ -8,6 +8,7 @@ type Props = { content: SiteContent };
 export function SiteFooter({ content }: Props) {
   const { practitioner, contact, about, openingHours, googleBusinessUrl } = content;
   const year = new Date().getFullYear();
+  const gtmEnabled = /^GTM-[A-Z0-9]+$/.test(process.env.NEXT_PUBLIC_GTM_ID ?? "");
   return (
     <footer className="bg-sage-900 pb-28 text-sage-100 md:pb-0">
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
@@ -68,6 +69,13 @@ export function SiteFooter({ content }: Props) {
                   Confidentialité
                 </Link>
               </li>
+              {gtmEnabled && (
+                <li>
+                  <a href="#cookies" className="text-sage-100/80 hover:text-white hover:underline">
+                    Gérer les cookies
+                  </a>
+                </li>
+              )}
             </ul>
           </div>
         </div>
