@@ -65,7 +65,10 @@ export function Hero({ content }: { content: SiteContent }) {
         </div>
 
         <div className="relative lg:col-span-5">
-          <div className="absolute -inset-3 -z-10 rotate-2 rounded-[2rem] bg-sage-100" aria-hidden="true" />
+          <div
+            className="absolute inset-0 -z-10 rounded-[2rem] bg-sage-100 sm:-inset-3 sm:rotate-2"
+            aria-hidden="true"
+          />
           <div className="aspect-[4/3] overflow-hidden rounded-3xl bg-sage-100 lg:aspect-[4/5]">
             <SiteImage
               image={heroImage}
