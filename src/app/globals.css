@@ -55,4 +55,10 @@
 @media (prefers-reduced-motion: reduce) {
   .faq-item::details-content { transition: none; }
   .faq-item[open] .faq-answer { animation: none; }
+  /*
+   * `motion` (MotionConfig reducedMotion="user") ne neutralise que les animations de
+   * position/transform (x, y, scale…), pas l'opacité : on force donc l'état final ici,
+   * en CSS, pour respecter la règle "aucune animation si mouvements réduits" (§2.3 règle 4).
+   */
+  [data-reveal] { opacity: 1 !important; transform: none !important; }
 }

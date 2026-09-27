@@ -1,6 +1,7 @@
 import { ArrowUpRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
+import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
 import { StarRating } from "@/components/ui/star-rating";
 import { COPY } from "@/content/ui-copy";
@@ -42,20 +43,19 @@ export function Reviews({ content }: { content: SiteContent }) {
         aria-label="Avis patients"
         className="mt-10 -mx-4 flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0"
       >
-        {reviews.map((review) => (
-          <figure
-            key={`${review.author}-${review.date}`}
-            className="w-[85%] shrink-0 snap-start rounded-2xl border border-slate-200/80 bg-white p-6 md:w-auto md:p-8"
-          >
-            {review.rating !== null && <StarRating value={review.rating} />}
-            <blockquote className="mt-4 leading-relaxed text-slate-600">{review.text}</blockquote>
-            <figcaption className="mt-4 text-sm text-slate-500">
-              <span className="font-semibold text-ink">{review.author}</span>
-              {formatReviewDate(review.date) && <> · {formatReviewDate(review.date)}</>}
-              {" · "}
-              {COPY.reviews.source}
-            </figcaption>
-          </figure>
+        {reviews.map((review, i) => (
+          <Reveal key={`${review.author}-${review.date}`} delay={i * 0.08} className="w-[85%] shrink-0 snap-start md:w-auto">
+            <figure className="h-full rounded-2xl border border-slate-200/80 bg-white p-6 md:p-8">
+              {review.rating !== null && <StarRating value={review.rating} />}
+              <blockquote className="mt-4 leading-relaxed text-slate-600">{review.text}</blockquote>
+              <figcaption className="mt-4 text-sm text-slate-500">
+                <span className="font-semibold text-ink">{review.author}</span>
+                {formatReviewDate(review.date) && <> · {formatReviewDate(review.date)}</>}
+                {" · "}
+                {COPY.reviews.source}
+              </figcaption>
+            </figure>
+          </Reveal>
         ))}
       </div>
 

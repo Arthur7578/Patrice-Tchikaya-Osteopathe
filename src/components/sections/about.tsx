@@ -1,6 +1,7 @@
 import { BadgeCheck, Briefcase, GraduationCap, Trophy } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { ImagePlaceholder } from "@/components/ui/image-placeholder";
+import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
 import { SiteImage } from "@/components/ui/site-image";
 import { Eyebrow } from "@/components/ui/eyebrow";
@@ -50,13 +51,15 @@ export function About({ content }: { content: SiteContent }) {
           const Icon = EXPERTISE_ICONS[i % EXPERTISE_ICONS.length];
           return (
             <li key={expertise.title}>
-              <article className="h-full rounded-2xl border border-slate-200/80 bg-white p-6 transition hover:-translate-y-0.5 hover:border-sage-200 hover:shadow-md motion-reduce:transform-none md:p-8">
-                <span className="grid size-12 place-items-center rounded-xl bg-sage-100 text-sage-700">
-                  <Icon aria-hidden="true" className="size-6" />
-                </span>
-                <h3 className="mt-4 text-lg font-semibold text-ink">{expertise.title}</h3>
-                <p className="mt-2 leading-relaxed text-slate-600">{expertise.text}</p>
-              </article>
+              <Reveal delay={i * 0.08}>
+                <article className="h-full rounded-2xl border border-slate-200/80 bg-white p-6 transition hover:-translate-y-0.5 hover:border-sage-200 hover:shadow-md motion-reduce:transform-none md:p-8">
+                  <span className="grid size-12 place-items-center rounded-xl bg-sage-100 text-sage-700">
+                    <Icon aria-hidden="true" className="size-6" />
+                  </span>
+                  <h3 className="mt-4 text-lg font-semibold text-ink">{expertise.title}</h3>
+                  <p className="mt-2 leading-relaxed text-slate-600">{expertise.text}</p>
+                </article>
+              </Reveal>
             </li>
           );
         })}
