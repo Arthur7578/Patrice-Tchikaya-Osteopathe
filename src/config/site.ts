@@ -9,9 +9,6 @@ export const SITE_URL = (
 export const ALLOW_INDEXING =
   process.env.VERCEL_ENV === "production" || process.env.ALLOW_INDEXING === "true";
 
-/** Coordonnées GPS du cabinet — À VÉRIFIER sur Google Maps (clic droit sur le bâtiment). */
-export const GEO = { latitude: 49.4808, longitude: 6.0841 } as const;
-
 /** IDs des bases Notion (visibles dans l'URL de chaque base). */
 export const NOTION_DATABASES = {
   general: "3e84bf3fc728807289c3d8fd65392419", // Informations_generales

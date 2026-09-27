@@ -28,24 +28,30 @@ export default async function MentionsLegalesPage() {
               <br />
               Téléphone : {c.contact.phoneDisplay}
               <br />
-              E-mail : [À COMPLÉTER : adresse e-mail professionnelle]
+              E-mail : {c.contact.email ?? "[À COMPLÉTER : adresse e-mail professionnelle — champ Notion Email_Contact]"}
             </p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-ink">Profession réglementée</h2>
             <p className="mt-2">
-              L&apos;ostéopathie est une profession de santé réglementée au Grand-Duché de Luxembourg. Son exercice
-              est encadré par la loi modifiée du 26 mars 1992 sur l&apos;exercice et la revalorisation de certaines
-              professions de santé. {c.practitioner.name} exerce sous autorisation d&apos;exercer délivrée par le
-              ministre de la Santé du Luxembourg.
+              L&apos;ostéopathie est une profession de santé réglementée au Grand-Duché de Luxembourg, inscrite sur
+              la liste des professions de santé fixée par la loi modifiée du 26 mars 1992 sur l&apos;exercice et la
+              revalorisation de certaines professions de santé (ajout opéré par la loi du 21 août 2018). {c.practitioner.name}{" "}
+              exerce sous autorisation d&apos;exercer délivrée par le ministre de la Santé du Luxembourg et figure au
+              registre professionnel tenu par ce ministère.
             </p>
             <p className="mt-2">
-              Numéro d&apos;autorisation d&apos;exercer : [À COMPLÉTER]
+              Numéro d&apos;autorisation d&apos;exercer :{" "}
+              {c.legal.authorizationNumber ??
+                "[À COMPLÉTER — champ Notion Numero_Autorisation_Exercer ; délivré par le ministère de la Santé]"}
               <br />
-              École et année du diplôme : [À COMPLÉTER]
+              École et année du diplôme :{" "}
+              {c.about.education ?? "[À COMPLÉTER — champ Notion Formation, base Section A_Propos]"}
               <br />
-              Numéro de TVA / matricule (si applicable) : [À COMPLÉTER]
+              Numéro de TVA / immatriculation :{" "}
+              {c.legal.vatStatus ??
+                "[À COMPLÉTER — champ Notion Statut_TVA ; les soins de santé sont en général exonérés de TVA (art. 44 de la loi TVA), à confirmer avec votre comptable]"}
             </p>
           </section>
 

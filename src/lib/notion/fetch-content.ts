@@ -9,6 +9,7 @@ import {
   isPlaceholder,
   normalizeSlug,
   parseBookingUrl,
+  parseGeo,
   parseInteger,
   parseOpeningHours,
   parsePostalLine,
@@ -112,6 +113,10 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
   if (openingRaw && !openingHours) warnings.push(`Horaires illisibles : « ${openingRaw} »`);
   const phoneDisplay = required(g.text("Telephone_Display"), F.contact.phoneDisplay, "Telephone_Display");
   const durationLabel = required(g.text("Duree_Consultation"), F.consultation.durationLabel, "Duree_Consultation");
+  const geoRaw = g.text("GPS_Coordonnees");
+  const geo = parseGeo(geoRaw);
+  if (geoRaw && !isPlaceholder(geoRaw) && !geo) warnings.push(`GPS_Coordonnees illisible : « ${geoRaw} »`);
+  if (!geo) warnings.push("GPS_Coordonnees non renseigné dans Notion (valeur de secours utilisée)");
 
   // --- Section A_Propos (+ expertises optionnelles Expertise_1_Titre / Expertise_1_Texte …)
   const a = toKeyValue(db.about);
@@ -200,6 +205,8 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
       countryCode: "LU",
       phoneDisplay,
       phoneE164: toE164(g.text("Telephone_RAW") || phoneDisplay),
+      geo: geo ?? F.contact.geo,
+      email: cleanOptional(g.text("Email_Contact")),
     },
     booking: booking ?? F.booking,
     googleBusinessUrl: gbp,
@@ -225,6 +232,10 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
     faq,
     images,
     sameAs: [gbp, ...profiles].filter((u): u is string => Boolean(u)),
+    legal: {
+      authorizationNumber: cleanOptional(g.text("Numero_Autorisation_Exercer")),
+      vatStatus: cleanOptional(g.text("Statut_TVA")),
+    },
   };
   return { content, warnings };
 }
