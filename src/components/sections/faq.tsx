@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+import { CalendarDays, ChevronDown } from "lucide-react";
 import { BookingLink } from "@/components/booking/booking-link";
 import { buttonVariants } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
@@ -52,7 +52,8 @@ export function Faq({ content }: { content: SiteContent }) {
             >
               {contact.phoneDisplay}
             </a>
-            <BookingLink booking={booking} className={cn(buttonVariants({ variant: "ghost" }), "mt-4 w-full")}>
+            <BookingLink booking={booking} className={cn(buttonVariants(), "mt-4 w-full")}>
+              <CalendarDays aria-hidden="true" />
               {COPY.cta.bookShort}
             </BookingLink>
           </div>
