@@ -46,7 +46,7 @@ export function Reviews({ content }: { content: SiteContent }) {
         {reviews.map((review, i) => (
           <Reveal key={`${review.author}-${review.date}`} delay={i * 0.08} className="w-[85%] shrink-0 snap-start md:w-auto">
             <figure className="h-full rounded-2xl border border-slate-200/80 bg-white p-6 md:p-8">
-              {review.rating !== null && <StarRating value={review.rating} />}
+              {review.rating !== null && <StarRating value={review.rating} showValue />}
               <blockquote className="mt-4 leading-relaxed text-slate-600">{review.text}</blockquote>
               <figcaption className="mt-4 text-sm text-slate-500">
                 <span className="font-semibold text-ink">{review.author}</span>

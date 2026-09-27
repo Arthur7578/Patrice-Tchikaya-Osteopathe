@@ -51,7 +51,7 @@ export function About({ content }: { content: SiteContent }) {
           const Icon = EXPERTISE_ICONS[i % EXPERTISE_ICONS.length];
           return (
             <li key={expertise.title}>
-              <Reveal delay={i * 0.08}>
+              <Reveal delay={i * 0.08} className="h-full">
                 <article className="h-full rounded-2xl border border-slate-200/80 bg-white p-6 transition hover:-translate-y-0.5 hover:border-sage-200 hover:shadow-md motion-reduce:transform-none md:p-8">
                   <span className="grid size-12 place-items-center rounded-xl bg-sage-100 text-sage-700">
                     <Icon aria-hidden="true" className="size-6" />
