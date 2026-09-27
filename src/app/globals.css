@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #fdfdfc;
+  --color-ink: #0f172a;
+  --color-sage-50: #f3f7f5;
+  --color-sage-100: #e8f0ec; /* vert menthe du brief */
+  --color-sage-200: #cfe0d7;
+  --color-sage-300: #a9c7b8;
+  --color-sage-400: #7aa592;
+  --color-sage-500: #4f8570;
+  --color-sage-600: #3a6e5c;
+  --color-sage-700: #2d5a4c; /* primaire du brief */
+  --color-sage-800: #244a3e;
+  --color-sage-900: #1d3b32;
+  --color-sage-950: #10231d;
+}
+
+@theme inline {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  :root {
+    interpolate-size: allow-keywords; /* animation hauteur auto (Chromium) */
+  }
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem; /* hauteur du header sticky */
+  }
+  body {
+    @apply bg-background font-sans text-slate-700 antialiased;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+}
+
+/* FAQ : ouverture animée (progressive enhancement, sans JS) */
+.faq-item::details-content {
+  block-size: 0;
+  overflow-y: clip;
+  transition: block-size 300ms ease, content-visibility 300ms allow-discrete;
+}
+.faq-item[open]::details-content {
+  block-size: auto;
+}
+.faq-item[open] .faq-answer {
+  animation: faq-in 250ms ease-out;
+}
+@keyframes faq-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .faq-item::details-content { transition: none; }
+  .faq-item[open] .faq-answer { animation: none; }
+  /*
+   * `motion` (MotionConfig reducedMotion="user") ne neutralise que les animations de
+   * position/transform (x, y, scale…), pas l'opacité : on force donc l'état final ici,
+   * en CSS, pour respecter la règle "aucune animation si mouvements réduits" (§2.3 règle 4).
+   */
+  [data-reveal] { opacity: 1 !important; transform: none !important; }
+}
