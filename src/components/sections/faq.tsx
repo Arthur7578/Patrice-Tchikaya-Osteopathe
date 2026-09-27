@@ -1,4 +1,5 @@
 import { ChevronDown } from "lucide-react";
+import { BookingLink } from "@/components/booking/booking-link";
 import { buttonVariants } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Section } from "@/components/ui/section";
@@ -51,9 +52,9 @@ export function Faq({ content }: { content: SiteContent }) {
             >
               {contact.phoneDisplay}
             </a>
-            <a href={booking.url} className={cn(buttonVariants({ variant: "ghost" }), "mt-4 w-full")}>
+            <BookingLink booking={booking} className={cn(buttonVariants({ variant: "ghost" }), "mt-4 w-full")}>
               {COPY.cta.bookShort}
-            </a>
+            </BookingLink>
           </div>
         </div>
         <div className="lg:col-span-8">

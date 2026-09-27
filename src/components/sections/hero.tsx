@@ -1,4 +1,5 @@
 import { CalendarDays, CircleCheck, Clock, Phone, Star } from "lucide-react";
+import { BookingLink } from "@/components/booking/booking-link";
 import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { SiteImage } from "@/components/ui/site-image";
 import { buttonVariants } from "@/components/ui/button";
@@ -37,10 +38,10 @@ export function Hero({ content }: { content: SiteContent }) {
           <p className="mt-5 text-lg text-pretty text-slate-600">{seo.heroSubtitle}</p>
 
           <div id="hero-cta" className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <a href={booking.url} className={buttonVariants({ size: "lg" })}>
+            <BookingLink booking={booking} className={buttonVariants({ size: "lg" })}>
               <CalendarDays aria-hidden="true" />
               {COPY.cta.book}
-            </a>
+            </BookingLink>
             <a href={`tel:${contact.phoneE164}`} className={buttonVariants({ variant: "secondary", size: "lg" })}>
               <Phone aria-hidden="true" />
               Appeler le {contact.phoneDisplay}

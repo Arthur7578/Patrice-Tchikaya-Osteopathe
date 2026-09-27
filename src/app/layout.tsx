@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { MobileActionBar } from "@/components/layout/mobile-action-bar";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SkipLink } from "@/components/layout/skip-link";
@@ -48,6 +49,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <SiteHeader content={c} />
         {children}
         <SiteFooter content={c} />
+        <MobileActionBar booking={c.booking} phoneE164={c.contact.phoneE164} phoneDisplay={c.contact.phoneDisplay} />
       </body>
     </html>
   );

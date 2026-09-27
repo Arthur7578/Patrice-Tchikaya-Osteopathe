@@ -1,5 +1,6 @@
 import { MapPin } from "lucide-react";
 import Link from "next/link";
+import { BookingLink } from "@/components/booking/booking-link";
 import { buttonVariants } from "@/components/ui/button";
 import { NAV } from "@/content/ui-copy";
 import type { SiteContent } from "@/lib/content/types";
@@ -38,9 +39,9 @@ export function SiteHeader({ content }: Props) {
             <MapPin aria-hidden="true" className="size-4" />
             {contact.locality}
           </Link>
-          <a href={booking.url} className={cn(buttonVariants({ size: "sm" }))}>
+          <BookingLink booking={booking} className={cn(buttonVariants({ size: "sm" }))}>
             Prendre RDV
-          </a>
+          </BookingLink>
         </div>
       </div>
     </header>

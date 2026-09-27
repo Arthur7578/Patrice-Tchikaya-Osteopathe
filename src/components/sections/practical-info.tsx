@@ -1,4 +1,5 @@
 import { Car, CalendarDays, Clock, Euro, Languages, MapPin, Navigation, Phone, Receipt } from "lucide-react";
+import { BookingInline } from "@/components/booking/booking-inline";
 import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Section } from "@/components/ui/section";
@@ -148,12 +149,18 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
         <div id="rendez-vous">
           <h3 className="text-lg font-semibold text-ink">{COPY.infos.bookingTitle}</h3>
           <p className="mt-2 text-slate-600">{COPY.infos.bookingText}</p>
-          <div className="mt-4 flex min-h-[720px] flex-col items-center justify-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-8 text-center text-slate-600">
-            <p>L&apos;agenda s&apos;affichera ici.</p>
-            <a href={booking.url} className="font-semibold text-sage-700 underline underline-offset-4">
-              {COPY.infos.bookingFallback}
-            </a>
+          <div className="mt-4">
+            <BookingInline booking={booking} />
           </div>
+          <a
+            href={booking.url}
+            target="_blank"
+            rel="noopener"
+            className="mt-4 inline-block font-semibold text-sage-700 underline underline-offset-4"
+          >
+            {COPY.infos.bookingFallback}
+            <span className="sr-only">{COPY.newTab}</span>
+          </a>
         </div>
       </div>
     </Section>
