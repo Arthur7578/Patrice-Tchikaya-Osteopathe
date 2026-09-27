@@ -47,18 +47,20 @@ export function Faq({ content }: { content: SiteContent }) {
         <div className="lg:col-span-8">
           <FaqList items={faq} />
         </div>
-        <div className="lg:sticky lg:top-24 lg:col-span-4 lg:self-start">
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-6">
-            <p className="font-semibold text-ink">{COPY.faq.helpTitle}</p>
-            <p className="mt-2 text-sm text-slate-600">{COPY.faq.helpText}</p>
-            <a
-              href={`tel:${contact.phoneE164}`}
-              className="mt-4 flex items-center gap-2 font-semibold text-sage-700 underline underline-offset-4"
-            >
-              <Phone aria-hidden="true" className="size-4 shrink-0" />
-              {contact.phoneDisplay}
-            </a>
-            <BookingLink booking={booking} className={cn(buttonVariants({ variant: "secondary" }), "mt-4 w-full")}>
+        <div className="lg:sticky lg:top-24 lg:col-span-4">
+          <div className="flex h-full flex-col justify-between gap-6 rounded-2xl border border-slate-200/80 bg-white p-6">
+            <div>
+              <p className="font-semibold text-ink">{COPY.faq.helpTitle}</p>
+              <p className="mt-2 text-sm text-slate-600">{COPY.faq.helpText}</p>
+              <a
+                href={`tel:${contact.phoneE164}`}
+                className="mt-4 flex items-center gap-2 font-semibold text-sage-700 underline underline-offset-4"
+              >
+                <Phone aria-hidden="true" className="size-4 shrink-0" />
+                {contact.phoneDisplay}
+              </a>
+            </div>
+            <BookingLink booking={booking} className={cn(buttonVariants({ variant: "secondary" }), "w-full")}>
               {COPY.cta.bookShort}
             </BookingLink>
           </div>
