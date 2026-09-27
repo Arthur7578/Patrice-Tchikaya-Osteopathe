@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronDown } from "lucide-react";
+import { ChevronDown, Phone } from "lucide-react";
 import { BookingLink } from "@/components/booking/booking-link";
 import { buttonVariants } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
@@ -37,29 +37,33 @@ export function Faq({ content }: { content: SiteContent }) {
 
   return (
     <Section id="faq" labelledBy="faq-title">
-      <div className="grid gap-10 lg:grid-cols-12">
-        <div className="lg:sticky lg:top-24 lg:col-span-4 lg:self-start">
-          <Eyebrow>{COPY.faq.eyebrow}</Eyebrow>
-          <h2 id="faq-title" className="mt-3 text-3xl font-bold tracking-tight text-balance text-ink md:text-4xl">
-            {COPY.faq.title}
-          </h2>
-          <div className="mt-6 rounded-2xl border border-slate-200/80 bg-white p-6">
-            <p className="font-semibold text-ink">{COPY.faq.helpTitle}</p>
-            <p className="mt-2 text-sm text-slate-600">{COPY.faq.helpText}</p>
-            <a
-              href={`tel:${contact.phoneE164}`}
-              className="mt-4 block font-semibold text-sage-700 underline underline-offset-4"
-            >
-              {contact.phoneDisplay}
-            </a>
-            <BookingLink booking={booking} className={cn(buttonVariants(), "mt-4 w-full")}>
-              <CalendarDays aria-hidden="true" />
+      <div className="max-w-2xl">
+        <Eyebrow>{COPY.faq.eyebrow}</Eyebrow>
+        <h2 id="faq-title" className="mt-3 text-3xl font-bold tracking-tight text-balance text-ink md:text-4xl">
+          {COPY.faq.title}
+        </h2>
+      </div>
+      <div className="mt-10 grid gap-10 lg:grid-cols-12">
+        <div className="lg:col-span-8">
+          <FaqList items={faq} />
+        </div>
+        <div className="lg:sticky lg:top-24 lg:col-span-4">
+          <div className="flex h-full flex-col justify-between gap-6 rounded-2xl border border-slate-200/80 bg-white p-6">
+            <div>
+              <p className="font-semibold text-ink">{COPY.faq.helpTitle}</p>
+              <p className="mt-2 text-sm text-slate-600">{COPY.faq.helpText}</p>
+              <a
+                href={`tel:${contact.phoneE164}`}
+                className="mt-4 flex items-center gap-2 font-semibold text-sage-700 underline underline-offset-4"
+              >
+                <Phone aria-hidden="true" className="size-4 shrink-0" />
+                {contact.phoneDisplay}
+              </a>
+            </div>
+            <BookingLink booking={booking} className={cn(buttonVariants({ variant: "secondary" }), "w-full")}>
               {COPY.cta.bookShort}
             </BookingLink>
           </div>
-        </div>
-        <div className="lg:col-span-8">
-          <FaqList items={faq} />
         </div>
       </div>
     </Section>
