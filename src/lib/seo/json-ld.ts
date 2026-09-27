@@ -1,5 +1,5 @@
 import type { FAQPage, Graph, MedicalBusiness, OpeningHoursSpecification, Person, WebPage, WebSite } from "schema-dts";
-import { GEO, SITE_URL } from "@/config/site";
+import { SITE_URL } from "@/config/site";
 import type { SiteContent } from "@/lib/content/types";
 import { googleMapsSearchUrl } from "@/lib/maps";
 
@@ -48,7 +48,7 @@ export function buildSiteGraph(c: SiteContent): Graph {
       addressLocality: c.contact.locality,
       addressCountry: c.contact.countryCode,
     },
-    geo: { "@type": "GeoCoordinates", latitude: GEO.latitude, longitude: GEO.longitude },
+    geo: { "@type": "GeoCoordinates", latitude: c.contact.geo.latitude, longitude: c.contact.geo.longitude },
     hasMap: googleMapsSearchUrl(c),
     areaServed: [
       { "@type": "City", name: c.contact.locality },

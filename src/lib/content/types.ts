@@ -16,6 +16,8 @@ export type OpeningHoursRange = {
 
 export type Expertise = { title: string; text: string };
 
+export type Geo = { latitude: number; longitude: number };
+
 export type Motif = {
   title: string;
   slug: string;
@@ -62,6 +64,8 @@ export type SiteContent = {
     countryCode: "LU";
     phoneDisplay: string;
     phoneE164: string;
+    geo: Geo;
+    email: string | null;
   };
   booking: Booking;
   googleBusinessUrl: string | null;
@@ -87,4 +91,9 @@ export type SiteContent = {
   faq: FaqItem[];
   images: Record<ImageSlot, SiteImage>;
   sameAs: string[];
+  /** Mentions légales : données que seul Patrice peut fournir (aucune valeur inventée). */
+  legal: {
+    authorizationNumber: string | null; // Numero_Autorisation_Exercer (ministère de la Santé)
+    vatStatus: string | null; // Statut_TVA (matricule, exonération…) — à confirmer avec le comptable
+  };
 };

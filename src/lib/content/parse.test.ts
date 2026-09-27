@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { isAllowedImageUrl } from "@/config/images";
 import {
-  formatReviewAuthor, isPlaceholder, normalizeSlug, parseBookingUrl, parseOpeningHours,
+  formatReviewAuthor, isPlaceholder, normalizeSlug, parseBookingUrl, parseGeo, parseOpeningHours,
   parsePostalLine, parseRating, toE164,
 } from "./parse";
 
@@ -47,6 +47,13 @@ describe("parse", () => {
       { days: ["Sa"], opens: "08:00", closes: "12:00" },
     ]);
     expect(parseOpeningHours("lundi 8h")).toBeNull();
+  });
+  it("parse les coordonnées GPS", () => {
+    expect(parseGeo("49.481194, 6.084361")).toEqual({ latitude: 49.481194, longitude: 6.084361 });
+    expect(parseGeo("49.481194,6.084361")).toEqual({ latitude: 49.481194, longitude: 6.084361 });
+    expect(parseGeo("")).toBeNull();
+    expect(parseGeo("Dudelange")).toBeNull();
+    expect(parseGeo("200, 6.08")).toBeNull();
   });
   it("valide les hôtes d'images", () => {
     expect(isAllowedImageUrl("https://abc123.public.blob.vercel-storage.com/portrait.jpg")).toBe(true);
