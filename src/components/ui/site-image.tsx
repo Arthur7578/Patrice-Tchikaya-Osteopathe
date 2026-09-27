@@ -24,6 +24,7 @@ export function SiteImage({ image, sizes, preload = false, className, placeholde
       height={image.height}
       sizes={sizes}
       preload={preload}
+      fetchPriority={preload ? "high" : undefined}
       className={cn("h-full w-full object-cover", className)}
     />
   );
