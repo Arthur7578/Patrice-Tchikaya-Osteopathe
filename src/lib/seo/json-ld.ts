@@ -40,6 +40,7 @@ export function buildSiteGraph(c: SiteContent): Graph {
     telephone: c.contact.phoneE164,
     priceRange: "€€",
     currenciesAccepted: "EUR",
+    paymentAccepted: ["Wero", c.payment.otherMethods].filter(Boolean).join(", "), // cf. page /paiement
     image: images.length > 0 ? images : undefined,
     address: {
       "@type": "PostalAddress",

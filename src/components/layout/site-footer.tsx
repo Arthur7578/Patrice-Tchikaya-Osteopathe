@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { NAV } from "@/content/ui-copy";
+import { COPY, NAV } from "@/content/ui-copy";
 import { formatOpeningHours } from "@/lib/content/format";
 import type { SiteContent } from "@/lib/content/types";
 
@@ -59,6 +59,11 @@ export function SiteFooter({ content }: Props) {
                   </a>
                 </li>
               )}
+              <li>
+                <Link href="/paiement" className="text-sage-100/80 hover:text-white hover:underline">
+                  {COPY.footer.payment}
+                </Link>
+              </li>
               <li>
                 <Link href="/mentions-legales" className="text-sage-100/80 hover:text-white hover:underline">
                   Mentions légales

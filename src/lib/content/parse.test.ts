@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { isAllowedImageUrl } from "@/config/images";
 import {
   formatReviewAuthor, isPlaceholder, normalizeSlug, parseBookingUrl, parseGeo, parseOpeningHours,
-  parsePostalLine, parseRating, toE164,
+  parsePostalLine, parseRating, parseWeroRecipient, toE164,
 } from "./parse";
 
 describe("parse", () => {
@@ -54,6 +54,16 @@ describe("parse", () => {
     expect(parseGeo("")).toBeNull();
     expect(parseGeo("Dudelange")).toBeNull();
     expect(parseGeo("200, 6.08")).toBeNull();
+  });
+  it("parse les coordonnées Wero (mobile ou e-mail)", () => {
+    expect(parseWeroRecipient("+352 691 123 456")).toEqual({ value: "+352 691 123 456", kind: "phone" });
+    expect(parseWeroRecipient(" 06 12 34 56 78 ")).toEqual({ value: "06 12 34 56 78", kind: "phone" });
+    expect(parseWeroRecipient("cabinet@example.lu")).toEqual({ value: "cabinet@example.lu", kind: "email" });
+    expect(parseWeroRecipient("[À COMPLÉTER : numéro Wero]")).toBeNull();
+    expect(parseWeroRecipient("")).toBeNull();
+    expect(parseWeroRecipient("51 92")).toBeNull();
+    expect(parseWeroRecipient("cabinet@")).toBeNull();
+    expect(parseWeroRecipient("Patrice")).toBeNull();
   });
   it("valide les hôtes d'images", () => {
     expect(isAllowedImageUrl("https://abc123.public.blob.vercel-storage.com/portrait.jpg")).toBe(true);

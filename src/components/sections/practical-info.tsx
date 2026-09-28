@@ -1,4 +1,5 @@
-import { Car, CalendarDays, Clock, Euro, Languages, MapPin, Navigation, Phone, Receipt } from "lucide-react";
+import { Car, CalendarDays, Clock, Euro, Languages, MapPin, Navigation, Phone, Receipt, Wallet } from "lucide-react";
+import Link from "next/link";
 import { BookingInline } from "@/components/booking/booking-inline";
 import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { Eyebrow } from "@/components/ui/eyebrow";
@@ -10,7 +11,8 @@ import type { SiteContent } from "@/lib/content/types";
 import { googleMapsDirectionsUrl, googleMapsSearchUrl } from "@/lib/maps";
 
 export function PracticalInfo({ content }: { content: SiteContent }) {
-  const { contact, consultation, openingHours, access, languages, images, googleBusinessUrl, booking } = content;
+  const { contact, consultation, payment, openingHours, access, languages, images, googleBusinessUrl, booking } =
+    content;
   const { labels } = COPY.infos;
   const mapUrl = googleBusinessUrl ?? googleMapsSearchUrl(content);
 
@@ -95,6 +97,20 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
                 </dd>
               </>
             )}
+
+            <dt className="text-sage-700">
+              <Wallet aria-hidden="true" className="size-5" />
+            </dt>
+            <dd>
+              <p className="font-semibold text-ink">{labels.payment}</p>
+              <p className="text-slate-600">{payment.info}</p>
+              <Link
+                href="/paiement"
+                className="mt-1 inline-block text-sm font-semibold text-sage-700 underline underline-offset-4"
+              >
+                {COPY.infos.paymentLink}
+              </Link>
+            </dd>
 
             <dt className="text-sage-700">
               <Receipt aria-hidden="true" className="size-5" />

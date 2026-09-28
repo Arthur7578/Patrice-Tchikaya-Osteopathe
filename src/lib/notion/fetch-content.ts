@@ -14,6 +14,7 @@ import {
   parseOpeningHours,
   parsePostalLine,
   parseRating,
+  parseWeroRecipient,
   toE164,
 } from "@/lib/content/parse";
 import type { ImageSlot, Motif, SiteContent, SiteImage } from "@/lib/content/types";
@@ -117,6 +118,15 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
   const geo = parseGeo(geoRaw);
   if (geoRaw && !isPlaceholder(geoRaw) && !geo) warnings.push(`GPS_Coordonnees illisible : « ${geoRaw} »`);
   if (!geo) warnings.push("GPS_Coordonnees non renseigné dans Notion (valeur de secours utilisée)");
+  // Règlement (page /paiement) : les coordonnées Wero ne sont publiées que si elles sont lisibles.
+  const weroRaw = g.text("Wero_Numero_Ou_Email");
+  const weroRecipient = parseWeroRecipient(weroRaw);
+  if (!weroRecipient)
+    warnings.push(
+      isPlaceholder(weroRaw)
+        ? "Wero_Numero_Ou_Email non renseigné : /paiement explique Wero sans afficher de numéro"
+        : `Wero_Numero_Ou_Email illisible : « ${weroRaw} » (numéro de mobile ou e-mail attendu) — non publié`,
+    );
 
   // --- Section A_Propos (+ expertises optionnelles Expertise_1_Titre / Expertise_1_Texte …)
   const a = toKeyValue(db.about);
@@ -215,6 +225,14 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
       durationMinutes: parseInteger(durationLabel),
       price,
       reimbursement: required(g.text("Info_Remboursement"), F.consultation.reimbursement, "Info_Remboursement"),
+    },
+    payment: {
+      info: required(g.text("Info_Paiement"), F.payment.info, "Info_Paiement"),
+      wero: {
+        recipient: weroRecipient,
+        recipientName: cleanOptional(g.text("Wero_Nom_Beneficiaire")),
+      },
+      otherMethods: cleanOptional(g.text("Autres_Moyens_Paiement")),
     },
     rating: ratingValue === null ? null : { value: ratingValue, count: parseInteger(g.text("Nombre_Avis_Google")) },
     openingHours,

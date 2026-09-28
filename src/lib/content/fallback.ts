@@ -40,6 +40,13 @@ export const FALLBACK_CONTENT: SiteContent = {
     reimbursement:
       "Consultations prises en charge par les mutuelles et assurances complémentaires de santé.",
   },
+  // Transmis par Patrice (via Arthur, 28/09/2026) : règlement après la séance, Wero parmi les options.
+  // Coordonnées Wero et autres moyens de paiement inconnus à cette date : rien d'inventé (null = masqué).
+  payment: {
+    info: "Le règlement se fait après la séance. Wero fait partie des moyens de paiement acceptés.",
+    wero: { recipient: null, recipientName: null },
+    otherMethods: null,
+  },
   rating: { value: 5, count: null },
   openingHours: null,
   access: null,

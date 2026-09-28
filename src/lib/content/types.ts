@@ -53,6 +53,19 @@ export type Booking = {
   calOrigin: string | null;
 };
 
+/** Coordonnées Wero du cabinet : Wero accepte un numéro de mobile ou une adresse e-mail. */
+export type WeroRecipient = { value: string; kind: "phone" | "email" };
+
+/** Règlement après la séance (page /paiement + ligne « Règlement » des infos pratiques). */
+export type Payment = {
+  info: string; // Info_Paiement (phrase courte : quand et comment régler)
+  wero: {
+    recipient: WeroRecipient | null; // Wero_Numero_Ou_Email ; null = non publié sur le site
+    recipientName: string | null; // Wero_Nom_Beneficiaire : nom affiché par Wero avant validation
+  };
+  otherMethods: string | null; // Autres_Moyens_Paiement (texte libre) ; null = bloc masqué
+};
+
 export type SiteContent = {
   practitioner: { name: string; title: string };
   seo: { h1: string; heroSubtitle: string; metaTitle: string | null; metaDescription: string | null };
@@ -75,6 +88,7 @@ export type SiteContent = {
     price: string | null; // null si placeholder "[Mettre le tarif…]"
     reimbursement: string;
   };
+  payment: Payment;
   rating: { value: number; count: number | null } | null;
   openingHours: OpeningHoursRange[] | null;
   access: string | null; // Acces_Info (parking, bus…)

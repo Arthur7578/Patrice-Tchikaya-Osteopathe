@@ -64,6 +64,15 @@ async function main() {
   check(bookingLinks.length >= 2, `liens RDV vers ${content.booking.url} présents dans le HTML (${bookingLinks.length})`);
   check(root.querySelectorAll(`a[href^="tel:${content.contact.phoneE164}"]`).length >= 1, `lien tel:${content.contact.phoneE164} présent`);
 
+  // Page /paiement (guide Wero) : liée depuis l'accueil, un seul <h1>, canonical propre.
+  check(root.querySelectorAll('a[href="/paiement"]').length >= 1, "lien vers /paiement présent sur l'accueil");
+  const payRes = await fetch(`${base}/paiement`);
+  check(payRes.status === 200, `GET /paiement → ${payRes.status}`);
+  const payRoot = parse(await payRes.text());
+  check(payRoot.querySelectorAll("h1").length === 1, "un seul <h1> sur /paiement");
+  const payCanonical = payRoot.querySelector('link[rel="canonical"]')?.getAttribute("href") ?? "";
+  check(payCanonical.endsWith("/paiement"), `canonical de /paiement : ${payCanonical}`);
+
   for (const path of ["/robots.txt", "/sitemap.xml"]) {
     const r = await fetch(`${base}${path}`);
     check(r.status === 200, `GET ${path} → ${r.status}`);
