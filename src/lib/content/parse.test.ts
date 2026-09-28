@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { isAllowedImageUrl } from "@/config/images";
 import {
   formatReviewAuthor, isPlaceholder, normalizeSlug, parseBookingUrl, parseGeo, parseOpeningHours,
-  parsePostalLine, parseRating, toE164,
+  parseInteger, parsePostalLine, parseRating, toE164,
 } from "./parse";
 
 describe("parse", () => {
@@ -38,6 +38,9 @@ describe("parse", () => {
     expect(parseRating("5 / 5")).toBe(5);
     expect(parseRating("4,5")).toBe(4.5);
     expect(parseRating("12")).toBeNull();
+    expect(parseRating("[À COMPLÉTER : note Google, ex. « 5,0 »]")).toBeNull();
+    expect(parseInteger("[À COMPLÉTER : nombre d'avis, ex. « 12 »]")).toBeNull();
+    expect(parseInteger("45 minutes")).toBe(45);
     expect(formatReviewAuthor("Yves Schweicher")).toBe("Yves S.");
     expect(normalizeSlug("Ostéopathie du Sport")).toBe("osteopathie-du-sport");
   });

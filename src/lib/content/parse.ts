@@ -64,14 +64,16 @@ export function parseGeo(value: string | null | undefined): Geo | null {
 
 /** "5 / 5" | "4,5" | "5" -> 5 | 4.5 ; hors [0,5] ou illisible -> null */
 export function parseRating(value: string | null | undefined): number | null {
-  const m = (value ?? "").replace(",", ".").match(/\d+(?:\.\d+)?/);
+  if (isPlaceholder(value)) return null; // « [À COMPLÉTER : ex. 5,0] » ne doit jamais devenir une note
+  const m = value!.replace(",", ".").match(/\d+(?:\.\d+)?/);
   if (!m) return null;
   const n = Number(m[0]);
   return n >= 0 && n <= 5 ? n : null;
 }
 
 export function parseInteger(value: string | null | undefined): number | null {
-  const m = (value ?? "").match(/\d+/);
+  if (isPlaceholder(value)) return null;
+  const m = value!.match(/\d+/);
   return m ? Number(m[0]) : null;
 }
 
