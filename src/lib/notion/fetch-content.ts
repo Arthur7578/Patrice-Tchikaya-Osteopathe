@@ -110,7 +110,7 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
   const ratingValue = parseRating(g.text("Note_Google"));
   const openingRaw = g.text("Horaires");
   const openingHours = parseOpeningHours(openingRaw);
-  if (openingRaw && !openingHours) warnings.push(`Horaires illisibles : « ${openingRaw} »`);
+  if (openingRaw && !isPlaceholder(openingRaw) && !openingHours) warnings.push(`Horaires illisibles : « ${openingRaw} »`);
   const phoneDisplay = required(g.text("Telephone_Display"), F.contact.phoneDisplay, "Telephone_Display");
   const durationLabel = required(g.text("Duree_Consultation"), F.consultation.durationLabel, "Duree_Consultation");
   const geoRaw = g.text("GPS_Coordonnees");
@@ -218,7 +218,12 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
     },
     rating: ratingValue === null ? null : { value: ratingValue, count: parseInteger(g.text("Nombre_Avis_Google")) },
     openingHours,
-    access: cleanOptional(g.text("Acces_Info")),
+    access: {
+      train: cleanOptional(g.text("Acces_Train")),
+      bus: cleanOptional(g.text("Acces_Bus")),
+      parking: cleanOptional(g.text("Acces_Parking")),
+      accessibility: cleanOptional(g.text("Acces_PMR")),
+    },
     languages,
     about: {
       education: cleanOptional(a.text("Formation")),

@@ -14,6 +14,7 @@
   --color-sage-800: #244a3e;
   --color-sage-900: #1d3b32;
   --color-sage-950: #10231d;
+  --color-gmp-attribution: #5e5e5e; /* texte « Google Maps » imposé par Google (note via l'API Places) */
 }
 
 @theme inline {

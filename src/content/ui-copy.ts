@@ -7,9 +7,9 @@ export const NAV = [
 
 export const COPY = {
   skipLink: "Aller au contenu",
+  ratingOn: "sur", // « 5,0/5 sur Google Maps » (hero), « 12 avis sur Google Maps » (avis)
   cta: { book: "Prendre rendez-vous en ligne", bookShort: "Prendre RDV", bookMobile: "Prendre rendez-vous" },
   hero: {
-    ratingSuffix: "sur Google Reviews",
     reassurance: ["Sans ordonnance", "Facture pour votre mutuelle"], // + « Séance de {durée} » calculé
     cardSubtitle: "Sur rendez-vous · sans ordonnance",
   },
@@ -25,6 +25,7 @@ export const COPY = {
     eyebrow: "Avis patients",
     title: "Ce qu'en disent les patients",
     source: "Avis Google",
+    ratingLabel: "Note", // « Note sur Google Maps », ou « 12 avis sur Google Maps » si le nombre est connu
     seeAll: "Voir tous les avis sur Google",
     leaveReview: "Laisser un avis",
   },
@@ -39,7 +40,8 @@ export const COPY = {
     title: "Infos pratiques, accès & tarifs",
     labels: {
       address: "Adresse", phone: "Téléphone", duration: "Durée", price: "Tarif",
-      reimbursement: "Remboursement", hours: "Horaires", access: "Accès", languages: "Langues",
+      reimbursement: "Remboursement", hours: "Horaires", languages: "Langues",
+      train: "Train", bus: "Bus", parking: "Stationnement", accessibility: "Accès PMR",
     },
     directions: "Itinéraire",
     map: "Voir sur Google Maps",
