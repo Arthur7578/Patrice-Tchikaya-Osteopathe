@@ -11,6 +11,7 @@ import {
   parseBookingUrl,
   parseGeo,
   parseInteger,
+  parseList,
   parseOpeningHours,
   parsePostalLine,
   parseRating,
@@ -227,6 +228,7 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
     languages,
     about: {
       education: cleanOptional(a.text("Formation")),
+      continuingEducation: parseList(a.text("Formations_Continues")),
       title: required(a.text("Titre"), F.about.title, "A_Propos.Titre"),
       shortBio: required(a.text("Bio_Courte"), F.about.shortBio, "A_Propos.Bio_Courte"),
       longBio: required(a.text("Bio_Detaillee"), F.about.longBio, "A_Propos.Bio_Detaillee"),

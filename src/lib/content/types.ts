@@ -95,6 +95,7 @@ export type SiteContent = {
     shortBio: string;
     longBio: string;
     education: string | null; // Formation (E-E-A-T)
+    continuingEducation: string[]; // Formations_Continues (optionnel, une par ligne) — vide = bloc masqué
     expertises: Expertise[];
   };
   motifs: Motif[];

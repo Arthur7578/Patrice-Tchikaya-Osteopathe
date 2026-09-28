@@ -77,6 +77,18 @@ export function parseInteger(value: string | null | undefined): number | null {
   return m ? Number(m[0]) : null;
 }
 
+/**
+ * Liste saisie dans une cellule Notion : un élément par ligne (Maj+Entrée) ou séparé par « ; ».
+ * Puces tapées à la main (« - », « • », « * ») retirées ; lignes vides ou placeholders ignorées.
+ */
+export function parseList(value: string | null | undefined): string[] {
+  if (isPlaceholder(value)) return [];
+  return value!
+    .split(/[\n;]+/)
+    .map((item) => item.replace(/^\s*[-•*]\s*/, "").trim())
+    .filter((item) => !isPlaceholder(item));
+}
+
 /** "Yves Schweicher" -> "Yves S." ; "Michelle" -> "Michelle" (minimisation des données patient) */
 export function formatReviewAuthor(fullName: string): string {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);

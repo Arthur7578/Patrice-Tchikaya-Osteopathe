@@ -1,4 +1,4 @@
-import { BadgeCheck, Briefcase, GraduationCap, Trophy } from "lucide-react";
+import { BadgeCheck, BookOpenCheck, Briefcase, GraduationCap, Trophy } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { Reveal } from "@/components/ui/reveal";
@@ -33,6 +33,19 @@ export function About({ content }: { content: SiteContent }) {
               <GraduationCap aria-hidden="true" className="size-5 shrink-0" />
               {about.education}
             </p>
+          )}
+          {about.continuingEducation.length > 0 && (
+            <div className="mt-6 border-t border-white/15 pt-5">
+              <h3 className="font-semibold text-white">{COPY.about.continuingEducation}</h3>
+              <ul className="mt-3 space-y-2 text-sage-100">
+                {about.continuingEducation.map((item) => (
+                  <li key={item} className="flex gap-2">
+                    <BookOpenCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
         <div className="lg:order-1 lg:col-span-5">

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { isAllowedImageUrl } from "@/config/images";
 import {
   formatReviewAuthor, isPlaceholder, normalizeSlug, parseBookingUrl, parseGeo, parseOpeningHours,
-  parseInteger, parsePostalLine, parseRating, toE164,
+  parseInteger, parseList, parsePostalLine, parseRating, toE164,
 } from "./parse";
 
 describe("parse", () => {
@@ -41,6 +41,15 @@ describe("parse", () => {
     expect(parseRating("[À COMPLÉTER : note Google, ex. « 5,0 »]")).toBeNull();
     expect(parseInteger("[À COMPLÉTER : nombre d'avis, ex. « 12 »]")).toBeNull();
     expect(parseInteger("45 minutes")).toBe(45);
+  });
+  it("découpe une liste saisie dans une cellule Notion", () => {
+    expect(parseList("Ostéopathie du sport (Institut A)\n- Ostéopathie périnatale ; • Dry needling\n\n")).toEqual([
+      "Ostéopathie du sport (Institut A)",
+      "Ostéopathie périnatale",
+      "Dry needling",
+    ]);
+    expect(parseList("[À COMPLÉTER (optionnel) : une formation par ligne]")).toEqual([]);
+    expect(parseList("")).toEqual([]);
     expect(formatReviewAuthor("Yves Schweicher")).toBe("Yves S.");
     expect(normalizeSlug("Ostéopathie du Sport")).toBe("osteopathie-du-sport");
   });
