@@ -14,7 +14,11 @@ export type OpeningHoursRange = {
   closes: string; // "19:00"
 };
 
-export type Expertise = { title: string; text: string };
+export type Expertise = {
+  title: string;
+  text: string;
+  icon: string; // nom Lucide validé (voir MOTIF_ICONS)
+};
 
 export type Geo = { latitude: number; longitude: number };
 

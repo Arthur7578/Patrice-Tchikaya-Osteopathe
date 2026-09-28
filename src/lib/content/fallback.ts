@@ -55,14 +55,17 @@ export const FALLBACK_CONTENT: SiteContent = {
       {
         title: "Ancien sportif de haut niveau en handball",
         text: "Maîtrise des pathologies mécaniques, des traumatismes sportifs, de la récupération et de la prévention.",
+        icon: "Trophy",
       },
       {
         title: "Ancien cadre supérieur d'entreprise",
         text: "Compréhension directe du stress, des troubles musculo-squelettiques (TMS) et des mauvaises postures liées au travail sur écran.",
+        icon: "Briefcase",
       },
       {
         title: "Ostéopathe D.O.",
         text: "Une approche systémique, douce et globale du patient.",
+        icon: "BadgeCheck",
       },
     ],
   },
