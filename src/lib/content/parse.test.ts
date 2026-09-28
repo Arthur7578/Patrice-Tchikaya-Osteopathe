@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { isAllowedImageUrl } from "@/config/images";
 import {
   formatReviewAuthor, isPlaceholder, normalizeSlug, parseBookingUrl, parseGeo, parseOpeningHours,
-  parsePostalLine, parseRating, toE164,
+  parsePhone, parsePostalLine, parseRating, toE164,
 } from "./parse";
 
 describe("parse", () => {
@@ -40,6 +40,14 @@ describe("parse", () => {
     expect(parseRating("12")).toBeNull();
     expect(formatReviewAuthor("Yves Schweicher")).toBe("Yves S.");
     expect(normalizeSlug("Ostéopathie du Sport")).toBe("osteopathie-du-sport");
+  });
+  it("parse le numéro secondaire (mobile), indicatif international obligatoire", () => {
+    expect(parsePhone("+352 691 044 147")).toEqual({ display: "+352 691 044 147", e164: "+352691044147" });
+    expect(parsePhone("  +352 691 044 147 ")).toEqual({ display: "+352 691 044 147", e164: "+352691044147" });
+    expect(parsePhone("")).toBeNull();
+    expect(parsePhone("[À COMPLÉTER]")).toBeNull();
+    expect(parsePhone("691 044 147")).toBeNull(); // sans indicatif : ne pas produire "tel:+691…"
+    expect(parsePhone("+352 691 044 147 / +352 51 92 92")).toBeNull(); // deux numéros dans une valeur
   });
   it("parse les horaires schema.org", () => {
     expect(parseOpeningHours("Mo-Fr 08:00-19:00; Sa 08:00-12:00")).toEqual([

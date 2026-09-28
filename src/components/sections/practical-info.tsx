@@ -74,6 +74,17 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
               <a href={`tel:${contact.phoneE164}`} className="text-slate-600 hover:text-sage-700">
                 {contact.phoneDisplay}
               </a>
+              {contact.mobilePhone && (
+                <p className="mt-1 text-sm text-slate-500">
+                  {COPY.mobilePhone}{" "}
+                  <a
+                    href={`tel:${contact.mobilePhone.e164}`}
+                    className="whitespace-nowrap text-slate-600 hover:text-sage-700"
+                  >
+                    {contact.mobilePhone.display}
+                  </a>
+                </p>
+              )}
             </dd>
 
             <dt className="text-sage-700">

@@ -1,4 +1,4 @@
-import type { Booking, Geo, OpeningHoursRange } from "./types";
+import type { Booking, Geo, OpeningHoursRange, Phone } from "./types";
 
 /** "[Mettre le tarif ex: 90 €]" ou vide => valeur non renseignée. */
 export function isPlaceholder(value: string | null | undefined): boolean {
@@ -21,6 +21,17 @@ export function parsePostalLine(value: string) {
 export function toE164(value: string): string {
   const digits = value.replace(/[^\d+]/g, "");
   return digits.startsWith("+") ? digits : `+${digits}`;
+}
+
+/**
+ * Numéro optionnel, indicatif international obligatoire : "+352 691 044 147" -> { display, e164: "+352691044147" }.
+ * Sans « + » ou illisible -> null (sans indicatif, "691 044 147" deviendrait "+691…" : la Micronésie).
+ */
+export function parsePhone(value: string | null | undefined): Phone | null {
+  if (isPlaceholder(value)) return null;
+  const display = value!.trim();
+  const e164 = toE164(display);
+  return display.startsWith("+") && /^\+[1-9]\d{6,14}$/.test(e164) ? { display, e164 } : null;
 }
 
 /** Hôtes Cal.com connus (UE et global) : seuls ceux-ci activent l'intégration embarquée. */
