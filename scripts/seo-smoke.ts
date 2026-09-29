@@ -70,7 +70,9 @@ async function main() {
     const r = await fetch(`${base}${path}`);
     check(r.status === 200, `GET ${path} → ${r.status}`);
   }
-  const robotsMeta = root.querySelector('meta[name="robots"]')?.getAttribute("content") ?? "(absente)";
+  const llms = await fetch(`${base}/llms.txt`);
+  console.log(`ℹ GET /llms.txt → ${llms.status} (404 attendu hors production)`);
+  const robotsMeta =root.querySelector('meta[name="robots"]')?.getAttribute("content") ?? "(absente)";
   console.log(`ℹ meta robots : ${robotsMeta} (noindex attendu hors production)`);
 
   if (failures.length > 0) {
