@@ -15,8 +15,7 @@
     "notion:check": "tsx --env-file=.env.local scripts/notion-check.ts",
     "seo:smoke": "tsx scripts/seo-smoke.ts",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test",
-    "test:mutation": "stryker run"
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@calcom/embed-react": "^1.5.3",
@@ -38,8 +37,6 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.63.0",
-    "@stryker-mutator/core": "^10.0.0",
-    "@stryker-mutator/vitest-runner": "^10.0.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
