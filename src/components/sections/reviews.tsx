@@ -1,6 +1,7 @@
 import { ArrowUpRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
+import { GoogleMapsAttribution } from "@/components/ui/google-maps-attribution";
 import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
 import { StarRating } from "@/components/ui/star-rating";
@@ -30,8 +31,8 @@ export function Reviews({ content }: { content: SiteContent }) {
             <div>
               <StarRating value={rating.value} />
               <p className="mt-1 text-sm text-slate-500">
-                {COPY.reviews.source}
-                {rating.count ? ` (${rating.count} avis)` : ""}
+                {rating.count ? `${rating.count} avis` : COPY.reviews.ratingLabel} {COPY.ratingOn}{" "}
+                <GoogleMapsAttribution />
               </p>
             </div>
           </div>

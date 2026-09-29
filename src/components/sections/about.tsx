@@ -1,14 +1,12 @@
-import { BadgeCheck, Briefcase, GraduationCap, Trophy } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { BookOpenCheck, GraduationCap } from "lucide-react";
 import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
 import { SiteImage } from "@/components/ui/site-image";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { COPY } from "@/content/ui-copy";
+import { MOTIF_ICONS, type MotifIconName } from "@/lib/icons";
 import type { SiteContent } from "@/lib/content/types";
-
-const EXPERTISE_ICONS: LucideIcon[] = [Trophy, Briefcase, BadgeCheck];
 
 export function About({ content }: { content: SiteContent }) {
   const { about, images } = content;
@@ -28,11 +26,24 @@ export function About({ content }: { content: SiteContent }) {
               <p key={paragraph}>{paragraph}</p>
             ))}
           </div>
-          {about.education && (
-            <p className="mt-4 flex items-center gap-2 text-sage-100">
-              <GraduationCap aria-hidden="true" className="size-5 shrink-0" />
-              {about.education}
-            </p>
+          {(about.education || about.continuingEducation.length > 0) && (
+            <div className="mt-6 border-t border-white/15 pt-5">
+              <h3 className="font-semibold text-white">{COPY.about.training}</h3>
+              <ul className="mt-3 space-y-2 text-sage-100">
+                {about.education && (
+                  <li className="flex gap-2 text-white">
+                    <GraduationCap aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+                    {about.education}
+                  </li>
+                )}
+                {about.continuingEducation.map((item) => (
+                  <li key={item} className="flex gap-2">
+                    <BookOpenCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
         <div className="lg:order-1 lg:col-span-5">
@@ -48,7 +59,7 @@ export function About({ content }: { content: SiteContent }) {
 
       <ul className="mt-6 grid gap-6 md:grid-cols-3">
         {about.expertises.map((expertise, i) => {
-          const Icon = EXPERTISE_ICONS[i % EXPERTISE_ICONS.length];
+          const Icon = MOTIF_ICONS[expertise.icon as MotifIconName];
           return (
             <li key={expertise.title}>
               <Reveal delay={i * 0.08} className="h-full">

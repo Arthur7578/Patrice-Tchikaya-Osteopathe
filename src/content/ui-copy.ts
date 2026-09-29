@@ -1,19 +1,19 @@
 export const NAV = [
   { href: "/#a-propos", label: "À propos" },
   { href: "/#motifs", label: "Motifs" },
-  { href: "/#infos", label: "Infos & Tarifs" },
   { href: "/#faq", label: "FAQ" },
+  { href: "/#infos", label: "Infos & Tarifs" },
 ] as const;
 
 export const COPY = {
   skipLink: "Aller au contenu",
+  ratingOn: "sur", // « 5,0/5 sur Google Maps » (hero), « 12 avis sur Google Maps » (avis)
   cta: { book: "Prendre rendez-vous en ligne", bookShort: "Prendre RDV", bookMobile: "Prendre rendez-vous" },
   hero: {
-    ratingSuffix: "sur Google Reviews",
     reassurance: ["Sans ordonnance", "Facture pour votre mutuelle"], // + « Séance de {durée} » calculé
     cardSubtitle: "Sur rendez-vous · sans ordonnance",
   },
-  about: { eyebrow: "À propos" },
+  about: { eyebrow: "À propos", training: "Formation" }, // diplôme (Formation) + formations continues, une seule liste
   motifs: {
     eyebrow: "Motifs de consultation",
     title: (city: string) => `Pourquoi consulter un ostéopathe à ${city} ?`,
@@ -25,6 +25,7 @@ export const COPY = {
     eyebrow: "Avis patients",
     title: "Ce qu'en disent les patients",
     source: "Avis Google",
+    ratingLabel: "Note", // « Note sur Google Maps », ou « 12 avis sur Google Maps » si le nombre est connu
     seeAll: "Voir tous les avis sur Google",
     leaveReview: "Laisser un avis",
   },
@@ -38,10 +39,10 @@ export const COPY = {
     eyebrow: "Infos pratiques",
     title: "Infos pratiques, accès & tarifs",
     labels: {
-      address: "Adresse", phone: "Téléphone", duration: "Durée", price: "Tarif",
-      reimbursement: "Remboursement", hours: "Horaires", access: "Accès", languages: "Langues",
+      address: "Adresse", phone: "Téléphone", phoneOffice: "Cabinet\u00a0:", phoneMobile: "Mobile\u00a0:", duration: "Durée", price: "Tarif",
+      reimbursement: "Remboursement", hours: "Horaires", languages: "Langues",
+      train: "Train", bus: "Bus", parking: "Stationnement", accessibility: "Accès PMR",
     },
-    accessKinds: { bus: "Bus", train: "Train", parking: "Parking", pmr: "Accès PMR", other: "" },
     directions: "Itinéraire",
     map: "Voir sur Google Maps",
     bookingTitle: "Réserver votre séance en ligne",

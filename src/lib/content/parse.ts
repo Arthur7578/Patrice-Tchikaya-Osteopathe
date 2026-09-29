@@ -1,4 +1,4 @@
-import type { Booking, Geo, OpeningHoursRange } from "./types";
+import type { Booking, Geo, OpeningHoursRange, Phone } from "./types";
 
 /** "[Mettre le tarif ex: 90 €]" ou vide => valeur non renseignée. */
 export function isPlaceholder(value: string | null | undefined): boolean {
@@ -21,6 +21,17 @@ export function parsePostalLine(value: string) {
 export function toE164(value: string): string {
   const digits = value.replace(/[^\d+]/g, "");
   return digits.startsWith("+") ? digits : `+${digits}`;
+}
+
+/**
+ * Numéro optionnel, indicatif international obligatoire : "+352 691 044 147" -> { display, e164: "+352691044147" }.
+ * Sans « + » ou illisible -> null (sans indicatif, "691 044 147" deviendrait "+691…" : la Micronésie).
+ */
+export function parsePhone(value: string | null | undefined): Phone | null {
+  if (isPlaceholder(value)) return null;
+  const display = value!.trim();
+  const e164 = toE164(display);
+  return display.startsWith("+") && /^\+[1-9]\d{6,14}$/.test(e164) ? { display, e164 } : null;
 }
 
 /** Hôtes Cal.com connus (UE et global) : seuls ceux-ci activent l'intégration embarquée. */
@@ -64,15 +75,29 @@ export function parseGeo(value: string | null | undefined): Geo | null {
 
 /** "5 / 5" | "4,5" | "5" -> 5 | 4.5 ; hors [0,5] ou illisible -> null */
 export function parseRating(value: string | null | undefined): number | null {
-  const m = (value ?? "").replace(",", ".").match(/\d+(?:\.\d+)?/);
+  if (isPlaceholder(value)) return null; // « [À COMPLÉTER : ex. 5,0] » ne doit jamais devenir une note
+  const m = value!.replace(",", ".").match(/\d+(?:\.\d+)?/);
   if (!m) return null;
   const n = Number(m[0]);
   return n >= 0 && n <= 5 ? n : null;
 }
 
 export function parseInteger(value: string | null | undefined): number | null {
-  const m = (value ?? "").match(/\d+/);
+  if (isPlaceholder(value)) return null;
+  const m = value!.match(/\d+/);
   return m ? Number(m[0]) : null;
+}
+
+/**
+ * Liste saisie dans une cellule Notion : un élément par ligne (Maj+Entrée) ou séparé par « ; ».
+ * Puces tapées à la main (« - », « • », « * ») retirées ; lignes vides ou placeholders ignorées.
+ */
+export function parseList(value: string | null | undefined): string[] {
+  if (isPlaceholder(value)) return [];
+  return value!
+    .split(/[\n;]+/)
+    .map((item) => item.replace(/^\s*[-•*]\s*/, "").trim())
+    .filter((item) => !isPlaceholder(item));
 }
 
 /** "Yves Schweicher" -> "Yves S." ; "Michelle" -> "Michelle" (minimisation des données patient) */
@@ -162,14 +187,3 @@ export function parseOpeningHours(value: string | null | undefined): OpeningHour
   }
   return ranges.length > 0 ? ranges : null;
 }
-
-export type AccessKind = "bus" | "train" | "parking" | "pmr" | "other";
-
-/** Clés Notion (Informations_generales) des indications d'accès, dans l'ordre d'affichage. */
-export const ACCESS_KEYS: ReadonlyArray<readonly [string, AccessKind]> = [
-  ["Acces_Bus", "bus"],
-  ["Acces_Train", "train"],
-  ["Acces_Parking", "parking"],
-  ["Acces_PMR", "pmr"],
-  ["Acces_Info", "other"], // texte libre (ancienne clé, toujours acceptée)
-];
