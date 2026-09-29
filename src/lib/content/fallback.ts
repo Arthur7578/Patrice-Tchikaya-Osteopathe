@@ -46,6 +46,7 @@ export const FALLBACK_CONTENT: SiteContent = {
   },
   rating: { value: 5, count: null },
   openingHours: null,
+  openingHoursLines: [],
   access: { train: null, bus: null, parking: null, accessibility: null },
   rowOrder: { infos: [...INFO_ROW_IDS], access: [...ACCESS_ROW_IDS] },
   languages: [],

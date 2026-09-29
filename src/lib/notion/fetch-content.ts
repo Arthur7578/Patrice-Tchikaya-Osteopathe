@@ -3,6 +3,7 @@ import type { PageObjectResponse } from "@notionhq/client";
 import { NOTION_DATABASES, type NotionDatabaseKey } from "@/config/site";
 import { isAllowedImageUrl } from "@/config/images";
 import { FALLBACK_CONTENT } from "@/lib/content/fallback";
+import { formatOpeningHours } from "@/lib/content/format";
 import {
   cleanOptional,
   formatReviewAuthor,
@@ -16,6 +17,7 @@ import {
   parsePhone,
   parsePostalLine,
   parseRating,
+  splitOpeningLines,
   toE164,
 } from "@/lib/content/parse";
 import { ACCESS_ROW_IDS, INFO_ROW_IDS, resolveRowOrder } from "@/lib/content/rows";
@@ -113,7 +115,8 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
   const ratingValue = parseRating(g.text("Note_Google"));
   const openingRaw = g.text("Horaires");
   const openingHours = parseOpeningHours(openingRaw);
-  if (openingRaw && !isPlaceholder(openingRaw) && !openingHours) warnings.push(`Horaires illisibles : « ${openingRaw} »`);
+  if (!isPlaceholder(openingRaw) && !openingHours)
+    warnings.push(`Horaires non structurés (affichés tels quels, absents du JSON-LD) : « ${openingRaw} »`);
   const phoneDisplay = required(g.text("Telephone_Display"), F.contact.phoneDisplay, "Telephone_Display");
   // Numéro secondaire optionnel (mobile du praticien) : une seule clé, le lien tel: en est dérivé.
   const mobileRaw = g.text("Telephone_Mobile");
@@ -234,6 +237,7 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
     },
     rating: ratingValue === null ? null : { value: ratingValue, count: parseInteger(g.text("Nombre_Avis_Google")) },
     openingHours,
+    openingHoursLines: openingHours ? formatOpeningHours(openingHours) : splitOpeningLines(openingRaw),
     access: {
       train: cleanOptional(g.text("Acces_Train")),
       bus: cleanOptional(g.text("Acces_Bus")),

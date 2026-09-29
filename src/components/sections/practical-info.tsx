@@ -6,13 +6,12 @@ import { Eyebrow } from "@/components/ui/eyebrow";
 import { InfoRow } from "@/components/ui/info-row";
 import { Section } from "@/components/ui/section";
 import { COPY } from "@/content/ui-copy";
-import { formatOpeningHours } from "@/lib/content/format";
 import type { InfoRowId } from "@/lib/content/rows";
 import type { SiteContent } from "@/lib/content/types";
 
 /** Tarifs, horaires, contact. L'adresse et les transports sont dans la section « Accès » (access.tsx). */
 export function PracticalInfo({ content }: { content: SiteContent }) {
-  const { contact, consultation, openingHours, languages, booking, rowOrder } = content;
+  const { contact, consultation, openingHoursLines, languages, booking, rowOrder } = content;
   const { labels } = COPY.infos;
 
   // Chaque ligne renvoie null tant qu'elle n'a rien à afficher ; l'ordre vient de Notion (Infos_Ordre).
@@ -53,9 +52,9 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
         <p className="text-slate-600">{consultation.reimbursement}</p>
       </InfoRow>
     ),
-    horaires: openingHours && (
+    horaires: openingHoursLines.length > 0 && (
       <InfoRow icon={CalendarDays} label={labels.hours}>
-        {formatOpeningHours(openingHours).map((line) => (
+        {openingHoursLines.map((line) => (
           <p key={line} className="text-slate-600">
             {line}
           </p>
