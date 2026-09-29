@@ -1,3 +1,5 @@
+import type { AccessRowId, InfoRowId } from "./rows";
+
 export type ImageSlot = "hero" | "portrait" | "cabinet";
 
 /** Image prête pour next/image. `src === null` => afficher le placeholder de la zone. */
@@ -98,6 +100,8 @@ export type SiteContent = {
   rating: Rating | null;
   openingHours: OpeningHoursRange[] | null;
   access: AccessInfo;
+  /** Ordre d'affichage des lignes, réglable dans Notion (Infos_Ordre / Acces_Ordre). Toujours complet. */
+  rowOrder: { infos: InfoRowId[]; access: AccessRowId[] };
   languages: string[]; // Langues_Parlees "Français, Anglais"
   about: {
     title: string;

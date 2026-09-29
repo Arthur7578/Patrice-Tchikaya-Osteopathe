@@ -1,190 +1,86 @@
-import {
-  Accessibility,
-  Bus,
-  CalendarDays,
-  Clock,
-  Euro,
-  Languages,
-  MapPin,
-  Navigation,
-  Phone,
-  Receipt,
-  SquareParking,
-  TrainFront,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { CalendarDays, Clock, Euro, Languages, Phone, Receipt } from "lucide-react";
 import { Fragment } from "react";
+import type { ReactNode } from "react";
 import { BookingInline } from "@/components/booking/booking-inline";
-import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { Eyebrow } from "@/components/ui/eyebrow";
+import { InfoRow } from "@/components/ui/info-row";
 import { Section } from "@/components/ui/section";
-import { SiteImage } from "@/components/ui/site-image";
 import { COPY } from "@/content/ui-copy";
 import { formatOpeningHours } from "@/lib/content/format";
-import type { AccessInfo, SiteContent } from "@/lib/content/types";
-import { googleMapsDirectionsUrl, googleMapsSearchUrl } from "@/lib/maps";
+import type { InfoRowId } from "@/lib/content/rows";
+import type { SiteContent } from "@/lib/content/types";
 
-/** Venir au cabinet : chaque ligne n'apparaît que si elle est renseignée dans Notion. */
-const ACCESS_ROWS: Array<{ key: keyof AccessInfo; icon: LucideIcon }> = [
-  { key: "train", icon: TrainFront },
-  { key: "bus", icon: Bus },
-  { key: "parking", icon: SquareParking },
-  { key: "accessibility", icon: Accessibility },
-];
-
+/** Tarifs, horaires, contact. L'adresse et les transports sont dans la section « Accès » (access.tsx). */
 export function PracticalInfo({ content }: { content: SiteContent }) {
-  const { contact, consultation, openingHours, access, languages, images, googleBusinessUrl, booking } = content;
+  const { contact, consultation, openingHours, languages, booking, rowOrder } = content;
   const { labels } = COPY.infos;
-  const mapUrl = googleBusinessUrl ?? googleMapsSearchUrl(content);
+
+  // Chaque ligne renvoie null tant qu'elle n'a rien à afficher ; l'ordre vient de Notion (Infos_Ordre).
+  const rows: Record<InfoRowId, ReactNode> = {
+    telephone: (
+      <InfoRow icon={Phone} label={labels.phone}>
+        <p className="text-slate-500">
+          {labels.phoneOffice}{" "}
+          <a href={`tel:${contact.phoneE164}`} className="whitespace-nowrap text-slate-600 hover:text-sage-700">
+            {contact.phoneDisplay}
+          </a>
+        </p>
+        {contact.mobilePhone && (
+          <p className="text-slate-500">
+            {labels.phoneMobile}{" "}
+            <a
+              href={`tel:${contact.mobilePhone.e164}`}
+              className="whitespace-nowrap text-slate-600 hover:text-sage-700"
+            >
+              {contact.mobilePhone.display}
+            </a>
+          </p>
+        )}
+      </InfoRow>
+    ),
+    duree: (
+      <InfoRow icon={Clock} label={labels.duration}>
+        <p className="text-slate-600">{consultation.durationLabel}</p>
+      </InfoRow>
+    ),
+    tarif: consultation.price && (
+      <InfoRow icon={Euro} label={labels.price}>
+        <p className="text-slate-600">{consultation.price}</p>
+      </InfoRow>
+    ),
+    remboursement: (
+      <InfoRow icon={Receipt} label={labels.reimbursement}>
+        <p className="text-slate-600">{consultation.reimbursement}</p>
+      </InfoRow>
+    ),
+    horaires: openingHours && (
+      <InfoRow icon={CalendarDays} label={labels.hours}>
+        {formatOpeningHours(openingHours).map((line) => (
+          <p key={line} className="text-slate-600">
+            {line}
+          </p>
+        ))}
+      </InfoRow>
+    ),
+    langues: languages.length > 0 && (
+      <InfoRow icon={Languages} label={labels.languages}>
+        <p className="text-slate-600">{languages.join(", ")}</p>
+      </InfoRow>
+    ),
+  };
 
   return (
     <Section id="infos" labelledBy="infos-title">
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-200/80 bg-white p-6 md:p-8">
-          {images.cabinet.src && (
-            <div className="mb-6 aspect-[3/2] overflow-hidden rounded-2xl bg-sage-100">
-              <SiteImage
-                image={images.cabinet}
-                sizes="(min-width: 1024px) 45vw, 100vw"
-                placeholder={<ImagePlaceholder />}
-              />
-            </div>
-          )}
           <Eyebrow>{COPY.infos.eyebrow}</Eyebrow>
           <h2 id="infos-title" className="mt-3 text-3xl font-bold tracking-tight text-balance text-ink md:text-4xl">
             {COPY.infos.title}
           </h2>
-
           <dl className="mt-8 grid grid-cols-[auto_1fr] gap-x-4 gap-y-5">
-            <dt className="text-sage-700">
-              <MapPin aria-hidden="true" className="size-5" />
-            </dt>
-            <dd>
-              <p className="font-semibold text-ink">{labels.address}</p>
-              <address className="not-italic text-slate-600">
-                {contact.street}
-                <br />
-                {contact.postalCode} {contact.locality}
-              </address>
-              <div className="mt-1 flex flex-wrap gap-x-4 text-sm">
-                <a
-                  href={googleMapsDirectionsUrl(content)}
-                  target="_blank"
-                  rel="noopener"
-                  className="inline-flex items-center gap-1 font-semibold text-sage-700 underline underline-offset-4"
-                >
-                  <Navigation aria-hidden="true" className="size-4" />
-                  {COPY.infos.directions}
-                  <span className="sr-only">{COPY.newTab}</span>
-                </a>
-                <a
-                  href={mapUrl}
-                  target="_blank"
-                  rel="noopener"
-                  className="font-semibold text-sage-700 underline underline-offset-4"
-                >
-                  {COPY.infos.map}
-                  <span className="sr-only">{COPY.newTab}</span>
-                </a>
-              </div>
-            </dd>
-
-            {ACCESS_ROWS.map(({ key, icon: Icon }) =>
-              access[key] ? (
-                <Fragment key={key}>
-                  <dt className="text-sage-700">
-                    <Icon aria-hidden="true" className="size-5" />
-                  </dt>
-                  <dd>
-                    <p className="font-semibold text-ink">{labels[key]}</p>
-                    <p className="text-slate-600">{access[key]}</p>
-                  </dd>
-                </Fragment>
-              ) : null,
-            )}
-
-            <dt className="text-sage-700">
-              <Phone aria-hidden="true" className="size-5" />
-            </dt>
-            <dd>
-              <p className="font-semibold text-ink">{labels.phone}</p>
-              <p className="text-slate-500">
-                {labels.phoneOffice}{" "}
-                <a
-                  href={`tel:${contact.phoneE164}`}
-                  className="whitespace-nowrap text-slate-600 hover:text-sage-700"
-                >
-                  {contact.phoneDisplay}
-                </a>
-              </p>
-              {contact.mobilePhone && (
-                <p className="text-slate-500">
-                  {labels.phoneMobile}{" "}
-                  <a
-                    href={`tel:${contact.mobilePhone.e164}`}
-                    className="whitespace-nowrap text-slate-600 hover:text-sage-700"
-                  >
-                    {contact.mobilePhone.display}
-                  </a>
-                </p>
-              )}
-            </dd>
-
-            <dt className="text-sage-700">
-              <Clock aria-hidden="true" className="size-5" />
-            </dt>
-            <dd>
-              <p className="font-semibold text-ink">{labels.duration}</p>
-              <p className="text-slate-600">{consultation.durationLabel}</p>
-            </dd>
-
-            {consultation.price && (
-              <>
-                <dt className="text-sage-700">
-                  <Euro aria-hidden="true" className="size-5" />
-                </dt>
-                <dd>
-                  <p className="font-semibold text-ink">{labels.price}</p>
-                  <p className="text-slate-600">{consultation.price}</p>
-                </dd>
-              </>
-            )}
-
-            <dt className="text-sage-700">
-              <Receipt aria-hidden="true" className="size-5" />
-            </dt>
-            <dd>
-              <p className="font-semibold text-ink">{labels.reimbursement}</p>
-              <p className="text-slate-600">{consultation.reimbursement}</p>
-            </dd>
-
-            {openingHours && (
-              <>
-                <dt className="text-sage-700">
-                  <CalendarDays aria-hidden="true" className="size-5" />
-                </dt>
-                <dd>
-                  <p className="font-semibold text-ink">{labels.hours}</p>
-                  {formatOpeningHours(openingHours).map((line) => (
-                    <p key={line} className="text-slate-600">
-                      {line}
-                    </p>
-                  ))}
-                </dd>
-              </>
-            )}
-
-            {languages.length > 0 && (
-              <>
-                <dt className="text-sage-700">
-                  <Languages aria-hidden="true" className="size-5" />
-                </dt>
-                <dd>
-                  <p className="font-semibold text-ink">{labels.languages}</p>
-                  <p className="text-slate-600">{languages.join(", ")}</p>
-                </dd>
-              </>
-            )}
+            {rowOrder.infos.map((id) => (
+              <Fragment key={id}>{rows[id]}</Fragment>
+            ))}
           </dl>
         </div>
 

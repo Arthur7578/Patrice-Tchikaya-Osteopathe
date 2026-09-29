@@ -3,6 +3,7 @@ export const NAV = [
   { href: "/#motifs", label: "Motifs" },
   { href: "/#faq", label: "FAQ" },
   { href: "/#infos", label: "Infos & Tarifs" },
+  { href: "/#acces", label: "Accès" },
 ] as const;
 
 export const COPY = {
@@ -37,7 +38,7 @@ export const COPY = {
   },
   infos: {
     eyebrow: "Infos pratiques",
-    title: "Infos pratiques, accès & tarifs",
+    title: "Infos pratiques & tarifs",
     labels: {
       address: "Adresse", phone: "Téléphone", phoneOffice: "Cabinet\u00a0:", phoneMobile: "Mobile\u00a0:", duration: "Durée", price: "Tarif",
       reimbursement: "Remboursement", hours: "Horaires", languages: "Langues",
@@ -48,6 +49,10 @@ export const COPY = {
     bookingTitle: "Réserver votre séance en ligne",
     bookingText: "Choisissez un créneau : la confirmation vous est envoyée par e-mail.",
     bookingFallback: "Ouvrir l'agenda dans un nouvel onglet",
+  },
+  access: {
+    eyebrow: "Accès",
+    title: (city: string) => `Comment venir au cabinet à ${city} ?`,
   },
   footer: { legal: "Mentions légales", privacy: "Confidentialité" },
   newTab: "(nouvel onglet)",

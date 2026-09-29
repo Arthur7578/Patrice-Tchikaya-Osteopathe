@@ -91,3 +91,19 @@ describe("fetchSiteContent : cartes d'expertise de la section À propos", () => 
     expect(content.about.expertises).toEqual(FALLBACK_CONTENT.about.expertises);
   });
 });
+
+describe("fetchSiteContent : ordre des lignes Infos pratiques / Accès", () => {
+  it("applique Infos_Ordre et Acces_Ordre, signale les identifiants inconnus", async () => {
+    const { content, warnings } = await fetchSiteContent(
+      fakeNotion({ general: [kvRow("Infos_Ordre", "tarif, horaires, oups"), kvRow("Acces_Ordre", "parking, adresse")] }),
+    );
+    expect(content.rowOrder.infos.slice(0, 2)).toEqual(["tarif", "horaires"]);
+    expect(content.rowOrder.access).toEqual(["parking", "adresse", "train", "bus", "pmr"]);
+    expect(warnings.some((w) => w.includes("Infos_Ordre") && w.includes("oups"))).toBe(true);
+  });
+
+  it("sans clé : ordre par défaut", async () => {
+    const { content } = await fetchSiteContent(fakeNotion({ general: [kvRow("Nom_Praticien", "Patrice")] }));
+    expect(content.rowOrder).toEqual(FALLBACK_CONTENT.rowOrder);
+  });
+});
