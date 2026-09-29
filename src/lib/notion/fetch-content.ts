@@ -18,7 +18,7 @@ import {
   toE164,
 } from "@/lib/content/parse";
 import type { ImageSlot, Motif, SiteContent, SiteImage } from "@/lib/content/types";
-import { resolveIconName } from "@/lib/icons";
+import { DEFAULT_EXPERTISE_ICONS, resolveIconName } from "@/lib/icons";
 import type { NotionClient } from "./client";
 import { getCheckbox, getDateStart, getNumber, getText, getUrl } from "./properties";
 
@@ -123,11 +123,19 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
   if (geoRaw && !isPlaceholder(geoRaw) && !geo) warnings.push(`GPS_Coordonnees illisible : « ${geoRaw} »`);
   if (!geo) warnings.push("GPS_Coordonnees non renseigné dans Notion (valeur de secours utilisée)");
 
-  // --- Section A_Propos (+ expertises optionnelles Expertise_1_Titre / Expertise_1_Texte …)
+  // --- Section A_Propos (+ expertises optionnelles Expertise_1_Titre / Expertise_1_Texte / Expertise_1_Icone …)
   const a = toKeyValue(db.about);
-  const expertises = [1, 2, 3, 4]
-    .map((i) => ({ title: a.text(`Expertise_${i}_Titre`), text: a.text(`Expertise_${i}_Texte`) }))
-    .filter((e) => !isPlaceholder(e.title) && !isPlaceholder(e.text));
+  const expertises = [1, 2, 3, 4].flatMap((i) => {
+    const title = a.text(`Expertise_${i}_Titre`);
+    const text = a.text(`Expertise_${i}_Texte`);
+    if (isPlaceholder(title) || isPlaceholder(text)) return [];
+    const icon = resolveIconName(
+      cleanOptional(a.text(`Expertise_${i}_Icone`)) ?? "",
+      (bad) => warnings.push(`Icône Lucide inconnue « ${bad} » pour Expertise_${i}_Icone (icône par défaut)`),
+      DEFAULT_EXPERTISE_ICONS[(i - 1) % DEFAULT_EXPERTISE_ICONS.length],
+    );
+    return [{ title, text, icon }];
+  });
 
   // --- Medias_Images : colonne URL uniquement (jamais le fichier Notion : URL S3 temporaire ~1 h)
   const m = toKeyValue(db.images);
