@@ -23,6 +23,7 @@ import {
   splitOpeningLines,
   toE164,
 } from "@/lib/content/parse";
+import { ACCESS_ROW_IDS, INFO_ROW_IDS, resolveRowOrder } from "@/lib/content/rows";
 import type { ImageSlot, Motif, MotifPage, SiteContent, SiteImage } from "@/lib/content/types";
 import { DEFAULT_EXPERTISE_ICONS, resolveIconName } from "@/lib/icons";
 import { normalizeNotionBlocks } from "./blocks";
@@ -312,6 +313,14 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
       bus: cleanOptional(g.text("Acces_Bus")),
       parking: cleanOptional(g.text("Acces_Parking")),
       accessibility: cleanOptional(g.text("Acces_PMR")),
+    },
+    rowOrder: {
+      infos: resolveRowOrder(g.text("Infos_Ordre"), INFO_ROW_IDS, (bad) =>
+        warnings.push(`Infos_Ordre : identifiant inconnu « ${bad} » (attendus : ${INFO_ROW_IDS.join(", ")})`),
+      ),
+      access: resolveRowOrder(g.text("Acces_Ordre"), ACCESS_ROW_IDS, (bad) =>
+        warnings.push(`Acces_Ordre : identifiant inconnu « ${bad} » (attendus : ${ACCESS_ROW_IDS.join(", ")})`),
+      ),
     },
     languages,
     about: {

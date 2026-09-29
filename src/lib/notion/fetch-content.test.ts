@@ -197,6 +197,22 @@ describe("fetchSiteContent : pages motifs (phase 9)", () => {
   });
 });
 
+describe("fetchSiteContent : ordre des blocs Infos pratiques / lignes Accès", () => {
+  it("applique Infos_Ordre et Acces_Ordre, signale les identifiants inconnus", async () => {
+    const { content, warnings } = await fetchSiteContent(
+      fakeNotion({ general: [kvRow("Infos_Ordre", "tarif, horaires, oups"), kvRow("Acces_Ordre", "parking, adresse")] }),
+    );
+    expect(content.rowOrder.infos.slice(0, 2)).toEqual(["tarif", "horaires"]);
+    expect(content.rowOrder.access).toEqual(["parking", "adresse", "train", "bus", "pmr"]);
+    expect(warnings.some((w) => w.includes("Infos_Ordre") && w.includes("oups"))).toBe(true);
+  });
+
+  it("sans clé : ordre par défaut", async () => {
+    const { content } = await fetchSiteContent(fakeNotion({ general: [kvRow("Nom_Praticien", "Patrice")] }));
+    expect(content.rowOrder).toEqual(FALLBACK_CONTENT.rowOrder);
+  });
+});
+
 /** Ligne de la base Page_Paiement (Name, Type, Texte, Ordre), réduite à ce que lit le code. */
 function payRow(name: string, type: string, texte: string, ordre?: number) {
   return {
