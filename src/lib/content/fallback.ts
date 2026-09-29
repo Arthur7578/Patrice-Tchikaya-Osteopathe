@@ -22,6 +22,9 @@ export const FALLBACK_CONTENT: SiteContent = {
     countryCode: "LU",
     phoneDisplay: "+352 51 92 92",
     phoneE164: "+352519292",
+    // Ajouté le 28/09/2026 (clé Notion Telephone_Mobile) : ligne directe de Patrice, secondaire (il ne peut pas
+    // décrocher en séance) ; le numéro du cabinet ci-dessus reste le principal.
+    mobilePhone: { display: "+352 691 044 147", e164: "+352691044147" },
     // Vérifiées le 27/09/2026 (clic droit sur le bâtiment, Google Maps) : 49°28'52.3"N 6°05'03.7"E.
     geo: { latitude: 49.481194, longitude: 6.084361 },
     email: null,
@@ -56,14 +59,17 @@ export const FALLBACK_CONTENT: SiteContent = {
       {
         title: "Ancien sportif de haut niveau en handball",
         text: "Maîtrise des pathologies mécaniques, des traumatismes sportifs, de la récupération et de la prévention.",
+        icon: "Trophy",
       },
       {
         title: "Ancien cadre supérieur d'entreprise",
         text: "Compréhension directe du stress, des troubles musculo-squelettiques (TMS) et des mauvaises postures liées au travail sur écran.",
+        icon: "Briefcase",
       },
       {
         title: "Ostéopathe D.O.",
         text: "Une approche systémique, douce et globale du patient.",
+        icon: "BadgeCheck",
       },
     ],
   },

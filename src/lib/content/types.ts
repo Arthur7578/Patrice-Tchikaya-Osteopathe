@@ -14,9 +14,16 @@ export type OpeningHoursRange = {
   closes: string; // "19:00"
 };
 
-export type Expertise = { title: string; text: string };
+export type Expertise = {
+  title: string;
+  text: string;
+  icon: string; // nom Lucide validé (voir MOTIF_ICONS)
+};
 
 export type Geo = { latitude: number; longitude: number };
+
+/** Numéro affiché tel que saisi dans Notion + sa forme E.164 pour le lien `tel:`. */
+export type Phone = { display: string; e164: string };
 
 export type Motif = {
   title: string;
@@ -73,8 +80,10 @@ export type SiteContent = {
     locality: string;
     countryName: string;
     countryCode: "LU";
-    phoneDisplay: string;
+    phoneDisplay: string; // numéro principal : celui du cabinet
     phoneE164: string;
+    /** Numéro secondaire : mobile du praticien (ligne directe), toujours affiché après le cabinet. null = masqué. */
+    mobilePhone: Phone | null;
     geo: Geo;
     email: string | null;
   };

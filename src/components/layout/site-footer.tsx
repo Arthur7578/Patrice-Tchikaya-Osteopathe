@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { NAV } from "@/content/ui-copy";
+import { COPY, NAV } from "@/content/ui-copy";
 import { formatOpeningHours } from "@/lib/content/format";
 import type { SiteContent } from "@/lib/content/types";
 
@@ -25,9 +25,19 @@ export function SiteFooter({ content }: Props) {
               <br />
               {contact.postalCode} {contact.locality}, {contact.countryName}
               <br />
-              <a href={`tel:${contact.phoneE164}`} className="hover:underline">
+              {COPY.infos.labels.phoneOffice}{" "}
+              <a href={`tel:${contact.phoneE164}`} className="whitespace-nowrap hover:underline">
                 {contact.phoneDisplay}
               </a>
+              {contact.mobilePhone && (
+                <>
+                  <br />
+                  {COPY.infos.labels.phoneMobile}{" "}
+                  <a href={`tel:${contact.mobilePhone.e164}`} className="whitespace-nowrap hover:underline">
+                    {contact.mobilePhone.display}
+                  </a>
+                </>
+              )}
             </address>
             {openingHours && (
               <ul className="mt-3 space-y-1 text-sm text-sage-100/80">

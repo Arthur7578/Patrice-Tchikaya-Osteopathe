@@ -1,14 +1,12 @@
-import { BadgeCheck, BookOpenCheck, Briefcase, GraduationCap, Trophy } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { BookOpenCheck, GraduationCap } from "lucide-react";
 import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
 import { SiteImage } from "@/components/ui/site-image";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { COPY } from "@/content/ui-copy";
+import { MOTIF_ICONS, type MotifIconName } from "@/lib/icons";
 import type { SiteContent } from "@/lib/content/types";
-
-const EXPERTISE_ICONS: LucideIcon[] = [Trophy, Briefcase, BadgeCheck];
 
 export function About({ content }: { content: SiteContent }) {
   const { about, images } = content;
@@ -61,7 +59,7 @@ export function About({ content }: { content: SiteContent }) {
 
       <ul className="mt-6 grid gap-6 md:grid-cols-3">
         {about.expertises.map((expertise, i) => {
-          const Icon = EXPERTISE_ICONS[i % EXPERTISE_ICONS.length];
+          const Icon = MOTIF_ICONS[expertise.icon as MotifIconName];
           return (
             <li key={expertise.title}>
               <Reveal delay={i * 0.08} className="h-full">
