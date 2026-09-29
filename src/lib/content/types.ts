@@ -42,6 +42,17 @@ export type Review = {
 
 export type FaqItem = { question: string; answer: string };
 
+/** Venir au cabinet : une ligne Notion par sujet, chacune masquée tant qu'elle est vide ou « [À …] ». */
+export type AccessInfo = {
+  train: string | null; // Acces_Train
+  bus: string | null; // Acces_Bus
+  parking: string | null; // Acces_Parking
+  accessibility: string | null; // Acces_PMR — ne jamais affirmer un accès PMR non vérifié
+};
+
+/** Note Google : API Google Places si configurée (voir get-google-rating.ts), sinon Note_Google (Notion). */
+export type Rating = { value: number; count: number | null };
+
 /**
  * Prise de RDV, pensée pour être configurable sans changer de code : une seule URL vient de
  * Notion (`Url_Booking`). `provider` est déduit de son hôte — seuls les hôtes Cal.com connus
@@ -84,15 +95,16 @@ export type SiteContent = {
     price: string | null; // null si placeholder "[Mettre le tarif…]"
     reimbursement: string;
   };
-  rating: { value: number; count: number | null } | null;
+  rating: Rating | null;
   openingHours: OpeningHoursRange[] | null;
-  access: string | null; // Acces_Info (parking, bus…)
+  access: AccessInfo;
   languages: string[]; // Langues_Parlees "Français, Anglais"
   about: {
     title: string;
     shortBio: string;
     longBio: string;
     education: string | null; // Formation (E-E-A-T)
+    continuingEducation: string[]; // Formations_Continues (optionnel, une par ligne) — vide = bloc masqué
     expertises: Expertise[];
   };
   motifs: Motif[];

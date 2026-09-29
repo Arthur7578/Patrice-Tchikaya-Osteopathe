@@ -11,6 +11,7 @@ import {
   parseBookingUrl,
   parseGeo,
   parseInteger,
+  parseList,
   parseOpeningHours,
   parsePhone,
   parsePostalLine,
@@ -111,7 +112,7 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
   const ratingValue = parseRating(g.text("Note_Google"));
   const openingRaw = g.text("Horaires");
   const openingHours = parseOpeningHours(openingRaw);
-  if (openingRaw && !openingHours) warnings.push(`Horaires illisibles : « ${openingRaw} »`);
+  if (openingRaw && !isPlaceholder(openingRaw) && !openingHours) warnings.push(`Horaires illisibles : « ${openingRaw} »`);
   const phoneDisplay = required(g.text("Telephone_Display"), F.contact.phoneDisplay, "Telephone_Display");
   // Numéro secondaire optionnel (mobile du praticien) : une seule clé, le lien tel: en est dérivé.
   const mobileRaw = g.text("Telephone_Mobile");
@@ -232,10 +233,16 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
     },
     rating: ratingValue === null ? null : { value: ratingValue, count: parseInteger(g.text("Nombre_Avis_Google")) },
     openingHours,
-    access: cleanOptional(g.text("Acces_Info")),
+    access: {
+      train: cleanOptional(g.text("Acces_Train")),
+      bus: cleanOptional(g.text("Acces_Bus")),
+      parking: cleanOptional(g.text("Acces_Parking")),
+      accessibility: cleanOptional(g.text("Acces_PMR")),
+    },
     languages,
     about: {
       education: cleanOptional(a.text("Formation")),
+      continuingEducation: parseList(a.text("Formations_Continues")),
       title: required(a.text("Titre"), F.about.title, "A_Propos.Titre"),
       shortBio: required(a.text("Bio_Courte"), F.about.shortBio, "A_Propos.Bio_Courte"),
       longBio: required(a.text("Bio_Detaillee"), F.about.longBio, "A_Propos.Bio_Detaillee"),

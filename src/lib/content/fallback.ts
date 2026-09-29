@@ -45,10 +45,11 @@ export const FALLBACK_CONTENT: SiteContent = {
   },
   rating: { value: 5, count: null },
   openingHours: null,
-  access: null,
+  access: { train: null, bus: null, parking: null, accessibility: null },
   languages: [],
   about: {
     education: null,
+    continuingEducation: [],
     title: "Un parcours unique au service de votre santé",
     shortBio:
       "Ostéopathe installé au sein du cabinet de Dudelange, Patrice Tchikaya propose une prise en charge globale et personnalisée de la douleur.",
