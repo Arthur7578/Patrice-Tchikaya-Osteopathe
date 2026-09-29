@@ -197,8 +197,89 @@ describe("fetchSiteContent : pages motifs (phase 9)", () => {
   });
 });
 
+/** Ligne de la base Page_Paiement (Name, Type, Texte, Ordre), réduite à ce que lit le code. */
+function payRow(name: string, type: string, texte: string, ordre?: number) {
+  return {
+    object: "page",
+    id: `${type}-${name}`,
+    url: `https://www.notion.so/${encodeURIComponent(name)}`,
+    created_time: "2026-09-29T00:00:00.000Z",
+    in_trash: false,
+    properties: {
+      Name: { type: "title", title: [{ plain_text: name }] },
+      Type: { type: "select", select: { name: type } },
+      Texte: { type: "rich_text", rich_text: [{ plain_text: texte }] },
+      Ordre: { type: "number", number: ordre ?? null },
+    },
+  };
+}
+
+/** Les 21 lignes de la base Notion Page_Paiement telles que créées le 29/09/2026 : [Name, Type, Texte, Ordre]. */
+const PAGE_PAIEMENT_NOTION: Array<[string, string, string, number?]> = [
+  ["Titre_Page", "Texte", "Régler votre séance"],
+  ["Surtitre", "Texte", "Paiement"],
+  ["Introduction", "Texte", "Voici comment payer avec Wero, en quelques secondes depuis votre téléphone."],
+  ["Titre_Etapes", "Texte", "Payer avec Wero, étape par étape"],
+  ["Titre_Securite", "Texte", "Un paiement simple et sûr"],
+  ["Titre_Premiere_Utilisation", "Texte", "Première utilisation de Wero ?"],
+  ["Titre_Aide", "Texte", "Pas de Wero, ou une question ?"],
+  ["Texte_Aide", "Texte", "Votre banque ne propose pas encore Wero, ou vous avez une question sur le règlement ? Appelez le cabinet :"],
+  ["Encart", "Texte", "[Facultatif — encart « Bon à savoir » sous les étapes de paiement. Laisser tel quel pour ne rien afficher]"],
+  ["Meta_Title", "Texte", "[Facultatif — titre de la page dans l'onglet du navigateur et sur Google. Laisser tel quel pour utiliser le titre par défaut]"],
+  ["Meta_Description", "Texte", "[Facultatif — description de la page sur Google (70 à 160 caractères). Laisser tel quel pour utiliser la description par défaut]"],
+  ["Ouvrez Wero", "Étape", "Dans l'application Wero, ou dans l'application de votre banque si Wero y est intégré.", 1],
+  ["Envoyez au cabinet", "Étape", "Choisissez l'envoi d'argent, puis saisissez le numéro de mobile ou l'adresse e-mail Wero du cabinet (à demander au cabinet s'ils ne sont pas indiqués sur cette page).", 2],
+  ["Indiquez le montant", "Étape", "Saisissez le montant de votre séance. En message, précisez le nom du patient et la date de la séance.", 3],
+  ["Vérifiez, puis validez", "Étape", "Contrôlez le nom du bénéficiaire affiché et le montant, puis validez avec votre empreinte, votre visage ou votre code. L'argent arrive en quelques secondes.", 4],
+  ["Une solution des banques européennes", "Sécurité", "Wero est développé par l'European Payments Initiative (EPI), soutenue par de grandes banques européennes.", 1],
+  ["Aucune coordonnée bancaire à partager", "Sécurité", "Un numéro de mobile ou une adresse e-mail suffit : ni IBAN, ni numéro de carte.", 2],
+  ["Validé par vous seul", "Sécurité", "Aucun paiement ne part sans votre validation dans l'application : empreinte, reconnaissance faciale ou code.", 3],
+  ["Le bon destinataire, en quelques secondes", "Sécurité", "Wero affiche le nom du bénéficiaire avant que vous validiez, puis l'argent arrive en quelques secondes.", 4],
+  ["Votre banque est au Luxembourg", "Première utilisation", "Téléchargez l'application Wero, puis reliez-la à votre compte : votre identité est vérifiée via LuxTrust ou l'application de votre banque.\nWero est proposé notamment par Spuerkeess, BGL BNP Paribas, BIL, Banque Raiffeisen et POST.\nVous utilisiez Payconiq ? Wero le remplace au Luxembourg depuis septembre 2026.", 1],
+  ["Votre banque est en France, en Belgique ou en Allemagne", "Première utilisation", "Wero y est proposé par de nombreuses banques, souvent directement dans leur application : cherchez « Wero » dans ses menus.", 2],
+];
+
+const payRows = (rows = PAGE_PAIEMENT_NOTION) => rows.map(([name, type, texte, ordre]) => payRow(name, type, texte, ordre));
+
 describe("fetchSiteContent : règlement après la séance (page /paiement)", () => {
-  it("état réel de Notion : lignes « à compléter » masquées, texte et conseil publiés", async () => {
+  it("lignes Notion actuelles de Page_Paiement : mêmes textes que l'instantané de secours (pas de dérive)", async () => {
+    const { content, warnings } = await fetchSiteContent(fakeNotion({ payment: payRows() }));
+    expect(content.payment.page).toEqual(FALLBACK_CONTENT.payment.page);
+    expect(warnings.filter((w) => w.includes("Page_Paiement"))).toEqual([]);
+  });
+
+  it("base Page_Paiement vide : instantané de secours + avertissement", async () => {
+    const { content, warnings } = await fetchSiteContent(fakeNotion({}));
+    expect(content.payment.page).toEqual(FALLBACK_CONTENT.payment.page);
+    expect(warnings).toContain("Page_Paiement vide : texte de secours utilisé pour /paiement");
+  });
+
+  it("modifications faites dans Notion : texte changé, encart activé, étape ajoutée et réordonnée, section retirée", async () => {
+    const edited = PAGE_PAIEMENT_NOTION.filter(([, type]) => type !== "Sécurité") // toutes les lignes « Sécurité » supprimées
+      .map(([name, type, texte, ordre]): [string, string, string, number?] => {
+        if (name === "Titre_Page") return [name, type, "Payer votre séance", ordre];
+        if (name === "Encart") return [name, type, "Un paiement Wero est immédiat.", ordre];
+        if (name === "Ouvrez Wero") return [name, type, texte, 2]; // permutation avec « Envoyez au cabinet »
+        if (name === "Envoyez au cabinet") return [name, type, texte, 1];
+        return [name, type, texte, ordre];
+      });
+    edited.push(["Confirmez", "Étape", "Le cabinet reçoit le paiement.", 5]);
+    const { content } = await fetchSiteContent(fakeNotion({ payment: payRows(edited) }));
+    const page = content.payment.page;
+    expect(page.title).toBe("Payer votre séance");
+    expect(page.caution).toBe("Un paiement Wero est immédiat.");
+    expect(page.steps?.cards.map((c) => c.title)).toEqual([
+      "Envoyez au cabinet",
+      "Ouvrez Wero",
+      "Indiquez le montant",
+      "Vérifiez, puis validez",
+      "Confirmez",
+    ]);
+    expect(page.reassurance).toBeNull();
+    expect(page.firstTime?.cards).toHaveLength(2);
+  });
+
+  it("état réel de Notion : lignes « à compléter » masquées, phrase de règlement publiée", async () => {
     // Valeurs exactes des lignes créées dans Informations_generales le 29/09/2026.
     const { content, warnings } = await fetchSiteContent(
       fakeNotion({
@@ -207,8 +288,6 @@ describe("fetchSiteContent : règlement après la séance (page /paiement)", () 
           kvRow("Wero_Numero_Ou_Email", "[À COMPLÉTER : numéro de mobile ou adresse e-mail Wero du cabinet]"),
           kvRow("Wero_Nom_Beneficiaire", "[À COMPLÉTER : nom tel qu'affiché par Wero avant la validation du paiement]"),
           kvRow("Autres_Moyens_Paiement", "[À COMPLÉTER — facultatif : autres moyens de paiement acceptés, en texte libre. Laisser tel quel pour ne rien afficher]"),
-          kvRow("Wero_Conseil_Message", "En message, précisez le nom du patient et la date de la séance."),
-          kvRow("Paiement_Mise_En_Garde", "[Facultatif — encart « Bon à savoir » sous les étapes de paiement. Laisser tel quel pour ne rien afficher]"),
         ],
       }),
     );
@@ -216,22 +295,19 @@ describe("fetchSiteContent : règlement après la séance (page /paiement)", () 
       info: "Le règlement se fait après la séance. Wero fait partie des moyens de paiement acceptés.",
       wero: { recipient: null, recipientName: null },
       otherMethods: null,
-      messageTip: "En message, précisez le nom du patient et la date de la séance.",
-      caution: null,
+      page: FALLBACK_CONTENT.payment.page,
     });
     expect(warnings).toContain("Wero_Numero_Ou_Email non renseigné : /paiement explique Wero sans afficher de numéro");
     expect(warnings.filter((w) => w.includes("Info_Paiement"))).toEqual([]);
   });
 
-  it("champs renseignés : coordonnées Wero, autres moyens et encart publiés ; conseil vide => masqué", async () => {
+  it("champs renseignés : coordonnées Wero et autres moyens publiés", async () => {
     const { content, warnings } = await fetchSiteContent(
       fakeNotion({
         general: [
           kvRow("Wero_Numero_Ou_Email", "+352 621 000 000"),
           kvRow("Wero_Nom_Beneficiaire", "Patrice Tchikaya"),
           kvRow("Autres_Moyens_Paiement", "Espèces sur place."),
-          kvRow("Wero_Conseil_Message", ""),
-          kvRow("Paiement_Mise_En_Garde", "Un paiement Wero est immédiat."),
         ],
       }),
     );
@@ -240,8 +316,6 @@ describe("fetchSiteContent : règlement après la séance (page /paiement)", () 
       recipientName: "Patrice Tchikaya",
     });
     expect(content.payment.otherMethods).toBe("Espèces sur place.");
-    expect(content.payment.messageTip).toBeNull();
-    expect(content.payment.caution).toBe("Un paiement Wero est immédiat.");
     expect(warnings.filter((w) => w.includes("Wero_Numero_Ou_Email"))).toEqual([]);
   });
 

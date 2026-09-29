@@ -96,6 +96,26 @@ export type Booking = {
 /** Coordonnées Wero du cabinet : Wero accepte un numéro de mobile ou une adresse e-mail. */
 export type WeroRecipient = { value: string; kind: "phone" | "email" };
 
+/** Carte de la page /paiement : titre + texte (un paragraphe par ligne). */
+export type PaymentCard = { title: string; text: string };
+
+/** Section de cartes : titre + cartes. Une section sans carte vaut `null` (masquée). */
+export type PaymentSection = { title: string; cards: PaymentCard[] };
+
+/** Textes de la page /paiement, éditables dans la base Notion Page_Paiement (mise en page fixe). */
+export type PaymentPage = {
+  eyebrow: string | null; // Surtitre
+  title: string; // Titre_Page (le <h1>)
+  intro: string | null; // Introduction, sous la phrase Info_Paiement
+  metaTitle: string | null; // Meta_Title ; null = titre par défaut
+  metaDescription: string | null; // Meta_Description ; null = description par défaut
+  steps: PaymentSection | null; // lignes de type « Étape »
+  caution: string | null; // Encart : encart « Bon à savoir » facultatif ; null = pas d'encart
+  reassurance: PaymentSection | null; // lignes de type « Sécurité »
+  firstTime: PaymentSection | null; // lignes de type « Première utilisation »
+  help: { title: string; text: string | null }; // Titre_Aide, Texte_Aide
+};
+
 /** Règlement après la séance (page /paiement + ligne « Règlement » des infos pratiques). */
 export type Payment = {
   info: string; // Info_Paiement (phrase courte : quand et comment régler)
@@ -104,8 +124,7 @@ export type Payment = {
     recipientName: string | null; // Wero_Nom_Beneficiaire : nom affiché par Wero avant validation
   };
   otherMethods: string | null; // Autres_Moyens_Paiement (texte libre) ; null = bloc masqué
-  messageTip: string | null; // Wero_Conseil_Message : conseil sur le message joint au paiement (étape 3) ; null = masqué
-  caution: string | null; // Paiement_Mise_En_Garde : encart « Bon à savoir » facultatif ; null = pas d'encart
+  page: PaymentPage; // base Page_Paiement
 };
 
 export type SiteContent = {

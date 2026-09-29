@@ -35,3 +35,15 @@ export function formatOpeningHours(ranges: OpeningHoursRange[]): string[] {
     return `${days} : ${time(r.opens)} – ${time(r.closes)}`;
   });
 }
+
+/**
+ * Espaces insécables de la typographie française : « guillemets », deux-points, point-virgule, points
+ * d'exclamation et d'interrogation ne passent jamais seuls à la ligne. Les textes saisis dans Notion
+ * n'en contiennent pas (on ne tape pas d'espace insécable), on les rétablit à l'affichage.
+ */
+export function frenchNbsp(text: string): string {
+  return text
+    .replace(/« +/g, "«\u00a0")
+    .replace(/ +»/g, "\u00a0»")
+    .replace(/ +([:;!?])/g, "\u00a0$1");
+}

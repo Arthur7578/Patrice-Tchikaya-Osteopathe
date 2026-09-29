@@ -5,6 +5,7 @@ import { isAllowedImageUrl } from "@/config/images";
 import { countWords } from "@/lib/content/blocks";
 import { FALLBACK_CONTENT } from "@/lib/content/fallback";
 import { formatOpeningHours } from "@/lib/content/format";
+import { buildPaymentPage, type PaymentRow } from "@/lib/content/payment-page";
 import {
   cleanOptional,
   formatReviewAuthor,
@@ -166,6 +167,19 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
         : `Wero_Numero_Ou_Email illisible : « ${weroRaw} » (numéro de mobile ou e-mail attendu) — non publié`,
     );
 
+  // --- Page_Paiement (textes de /paiement) : base vide => instantané de secours ; sinon Notion fait foi
+  // (une section sans ligne est masquée, une ligne « Texte » facultative vide masque son élément).
+  const paymentRows: PaymentRow[] = sortRows(db.payment.filter(isPublished)).map((row) => ({
+    name: getText(row.properties, "Name"),
+    type: getText(row.properties, "Type"),
+    text: getText(row.properties, "Texte"),
+  }));
+  if (paymentRows.length === 0) warnings.push("Page_Paiement vide : texte de secours utilisé pour /paiement");
+  const paymentPage =
+    paymentRows.length > 0
+      ? buildPaymentPage(paymentRows, FALLBACK_CONTENT.payment.page, (message) => warnings.push(message))
+      : FALLBACK_CONTENT.payment.page;
+
   // --- Section A_Propos (+ expertises optionnelles Expertise_1_Titre / Expertise_1_Texte / Expertise_1_Icone …)
   const a = toKeyValue(db.about);
   const expertises = [1, 2, 3, 4].flatMap((i) => {
@@ -288,8 +302,7 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
         recipientName: cleanOptional(g.text("Wero_Nom_Beneficiaire")),
       },
       otherMethods: cleanOptional(g.text("Autres_Moyens_Paiement")),
-      messageTip: cleanOptional(g.text("Wero_Conseil_Message")),
-      caution: cleanOptional(g.text("Paiement_Mise_En_Garde")),
+      page: paymentPage,
     },
     rating: ratingValue === null ? null : { value: ratingValue, count: parseInteger(g.text("Nombre_Avis_Google")) },
     openingHours,
