@@ -42,7 +42,7 @@ export const FALLBACK_CONTENT: SiteContent = {
   },
   rating: { value: 5, count: null },
   openingHours: null,
-  access: null,
+  access: [],
   languages: [],
   about: {
     education: null,

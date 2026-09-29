@@ -48,6 +48,16 @@ describe("parse", () => {
     ]);
     expect(parseOpeningHours("lundi 8h")).toBeNull();
   });
+  it("parse les horaires en français", () => {
+    expect(
+      parseOpeningHours("Lundi : 08:30–19:00 ; Mardi : 07:00–16:45 ; Mercredi : 08:30–19:00 ; Jeudi : 08:30–19:00 ; Samedi : 08:30–12:30 ; Dimanche : fermé"),
+    ).toEqual([
+      { days: ["Mo"], opens: "08:30", closes: "19:00" },
+      { days: ["Tu"], opens: "07:00", closes: "16:45" },
+      { days: ["We", "Th"], opens: "08:30", closes: "19:00" },
+      { days: ["Sa"], opens: "08:30", closes: "12:30" },
+    ]);
+  });
   it("parse les coordonnées GPS", () => {
     expect(parseGeo("49.481194, 6.084361")).toEqual({ latitude: 49.481194, longitude: 6.084361 });
     expect(parseGeo("49.481194,6.084361")).toEqual({ latitude: 49.481194, longitude: 6.084361 });

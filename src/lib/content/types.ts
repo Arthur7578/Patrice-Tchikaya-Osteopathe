@@ -8,6 +8,9 @@ export type SiteImage = {
   height: number;
 };
 
+export type AccessKind = "train" | "bus" | "parking" | "pmr";
+export type AccessItem = { kind: AccessKind; text: string };
+
 export type OpeningHoursRange = {
   days: Array<"Mo" | "Tu" | "We" | "Th" | "Fr" | "Sa" | "Su">;
   opens: string; // "08:00"
@@ -77,7 +80,7 @@ export type SiteContent = {
   };
   rating: { value: number; count: number | null } | null;
   openingHours: OpeningHoursRange[] | null;
-  access: string | null; // Acces_Info (parking, bus…)
+  access: AccessItem[]; // Acces_Train / Acces_Bus / Acces_Parking / Acces_PMR, dans l'ordre de Acces_Ordre
   languages: string[]; // Langues_Parlees "Français, Anglais"
   about: {
     title: string;

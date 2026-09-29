@@ -102,8 +102,39 @@ type Day = (typeof DAY_ORDER)[number];
  */
 export function parseOpeningHours(value: string | null | undefined): OpeningHoursRange[] | null {
   if (isPlaceholder(value)) return null;
+  return parseSchemaOrgHours(value!) ?? parseFrenchHours(value!);
+}
+
+const DAY_BY_FR_NAME: Record<string, Day> = {
+  lundi: "Mo", mardi: "Tu", mercredi: "We", jeudi: "Th", vendredi: "Fr", samedi: "Sa", dimanche: "Su",
+};
+
+/**
+ * Format libre français : "Lundi : 08:30–19:00 ; Mardi : 07:00–16:45 ; Dimanche : fermé".
+ * Les jours fermés sont ignorés ; les jours consécutifs aux horaires identiques sont fusionnés.
+ */
+function parseFrenchHours(value: string): OpeningHoursRange[] | null {
+  const perDay: { day: Day; opens: string; closes: string }[] = [];
+  for (const chunk of value.split(/[;\n]+/).map((c) => c.trim()).filter(Boolean)) {
+    const m = chunk.match(/^([\p{L}]+)\s*:\s*(?:(\d{1,2}):(\d{2})\s*[–-]\s*(\d{1,2}):(\d{2})|(ferm[ée]e?))$/iu);
+    const day = m && DAY_BY_FR_NAME[m[1].toLowerCase()];
+    if (!m || !day) return null;
+    if (m[6]) continue;
+    perDay.push({ day, opens: `${m[2].padStart(2, "0")}:${m[3]}`, closes: `${m[4].padStart(2, "0")}:${m[5]}` });
+  }
   const ranges: OpeningHoursRange[] = [];
-  for (const chunk of value!.split(/[;\n]+/).map((c) => c.trim()).filter(Boolean)) {
+  for (const d of perDay) {
+    const last = ranges[ranges.length - 1];
+    const consecutive = last && DAY_ORDER.indexOf(last.days[last.days.length - 1]) + 1 === DAY_ORDER.indexOf(d.day);
+    if (last && consecutive && last.opens === d.opens && last.closes === d.closes) last.days.push(d.day);
+    else ranges.push({ days: [d.day], opens: d.opens, closes: d.closes });
+  }
+  return ranges.length > 0 ? ranges : null;
+}
+
+function parseSchemaOrgHours(value: string): OpeningHoursRange[] | null {
+  const ranges: OpeningHoursRange[] = [];
+  for (const chunk of value.split(/[;\n]+/).map((c) => c.trim()).filter(Boolean)) {
     const m = chunk.match(/^([A-Z][a-z](?:-[A-Z][a-z])?(?:,[A-Z][a-z](?:-[A-Z][a-z])?)*)\s+(\d{2}:\d{2})-(\d{2}:\d{2})$/);
     if (!m) return null;
     const days: Day[] = [];

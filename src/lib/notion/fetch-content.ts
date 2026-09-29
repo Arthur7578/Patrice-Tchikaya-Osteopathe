@@ -16,7 +16,7 @@ import {
   parseRating,
   toE164,
 } from "@/lib/content/parse";
-import type { ImageSlot, Motif, SiteContent, SiteImage } from "@/lib/content/types";
+import type { AccessKind, ImageSlot, Motif, SiteContent, SiteImage } from "@/lib/content/types";
 import { resolveIconName } from "@/lib/icons";
 import type { NotionClient } from "./client";
 import { getCheckbox, getDateStart, getNumber, getText, getUrl } from "./properties";
@@ -186,6 +186,21 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
     .split(/[,;]/)
     .map((l) => l.trim())
     .filter(Boolean);
+  const accessOrder = (cleanOptional(g.text("Acces_Ordre")) ?? "")
+    .split(/[,;]/)
+    .map((k) => k.trim().toLowerCase());
+  const accessKinds: Record<AccessKind, string> = {
+    train: "Acces_Train", bus: "Acces_Bus", parking: "Acces_Parking", pmr: "Acces_PMR",
+  };
+  const kinds = (Object.keys(accessKinds) as AccessKind[]).sort((a, b) => {
+    const ia = accessOrder.indexOf(a);
+    const ib = accessOrder.indexOf(b);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+  });
+  const access = kinds.flatMap((kind) => {
+    const text = cleanOptional(g.text(accessKinds[kind]));
+    return text ? [{ kind, text }] : [];
+  });
   const content: SiteContent = {
     practitioner: {
       name: required(g.text("Nom_Praticien"), F.practitioner.name, "Nom_Praticien"),
@@ -218,7 +233,7 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
     },
     rating: ratingValue === null ? null : { value: ratingValue, count: parseInteger(g.text("Nombre_Avis_Google")) },
     openingHours,
-    access: cleanOptional(g.text("Acces_Info")),
+    access,
     languages,
     about: {
       education: cleanOptional(a.text("Formation")),
