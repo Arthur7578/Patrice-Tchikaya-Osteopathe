@@ -12,6 +12,7 @@ import {
   parseGeo,
   parseInteger,
   parseOpeningHours,
+  parsePhone,
   parsePostalLine,
   parseRating,
   toE164,
@@ -112,6 +113,10 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
   const openingHours = parseOpeningHours(openingRaw);
   if (openingRaw && !openingHours) warnings.push(`Horaires illisibles : « ${openingRaw} »`);
   const phoneDisplay = required(g.text("Telephone_Display"), F.contact.phoneDisplay, "Telephone_Display");
+  // Numéro secondaire optionnel (mobile du praticien) : une seule clé, le lien tel: en est dérivé.
+  const mobileRaw = g.text("Telephone_Mobile");
+  const mobilePhone = parsePhone(mobileRaw);
+  if (!isPlaceholder(mobileRaw) && !mobilePhone) warnings.push(`Telephone_Mobile illisible : « ${mobileRaw} » (attendu : « +352 6XX XXX XXX ») — numéro masqué`);
   const durationLabel = required(g.text("Duree_Consultation"), F.consultation.durationLabel, "Duree_Consultation");
   const geoRaw = g.text("GPS_Coordonnees");
   const geo = parseGeo(geoRaw);
@@ -205,6 +210,7 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
       countryCode: "LU",
       phoneDisplay,
       phoneE164: toE164(g.text("Telephone_RAW") || phoneDisplay),
+      mobilePhone,
       geo: geo ?? F.contact.geo,
       email: cleanOptional(g.text("Email_Contact")),
     },

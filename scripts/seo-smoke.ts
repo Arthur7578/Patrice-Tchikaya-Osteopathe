@@ -63,6 +63,8 @@ async function main() {
   const bookingLinks = root.querySelectorAll("a").filter((a) => a.getAttribute("href") === content.booking.url);
   check(bookingLinks.length >= 2, `liens RDV vers ${content.booking.url} présents dans le HTML (${bookingLinks.length})`);
   check(root.querySelectorAll(`a[href^="tel:${content.contact.phoneE164}"]`).length >= 1, `lien tel:${content.contact.phoneE164} présent`);
+  const mobile = content.contact.mobilePhone;
+  if (mobile) check(root.querySelectorAll(`a[href="tel:${mobile.e164}"]`).length >= 1, `lien tel:${mobile.e164} (mobile) présent`);
 
   for (const path of ["/robots.txt", "/sitemap.xml"]) {
     const r = await fetch(`${base}${path}`);

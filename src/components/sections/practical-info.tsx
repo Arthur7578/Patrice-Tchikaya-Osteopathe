@@ -71,9 +71,26 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
             </dt>
             <dd>
               <p className="font-semibold text-ink">{labels.phone}</p>
-              <a href={`tel:${contact.phoneE164}`} className="text-slate-600 hover:text-sage-700">
-                {contact.phoneDisplay}
-              </a>
+              <p className="text-slate-500">
+                {labels.phoneOffice}{" "}
+                <a
+                  href={`tel:${contact.phoneE164}`}
+                  className="whitespace-nowrap text-slate-600 hover:text-sage-700"
+                >
+                  {contact.phoneDisplay}
+                </a>
+              </p>
+              {contact.mobilePhone && (
+                <p className="text-slate-500">
+                  {labels.phoneMobile}{" "}
+                  <a
+                    href={`tel:${contact.mobilePhone.e164}`}
+                    className="whitespace-nowrap text-slate-600 hover:text-sage-700"
+                  >
+                    {contact.mobilePhone.display}
+                  </a>
+                </p>
+              )}
             </dd>
 
             <dt className="text-sage-700">

@@ -38,7 +38,7 @@ export const COPY = {
     eyebrow: "Infos pratiques",
     title: "Infos pratiques, accès & tarifs",
     labels: {
-      address: "Adresse", phone: "Téléphone", duration: "Durée", price: "Tarif",
+      address: "Adresse", phone: "Téléphone", phoneOffice: "Cabinet\u00a0:", phoneMobile: "Mobile\u00a0:", duration: "Durée", price: "Tarif",
       reimbursement: "Remboursement", hours: "Horaires", access: "Accès", languages: "Langues",
     },
     directions: "Itinéraire",
