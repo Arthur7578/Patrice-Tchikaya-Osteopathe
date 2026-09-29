@@ -1,16 +1,38 @@
-import { Car, CalendarDays, Clock, Euro, Languages, MapPin, Navigation, Phone, Receipt } from "lucide-react";
+import {
+  Accessibility,
+  Bus,
+  CalendarDays,
+  Clock,
+  Euro,
+  Languages,
+  MapPin,
+  Navigation,
+  Phone,
+  Receipt,
+  SquareParking,
+  TrainFront,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Fragment } from "react";
 import { BookingInline } from "@/components/booking/booking-inline";
 import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Section } from "@/components/ui/section";
 import { SiteImage } from "@/components/ui/site-image";
 import { COPY } from "@/content/ui-copy";
-import { formatOpeningHours } from "@/lib/content/format";
-import type { SiteContent } from "@/lib/content/types";
+import type { AccessInfo, SiteContent } from "@/lib/content/types";
 import { googleMapsDirectionsUrl, googleMapsSearchUrl } from "@/lib/maps";
 
+/** Venir au cabinet : chaque ligne n'apparaît que si elle est renseignée dans Notion. */
+const ACCESS_ROWS: Array<{ key: keyof AccessInfo; icon: LucideIcon }> = [
+  { key: "train", icon: TrainFront },
+  { key: "bus", icon: Bus },
+  { key: "parking", icon: SquareParking },
+  { key: "accessibility", icon: Accessibility },
+];
+
 export function PracticalInfo({ content }: { content: SiteContent }) {
-  const { contact, consultation, openingHours, access, languages, images, googleBusinessUrl, booking } = content;
+  const { contact, consultation, openingHoursLines, access, languages, images, googleBusinessUrl, booking } = content;
   const { labels } = COPY.infos;
   const mapUrl = googleBusinessUrl ?? googleMapsSearchUrl(content);
 
@@ -66,14 +88,45 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
               </div>
             </dd>
 
+            {ACCESS_ROWS.map(({ key, icon: Icon }) =>
+              access[key] ? (
+                <Fragment key={key}>
+                  <dt className="text-sage-700">
+                    <Icon aria-hidden="true" className="size-5" />
+                  </dt>
+                  <dd>
+                    <p className="font-semibold text-ink">{labels[key]}</p>
+                    <p className="text-slate-600">{access[key]}</p>
+                  </dd>
+                </Fragment>
+              ) : null,
+            )}
+
             <dt className="text-sage-700">
               <Phone aria-hidden="true" className="size-5" />
             </dt>
             <dd>
               <p className="font-semibold text-ink">{labels.phone}</p>
-              <a href={`tel:${contact.phoneE164}`} className="text-slate-600 hover:text-sage-700">
-                {contact.phoneDisplay}
-              </a>
+              <p className="text-slate-500">
+                {labels.phoneOffice}{" "}
+                <a
+                  href={`tel:${contact.phoneE164}`}
+                  className="whitespace-nowrap text-slate-600 hover:text-sage-700"
+                >
+                  {contact.phoneDisplay}
+                </a>
+              </p>
+              {contact.mobilePhone && (
+                <p className="text-slate-500">
+                  {labels.phoneMobile}{" "}
+                  <a
+                    href={`tel:${contact.mobilePhone.e164}`}
+                    className="whitespace-nowrap text-slate-600 hover:text-sage-700"
+                  >
+                    {contact.mobilePhone.display}
+                  </a>
+                </p>
+              )}
             </dd>
 
             <dt className="text-sage-700">
@@ -104,30 +157,18 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
               <p className="text-slate-600">{consultation.reimbursement}</p>
             </dd>
 
-            {openingHours && (
+            {openingHoursLines.length > 0 && (
               <>
                 <dt className="text-sage-700">
                   <CalendarDays aria-hidden="true" className="size-5" />
                 </dt>
                 <dd>
                   <p className="font-semibold text-ink">{labels.hours}</p>
-                  {formatOpeningHours(openingHours).map((line) => (
+                  {openingHoursLines.map((line) => (
                     <p key={line} className="text-slate-600">
                       {line}
                     </p>
                   ))}
-                </dd>
-              </>
-            )}
-
-            {access && (
-              <>
-                <dt className="text-sage-700">
-                  <Car aria-hidden="true" className="size-5" />
-                </dt>
-                <dd>
-                  <p className="font-semibold text-ink">{labels.access}</p>
-                  <p className="text-slate-600">{access}</p>
                 </dd>
               </>
             )}

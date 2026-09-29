@@ -1,6 +1,7 @@
 import { CalendarDays, CircleCheck, Clock, Phone, Star } from "lucide-react";
 import { BookingLink } from "@/components/booking/booking-link";
 import { ImagePlaceholder } from "@/components/ui/image-placeholder";
+import { GoogleMapsAttribution } from "@/components/ui/google-maps-attribution";
 import { SiteImage } from "@/components/ui/site-image";
 import { buttonVariants } from "@/components/ui/button";
 import { COPY } from "@/content/ui-copy";
@@ -23,7 +24,7 @@ export function Hero({ content }: { content: SiteContent }) {
             {rating && (
               <>
                 <Star aria-hidden="true" className="size-4 fill-amber-400 text-amber-400" />
-                {formatRating(rating.value)}/5 {COPY.hero.ratingSuffix}
+                {formatRating(rating.value)}/5 {COPY.ratingOn} <GoogleMapsAttribution />
                 <span aria-hidden="true">•</span>
               </>
             )}

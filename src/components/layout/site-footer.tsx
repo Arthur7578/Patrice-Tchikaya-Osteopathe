@@ -1,12 +1,11 @@
 import Link from "next/link";
-import { NAV } from "@/content/ui-copy";
-import { formatOpeningHours } from "@/lib/content/format";
+import { COPY, NAV } from "@/content/ui-copy";
 import type { SiteContent } from "@/lib/content/types";
 
 type Props = { content: SiteContent };
 
 export function SiteFooter({ content }: Props) {
-  const { practitioner, contact, about, openingHours, googleBusinessUrl } = content;
+  const { practitioner, contact, about, openingHoursLines, googleBusinessUrl } = content;
   const year = new Date().getFullYear();
   const gtmEnabled = /^GTM-[A-Z0-9]+$/.test(process.env.NEXT_PUBLIC_GTM_ID ?? "");
   return (
@@ -25,13 +24,23 @@ export function SiteFooter({ content }: Props) {
               <br />
               {contact.postalCode} {contact.locality}, {contact.countryName}
               <br />
-              <a href={`tel:${contact.phoneE164}`} className="hover:underline">
+              {COPY.infos.labels.phoneOffice}{" "}
+              <a href={`tel:${contact.phoneE164}`} className="whitespace-nowrap hover:underline">
                 {contact.phoneDisplay}
               </a>
+              {contact.mobilePhone && (
+                <>
+                  <br />
+                  {COPY.infos.labels.phoneMobile}{" "}
+                  <a href={`tel:${contact.mobilePhone.e164}`} className="whitespace-nowrap hover:underline">
+                    {contact.mobilePhone.display}
+                  </a>
+                </>
+              )}
             </address>
-            {openingHours && (
+            {openingHoursLines.length > 0 && (
               <ul className="mt-3 space-y-1 text-sm text-sage-100/80">
-                {formatOpeningHours(openingHours).map((line) => (
+                {openingHoursLines.map((line) => (
                   <li key={line}>{line}</li>
                 ))}
               </ul>

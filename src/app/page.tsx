@@ -7,6 +7,7 @@ import { PracticalInfo } from "@/components/sections/practical-info";
 import { Reviews } from "@/components/sections/reviews";
 import { JsonLd } from "@/components/seo/json-ld";
 import { getSiteContent } from "@/lib/content/get-site-content";
+import { getGoogleRating } from "@/lib/google/get-google-rating";
 import { buildHomeGraph } from "@/lib/seo/json-ld";
 import { homeMeta } from "@/lib/seo/metadata";
 
@@ -23,7 +24,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
-  const content = await getSiteContent();
+  // Note Google en direct (si configurée) prioritaire sur Note_Google (Notion). Appelée ici seulement :
+  // l'accueil est la seule page qui affiche la note, et chaque appel à l'API Google est facturable.
+  const [notionContent, googleRating] = await Promise.all([getSiteContent(), getGoogleRating()]);
+  const content = googleRating ? { ...notionContent, rating: googleRating } : notionContent;
   const meta = homeMeta(content);
 
   return (
