@@ -68,22 +68,15 @@ export const COPY = {
     bookingFallback: "Ouvrir l'agenda dans un nouvel onglet",
   },
   /**
-   * Page /paiement : seuls les libellés d'interface et les métadonnées par défaut sont ici. Les textes de la
-   * page (titres, étapes, réassurance, aide…) viennent de la base Notion Page_Paiement (secours : fallback.ts).
+   * Page /paiement : seuls les métadonnées par défaut et le libellé lu par les lecteurs d'écran sont ici. Tous les
+   * textes visibles de la page (titres, étapes, libellés, aide…) viennent de la base Notion Page_Paiement
+   * (secours : fallback.ts).
    */
   payment: {
     metaTitle: "Régler votre séance avec Wero",
     metaDescription: (city: string) =>
       `Régler votre séance d'ostéopathie à ${city} avec Wero : les étapes, pourquoi c'est sûr et que faire si vous n'avez pas encore Wero.`,
-    recipient: {
-      phone: "Numéro Wero du cabinet",
-      email: "Adresse e-mail Wero du cabinet",
-      name: "Nom affiché par Wero",
-      price: "Tarif de la consultation",
-    },
     step: (n: number) => `Étape ${n} : `, // annoncé par les lecteurs d'écran (le numéro affiché est décoratif)
-    caution: { label: "Bon à savoir" },
-    otherMethods: "Autres moyens de paiement acceptés",
   },
   footer: { legal: "Mentions légales", privacy: "Confidentialité", payment: "Régler votre séance" },
   backToHome: "Retour à l'accueil",

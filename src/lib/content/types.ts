@@ -116,6 +116,15 @@ export type PaymentPage = {
   reassurance: PaymentSection | null; // lignes de type « Sécurité »
   firstTime: PaymentSection | null; // lignes de type « Première utilisation »
   help: { title: string; text: string | null }; // Titre_Aide, Texte_Aide
+  /** Libellés du bloc de coordonnées, de l'encart et de l'aide (lignes Libelle_* de Page_Paiement). */
+  labels: {
+    phone: string; // Libelle_Numero : « Numéro Wero du cabinet »
+    email: string; // Libelle_Email : « Adresse e-mail Wero du cabinet »
+    name: string; // Libelle_Nom : « Nom affiché par Wero »
+    price: string; // Libelle_Tarif : « Tarif de la consultation »
+    caution: string; // Libelle_Encart : « Bon à savoir »
+    otherMethods: string; // Libelle_Autres_Moyens : « Autres moyens de paiement acceptés »
+  };
 };
 
 /** Règlement après la séance (page /paiement + ligne « Règlement » des infos pratiques). */

@@ -60,7 +60,7 @@ export default async function PaiementPage() {
             {wero.recipient && (
               <div className="sm:col-span-2">
                 <dt className="text-sm font-semibold text-sage-800">
-                  {wero.recipient.kind === "email" ? COPY.payment.recipient.email : COPY.payment.recipient.phone}
+                  {wero.recipient.kind === "email" ? page.labels.email : page.labels.phone}
                 </dt>
                 <dd className="mt-1 text-2xl font-bold tracking-tight text-ink wrap-anywhere select-all">
                   {wero.recipient.value.replace(/ /g, " ")}
@@ -69,13 +69,13 @@ export default async function PaiementPage() {
             )}
             {wero.recipient && wero.recipientName && (
               <div>
-                <dt className="text-sm font-semibold text-sage-800">{COPY.payment.recipient.name}</dt>
+                <dt className="text-sm font-semibold text-sage-800">{t(page.labels.name)}</dt>
                 <dd className="mt-1 font-semibold text-ink">{wero.recipientName}</dd>
               </div>
             )}
             {consultation.price && (
               <div>
-                <dt className="text-sm font-semibold text-sage-800">{COPY.payment.recipient.price}</dt>
+                <dt className="text-sm font-semibold text-sage-800">{t(page.labels.price)}</dt>
                 <dd className="mt-1 font-semibold text-ink">{consultation.price.replace(/ /g, " ")}</dd>
               </div>
             )}
@@ -120,7 +120,7 @@ export default async function PaiementPage() {
           >
             <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-sage-700" />
             <span>
-              <strong className="font-semibold text-ink">{t(`${COPY.payment.caution.label} :`)}</strong>{" "}
+              <strong className="font-semibold text-ink">{t(`${page.labels.caution} :`)}</strong>{" "}
               {t(page.caution)}
             </span>
           </p>
@@ -192,7 +192,7 @@ export default async function PaiementPage() {
           </h2>
           {payment.otherMethods && (
             <p className="mt-4 text-slate-600">
-              <strong className="font-semibold text-ink">{t(`${COPY.payment.otherMethods} :`)}</strong>{" "}
+              <strong className="font-semibold text-ink">{t(`${page.labels.otherMethods} :`)}</strong>{" "}
               {t(payment.otherMethods)}
             </p>
           )}

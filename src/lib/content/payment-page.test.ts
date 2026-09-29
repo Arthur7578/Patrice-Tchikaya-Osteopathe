@@ -5,9 +5,19 @@ import { buildPaymentPage, type PaymentRow } from "./payment-page";
 const F = FALLBACK_CONTENT.payment.page;
 const row = (name: string, type: string, text: string): PaymentRow => ({ name, type, text });
 
-function build(rows: PaymentRow[]) {
+/** Les six libellés (obligatoires) : ajoutés d'office, sauf mention contraire, pour ne tester que le cas visé. */
+const LABEL_ROWS: PaymentRow[] = [
+  row("Libelle_Numero", "Texte", "Numéro"),
+  row("Libelle_Email", "Texte", "E-mail"),
+  row("Libelle_Nom", "Texte", "Nom"),
+  row("Libelle_Tarif", "Texte", "Tarif"),
+  row("Libelle_Encart", "Texte", "À savoir"),
+  row("Libelle_Autres_Moyens", "Texte", "Autres"),
+];
+
+function build(rows: PaymentRow[], { labels = true }: { labels?: boolean } = {}) {
   const warnings: string[] = [];
-  return { page: buildPaymentPage(rows, F, (m) => warnings.push(m)), warnings };
+  return { page: buildPaymentPage(labels ? [...rows, ...LABEL_ROWS] : rows, F, (m) => warnings.push(m)), warnings };
 }
 
 describe("buildPaymentPage", () => {
@@ -97,6 +107,28 @@ describe("buildPaymentPage", () => {
     ]);
     expect(page.intro).toBe("Pensez à mettre le montant exact.");
     expect(page.steps?.cards[0].text).toBe("Vous pouvez mettre le message que vous voulez (todo).");
+  });
+
+  it("libellés : lus depuis Notion, sinon valeur de secours avec avertissement", () => {
+    const { page } = build([row("Titre_Page", "Texte", "T"), row("Titre_Aide", "Texte", "A")]);
+    expect(page.labels).toEqual({
+      phone: "Numéro",
+      email: "E-mail",
+      name: "Nom",
+      price: "Tarif",
+      caution: "À savoir",
+      otherMethods: "Autres",
+    });
+    const missing = build(
+      [row("Titre_Page", "Texte", "T"), row("Titre_Aide", "Texte", "A"), row("Libelle_Numero", "Texte", "[À COMPLÉTER]")],
+      { labels: false },
+    );
+    expect(missing.page.labels).toEqual(F.labels);
+    expect(missing.warnings).toEqual(
+      ["Numero", "Email", "Nom", "Tarif", "Encart", "Autres_Moyens"].map(
+        (key) => `Champ obligatoire vide dans Page_Paiement : Libelle_${key} (valeur de secours utilisée)`,
+      ),
+    );
   });
 
   it("carte sans texte : gardée avec le titre seul", () => {

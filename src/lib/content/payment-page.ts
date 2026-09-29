@@ -27,6 +27,7 @@ const isBlank = (value: string) => {
 const TEXT_KEYS = new Set([
   "titre_page", "surtitre", "introduction", "titre_etapes", "titre_securite",
   "titre_premiere_utilisation", "titre_aide", "texte_aide", "encart", "meta_title", "meta_description",
+  "libelle_numero", "libelle_email", "libelle_nom", "libelle_tarif", "libelle_encart", "libelle_autres_moyens",
 ]);
 
 /** Types de ligne « carte » -> section de la page. */
@@ -35,7 +36,8 @@ const CARD_TYPES = { etape: "steps", securite: "reassurance", premiere_utilisati
 /**
  * Construit les textes de /paiement depuis les lignes de Page_Paiement. Appelée seulement si la base
  * contient des lignes (sinon : instantané de secours). Règles :
- * - « Titre_Page » et le titre d'une section qui a des cartes sont obligatoires (secours + avertissement) ;
+ * - « Titre_Page », le titre d'une section qui a des cartes et les libellés « Libelle_* » sont obligatoires
+ *   (secours + avertissement) ;
  * - les autres lignes « Texte » sont facultatives : absente, vide ou entre crochets = élément masqué ;
  * - une section sans carte est masquée (supprimer les lignes d'un type suffit à la retirer).
  */
@@ -99,6 +101,14 @@ export function buildPaymentPage(
     help: {
       title: required("titre_aide", fallback.help.title, "Titre_Aide"),
       text: optional("texte_aide"),
+    },
+    labels: {
+      phone: required("libelle_numero", fallback.labels.phone, "Libelle_Numero"),
+      email: required("libelle_email", fallback.labels.email, "Libelle_Email"),
+      name: required("libelle_nom", fallback.labels.name, "Libelle_Nom"),
+      price: required("libelle_tarif", fallback.labels.price, "Libelle_Tarif"),
+      caution: required("libelle_encart", fallback.labels.caution, "Libelle_Encart"),
+      otherMethods: required("libelle_autres_moyens", fallback.labels.otherMethods, "Libelle_Autres_Moyens"),
     },
   };
 }

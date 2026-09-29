@@ -230,7 +230,7 @@ function payRow(name: string, type: string, texte: string, ordre?: number) {
   };
 }
 
-/** Les 21 lignes de la base Notion Page_Paiement telles que créées le 29/09/2026 : [Name, Type, Texte, Ordre]. */
+/** Les 27 lignes de la base Notion Page_Paiement (créées le 29/09/2026) : [Name, Type, Texte, Ordre]. */
 const PAGE_PAIEMENT_NOTION: Array<[string, string, string, number?]> = [
   ["Titre_Page", "Texte", "Régler votre séance"],
   ["Surtitre", "Texte", "Paiement"],
@@ -243,6 +243,12 @@ const PAGE_PAIEMENT_NOTION: Array<[string, string, string, number?]> = [
   ["Encart", "Texte", "[Facultatif — encart « Bon à savoir » sous les étapes de paiement. Laisser tel quel pour ne rien afficher]"],
   ["Meta_Title", "Texte", "[Facultatif — titre de la page dans l'onglet du navigateur et sur Google. Laisser tel quel pour utiliser le titre par défaut]"],
   ["Meta_Description", "Texte", "[Facultatif — description de la page sur Google (70 à 160 caractères). Laisser tel quel pour utiliser la description par défaut]"],
+  ["Libelle_Numero", "Texte", "Numéro Wero du cabinet"],
+  ["Libelle_Email", "Texte", "Adresse e-mail Wero du cabinet"],
+  ["Libelle_Nom", "Texte", "Nom affiché par Wero"],
+  ["Libelle_Tarif", "Texte", "Tarif de la consultation"],
+  ["Libelle_Encart", "Texte", "Bon à savoir"],
+  ["Libelle_Autres_Moyens", "Texte", "Autres moyens de paiement acceptés"],
   ["Ouvrez Wero", "Étape", "Dans l'application Wero, ou dans l'application de votre banque si Wero y est intégré.", 1],
   ["Envoyez au cabinet", "Étape", "Choisissez l'envoi d'argent, puis saisissez le numéro de mobile ou l'adresse e-mail Wero du cabinet (à demander au cabinet s'ils ne sont pas indiqués sur cette page).", 2],
   ["Indiquez le montant", "Étape", "Saisissez le montant de votre séance. En message, précisez le nom du patient et la date de la séance.", 3],
@@ -274,6 +280,7 @@ describe("fetchSiteContent : règlement après la séance (page /paiement)", () 
     const edited = PAGE_PAIEMENT_NOTION.filter(([, type]) => type !== "Sécurité") // toutes les lignes « Sécurité » supprimées
       .map(([name, type, texte, ordre]): [string, string, string, number?] => {
         if (name === "Titre_Page") return [name, type, "Payer votre séance", ordre];
+        if (name === "Libelle_Numero") return [name, type, "Numéro Wero de Patrice", ordre];
         if (name === "Encart") return [name, type, "Un paiement Wero est immédiat.", ordre];
         if (name === "Ouvrez Wero") return [name, type, texte, 2]; // permutation avec « Envoyez au cabinet »
         if (name === "Envoyez au cabinet") return [name, type, texte, 1];
@@ -283,6 +290,8 @@ describe("fetchSiteContent : règlement après la séance (page /paiement)", () 
     const { content } = await fetchSiteContent(fakeNotion({ payment: payRows(edited) }));
     const page = content.payment.page;
     expect(page.title).toBe("Payer votre séance");
+    expect(page.labels.phone).toBe("Numéro Wero de Patrice");
+    expect(page.labels.email).toBe("Adresse e-mail Wero du cabinet");
     expect(page.caution).toBe("Un paiement Wero est immédiat.");
     expect(page.steps?.cards.map((c) => c.title)).toEqual([
       "Envoyez au cabinet",
