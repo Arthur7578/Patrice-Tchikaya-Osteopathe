@@ -22,10 +22,16 @@ const DAY_FR: Record<OpeningHoursRange["days"][number], string> = {
 /** [{days:[Mo..Fr],opens:"08:00",closes:"19:00"}] -> ["Lundi – Vendredi : 8h00 – 19h00"] */
 export function formatOpeningHours(ranges: OpeningHoursRange[]): string[] {
   const time = (t: string) => t.replace(/^0/, "").replace(":", "h");
+  const order = Object.keys(DAY_FR);
   return ranges.map((r) => {
-    const first = DAY_FR[r.days[0]];
-    const last = DAY_FR[r.days[r.days.length - 1]];
-    const days = r.days.length > 1 ? `${first} – ${last}` : first;
+    const indexes = r.days.map((d) => order.indexOf(d));
+    const contiguous = indexes.every((n, i) => i === 0 || n === indexes[i - 1] + 1);
+    const days =
+      r.days.length === 1
+        ? DAY_FR[r.days[0]]
+        : contiguous && r.days.length > 2
+          ? `${DAY_FR[r.days[0]]} – ${DAY_FR[r.days[r.days.length - 1]]}`
+          : r.days.map((d) => DAY_FR[d]).join(", ");
     return `${days} : ${time(r.opens)} – ${time(r.closes)}`;
   });
 }

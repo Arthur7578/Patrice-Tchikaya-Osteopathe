@@ -14,9 +14,16 @@ export type OpeningHoursRange = {
   closes: string; // "19:00"
 };
 
-export type Expertise = { title: string; text: string };
+export type Expertise = {
+  title: string;
+  text: string;
+  icon: string; // nom Lucide validé (voir MOTIF_ICONS)
+};
 
 export type Geo = { latitude: number; longitude: number };
+
+/** Numéro affiché tel que saisi dans Notion + sa forme E.164 pour le lien `tel:`. */
+export type Phone = { display: string; e164: string };
 
 export type Motif = {
   title: string;
@@ -34,6 +41,17 @@ export type Review = {
 };
 
 export type FaqItem = { question: string; answer: string };
+
+/** Venir au cabinet : une ligne Notion par sujet, chacune masquée tant qu'elle est vide ou « [À …] ». */
+export type AccessInfo = {
+  train: string | null; // Acces_Train
+  bus: string | null; // Acces_Bus
+  parking: string | null; // Acces_Parking
+  accessibility: string | null; // Acces_PMR — ne jamais affirmer un accès PMR non vérifié
+};
+
+/** Note Google : API Google Places si configurée (voir get-google-rating.ts), sinon Note_Google (Notion). */
+export type Rating = { value: number; count: number | null };
 
 /**
  * Prise de RDV, pensée pour être configurable sans changer de code : une seule URL vient de
@@ -62,8 +80,10 @@ export type SiteContent = {
     locality: string;
     countryName: string;
     countryCode: "LU";
-    phoneDisplay: string;
+    phoneDisplay: string; // numéro principal : celui du cabinet
     phoneE164: string;
+    /** Numéro secondaire : mobile du praticien (ligne directe), toujours affiché après le cabinet. null = masqué. */
+    mobilePhone: Phone | null;
     geo: Geo;
     email: string | null;
   };
@@ -75,15 +95,19 @@ export type SiteContent = {
     price: string | null; // null si placeholder "[Mettre le tarif…]"
     reimbursement: string;
   };
-  rating: { value: number; count: number | null } | null;
+  rating: Rating | null;
+  /** Horaires structurés (JSON-LD) ; null si le texte Notion n'a pas pu être interprété. */
   openingHours: OpeningHoursRange[] | null;
-  access: string | null; // Acces_Info (parking, bus…)
+  /** Horaires à afficher : mise en forme normalisée si lisibles, sinon texte Notion tel quel. */
+  openingHoursLines: string[];
+  access: AccessInfo;
   languages: string[]; // Langues_Parlees "Français, Anglais"
   about: {
     title: string;
     shortBio: string;
     longBio: string;
     education: string | null; // Formation (E-E-A-T)
+    continuingEducation: string[]; // Formations_Continues (optionnel, une par ligne) — vide = bloc masqué
     expertises: Expertise[];
   };
   motifs: Motif[];
