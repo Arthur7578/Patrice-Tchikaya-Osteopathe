@@ -25,13 +25,14 @@ export function SiteFooter({ content }: Props) {
               <br />
               {contact.postalCode} {contact.locality}, {contact.countryName}
               <br />
-              <a href={`tel:${contact.phoneE164}`} className="hover:underline">
+              {COPY.infos.labels.phoneOffice}{" "}
+              <a href={`tel:${contact.phoneE164}`} className="whitespace-nowrap hover:underline">
                 {contact.phoneDisplay}
               </a>
               {contact.mobilePhone && (
                 <>
                   <br />
-                  {COPY.mobilePhone}{" "}
+                  {COPY.infos.labels.phoneMobile}{" "}
                   <a href={`tel:${contact.mobilePhone.e164}`} className="whitespace-nowrap hover:underline">
                     {contact.mobilePhone.display}
                   </a>

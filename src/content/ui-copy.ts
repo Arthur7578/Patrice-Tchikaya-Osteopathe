@@ -49,5 +49,4 @@ export const COPY = {
   },
   footer: { legal: "Mentions légales", privacy: "Confidentialité" },
   newTab: "(nouvel onglet)",
-  mobilePhone: "Mobile (ligne directe)\u00a0:", // numéro secondaire, toujours après celui du cabinet
 } as const;
