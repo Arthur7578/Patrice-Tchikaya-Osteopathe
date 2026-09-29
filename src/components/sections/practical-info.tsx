@@ -120,19 +120,14 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
               </>
             )}
 
-            {access.length > 0 && (
+            {access && (
               <>
                 <dt className="text-sage-700">
                   <Car aria-hidden="true" className="size-5" />
                 </dt>
                 <dd>
                   <p className="font-semibold text-ink">{labels.access}</p>
-                  {access.map((item) => (
-                    <p key={item.kind} className="text-slate-600">
-                      <span className="font-medium text-ink">{COPY.infos.accessKinds[item.kind]} : </span>
-                      {item.text}
-                    </p>
-                  ))}
+                  <p className="text-slate-600">{access}</p>
                 </dd>
               </>
             )}
