@@ -42,7 +42,7 @@ export function Reviews({ content }: { content: SiteContent }) {
       <div
         tabIndex={0}
         aria-label="Avis patients"
-        className="mt-10 -mx-4 flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0"
+        className="relative mt-10 -mx-4 flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0"
       >
         {reviews.map((review, i) => (
           <Reveal key={`${review.author}-${review.date}`} delay={i * 0.08} className="w-[85%] shrink-0 snap-start md:w-auto">
