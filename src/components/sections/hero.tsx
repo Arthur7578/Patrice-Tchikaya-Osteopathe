@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { COPY } from "@/content/ui-copy";
 import { formatRating } from "@/lib/content/format";
 import type { SiteContent } from "@/lib/content/types";
+import { cn } from "@/lib/utils";
 
 export function Hero({ content }: { content: SiteContent }) {
   const { seo, contact, consultation, booking, rating, images } = content;
@@ -14,7 +15,7 @@ export function Hero({ content }: { content: SiteContent }) {
   return (
     <section aria-labelledby="hero-title" className="pt-10 pb-16 lg:py-20">
       <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-12 lg:px-8">
-        <div className="lg:col-span-7">
+        <div className="min-w-0 lg:col-span-7">
           <a
             href="#avis"
             className="inline-flex items-center gap-1.5 rounded-full bg-sage-100 px-3 py-1.5 text-sm font-medium text-sage-800"
@@ -38,7 +39,7 @@ export function Hero({ content }: { content: SiteContent }) {
           <p className="mt-5 text-lg text-pretty text-slate-600">{seo.heroSubtitle}</p>
 
           <div id="hero-cta" className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <BookingLink booking={booking} className={buttonVariants({ size: "lg" })}>
+            <BookingLink booking={booking} className={cn(buttonVariants({ size: "lg" }), "max-sm:whitespace-normal max-sm:text-center")}>
               <CalendarDays aria-hidden="true" />
               {COPY.cta.book}
             </BookingLink>
