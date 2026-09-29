@@ -20,6 +20,18 @@ export const COPY = {
     intro: (city: string) =>
       `Au cabinet de ${city}, chaque séance commence par un bilan complet pour traiter la cause de la douleur, pas seulement le symptôme.`,
     helpLine: "Un doute sur votre situation ? Appelez le cabinet :",
+    discover: (title: string) => `Découvrir : ${title}`, // lien descriptif vers la page détaillée (phase 9)
+  },
+  // Pages motifs (phase 9) : seul l'habillage est ici, le texte vient du corps de la page Notion.
+  motifPage: {
+    breadcrumb: "Fil d'Ariane",
+    home: "Accueil",
+    h1: (title: string, city: string) => `${title} à ${city}`,
+    call: (phone: string) => `Appeler le ${phone}`,
+    ctaTitle: (city: string) => `Consulter au cabinet de ${city}`,
+    ctaText: (duration: string) =>
+      `Séance de ${duration}, sans ordonnance. Réservez en ligne, ou appelez le cabinet si vous avez une question avant de venir.`,
+    others: "Les autres motifs de consultation",
   },
   reviews: {
     eyebrow: "Avis patients",

@@ -25,6 +25,12 @@ describe("buildLlmsTxt", () => {
     expect(out).not.toMatch(/médecin|\bDr\b/i);
   });
 
+  it("relie chaque motif à sa page détaillée quand elle est publiée", () => {
+    for (const m of FALLBACK_CONTENT.motifs) expect(out).toContain(`- [${m.title}](https://exemple.test/${m.slug}) : `);
+    const out2 = buildLlmsTxt({ ...FALLBACK_CONTENT, motifs: FALLBACK_CONTENT.motifs.map((m) => ({ ...m, page: null })) });
+    for (const m of FALLBACK_CONTENT.motifs) expect(out2).toContain(`- ${m.title} : `);
+  });
+
   it("omet les champs vides", () => {
     const out2 = buildLlmsTxt({ ...FALLBACK_CONTENT, consultation: { ...FALLBACK_CONTENT.consultation, price: null } });
     expect(out2).not.toContain("Tarif :");
