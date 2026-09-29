@@ -38,21 +38,18 @@ export const COPY = {
   },
   infos: {
     eyebrow: "Infos pratiques",
-    title: "Infos pratiques & tarifs",
+    title: "Infos pratiques, accès & tarifs",
     labels: {
       address: "Adresse", phone: "Téléphone", phoneOffice: "Cabinet\u00a0:", phoneMobile: "Mobile\u00a0:", duration: "Durée", price: "Tarif",
       reimbursement: "Remboursement", hours: "Horaires", languages: "Langues",
       train: "Train", bus: "Bus", parking: "Stationnement", accessibility: "Accès PMR",
     },
+    accessTitle: "Accès",
     directions: "Itinéraire",
     map: "Voir sur Google Maps",
     bookingTitle: "Réserver votre séance en ligne",
     bookingText: "Choisissez un créneau : la confirmation vous est envoyée par e-mail.",
     bookingFallback: "Ouvrir l'agenda dans un nouvel onglet",
-  },
-  access: {
-    eyebrow: "Accès",
-    title: (city: string) => `Comment venir au cabinet à ${city} ?`,
   },
   footer: { legal: "Mentions légales", privacy: "Confidentialité" },
   newTab: "(nouvel onglet)",

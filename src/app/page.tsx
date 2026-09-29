@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Access } from "@/components/sections/access";
 import { About } from "@/components/sections/about";
 import { Faq } from "@/components/sections/faq";
 import { Hero } from "@/components/sections/hero";
@@ -40,7 +39,6 @@ export default async function Home() {
       <Reviews content={content} />
       <Faq content={content} />
       <PracticalInfo content={content} />
-      <Access content={content} />
     </main>
   );
 }

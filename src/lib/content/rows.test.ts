@@ -9,7 +9,7 @@ describe("resolveRowOrder", () => {
 
   it("respecte l'ordre saisi et ajoute les lignes oubliées à la fin", () => {
     expect(resolveRowOrder("tarif, horaires", INFO_ROW_IDS)).toEqual([
-      "tarif", "horaires", "telephone", "duree", "remboursement", "langues",
+      "tarif", "horaires", "acces", "telephone", "duree", "remboursement", "langues",
     ]);
   });
 

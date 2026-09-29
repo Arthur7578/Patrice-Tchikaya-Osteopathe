@@ -1,9 +1,9 @@
 /**
- * Lignes des sections « Infos pratiques » et « Accès », dans leur ordre par défaut.
- * Patrice peut les réordonner depuis Notion (clés `Infos_Ordre` et `Acces_Ordre`, base
+ * Blocs de la section « Infos pratiques » (dont le bloc « Accès », qui groupe ses propres lignes), dans leur ordre par défaut.
+ * Patrice peut les réordonner depuis Notion (clés `Infos_Ordre` pour les blocs, `Acces_Ordre` pour les lignes du bloc Accès ; base
  * `Informations_generales`) : une liste d'identifiants séparés par des virgules, ex. « tarif, duree, horaires ».
  */
-export const INFO_ROW_IDS = ["telephone", "duree", "tarif", "remboursement", "horaires", "langues"] as const;
+export const INFO_ROW_IDS = ["acces", "telephone", "duree", "tarif", "remboursement", "horaires", "langues"] as const;
 export const ACCESS_ROW_IDS = ["adresse", "train", "bus", "parking", "pmr"] as const;
 
 export type InfoRowId = (typeof INFO_ROW_IDS)[number];
