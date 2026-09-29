@@ -1,3 +1,6 @@
+/** Lien « Accueil » du header et du menu mobile (absent du footer, qui réutilise `NAV`). */
+export const HOME_LINK = { href: "/", label: "Accueil" } as const;
+
 export const NAV = [
   { href: "/#a-propos", label: "À propos" },
   { href: "/#motifs", label: "Motifs" },
@@ -21,6 +24,18 @@ export const COPY = {
     intro: (city: string) =>
       `Au cabinet de ${city}, chaque séance commence par un bilan complet pour traiter la cause de la douleur, pas seulement le symptôme.`,
     helpLine: "Un doute sur votre situation ? Appelez le cabinet :",
+    discover: (title: string) => `Découvrir : ${title}`, // lien descriptif vers la page détaillée (phase 9)
+  },
+  // Pages motifs (phase 9) : seul l'habillage est ici, le texte vient du corps de la page Notion.
+  motifPage: {
+    breadcrumb: "Fil d'Ariane",
+    home: "Accueil",
+    h1: (title: string, city: string) => `${title} à ${city}`,
+    call: (phone: string) => `Appeler le ${phone}`,
+    ctaTitle: (city: string) => `Consulter au cabinet de ${city}`,
+    ctaText: (duration: string) =>
+      `Séance de ${duration}, sans ordonnance. Réservez en ligne, ou appelez le cabinet si vous avez une question avant de venir.`,
+    others: "Les autres motifs de consultation",
   },
   reviews: {
     eyebrow: "Avis patients",
@@ -52,5 +67,16 @@ export const COPY = {
     bookingFallback: "Ouvrir l'agenda dans un nouvel onglet",
   },
   footer: { legal: "Mentions légales", privacy: "Confidentialité" },
+  backToHome: "Retour à l'accueil",
+  menu: { open: "Ouvrir le menu", close: "Fermer le menu", label: "Menu principal" },
+  // /llms.txt : intitulés structurels ; tout le contenu vient de getSiteContent().
+  llms: {
+    practical: "Informations pratiques",
+    motifs: "Motifs de consultation",
+    faq: "Questions fréquentes",
+    pages: "Pages du site",
+    booking: "Prise de rendez-vous en ligne",
+    home: "Page d'accueil",
+  },
   newTab: "(nouvel onglet)",
 } as const;

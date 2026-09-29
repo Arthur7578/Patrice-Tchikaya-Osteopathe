@@ -27,12 +27,34 @@ export type Geo = { latitude: number; longitude: number };
 /** Numéro affiché tel que saisi dans Notion + sa forme E.164 pour le lien `tel:`. */
 export type Phone = { display: string; e164: string };
 
+/** Segment de texte enrichi (Notion → site). Seuls gras, italique, code et liens sont conservés. */
+export type RichText = { text: string; bold?: true; italic?: true; code?: true; href?: string };
+
+/** Bloc de contenu normalisé : sous-ensemble des blocs Notion que le site sait afficher (phase 9). */
+export type ContentBlock =
+  | { type: "paragraph"; text: RichText[] }
+  | { type: "heading"; level: 2 | 3; text: RichText[] }
+  | { type: "list"; ordered: boolean; items: RichText[][] }
+  | { type: "quote"; text: RichText[] }
+  | { type: "callout"; text: RichText[] }
+  | { type: "divider" }
+  | { type: "image"; src: string; alt: string };
+
+/** Page détaillée d'un motif : corps de la page Notion, validé (case Page_Validée) et assez long. */
+export type MotifPage = {
+  blocks: ContentBlock[];
+  wordCount: number;
+  lastEdited: string; // ISO, last_edited_time de la page Notion (sitemap, JSON-LD lastReviewed)
+};
+
 export type Motif = {
   title: string;
   slug: string;
   description: string;
   icon: string; // nom Lucide validé (voir MOTIF_ICONS)
   notionPageId: string | null; // pour les pages motifs (phase 9)
+  /** null = pas de page détaillée publiée (case non cochée, texte trop court ou slug réservé). */
+  page: MotifPage | null;
 };
 
 export type Review = {
