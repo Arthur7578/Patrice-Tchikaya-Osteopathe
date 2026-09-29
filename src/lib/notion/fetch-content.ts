@@ -5,6 +5,7 @@ import { isAllowedImageUrl } from "@/config/images";
 import { countWords } from "@/lib/content/blocks";
 import { FALLBACK_CONTENT } from "@/lib/content/fallback";
 import { formatOpeningHours } from "@/lib/content/format";
+import { buildPaymentPage, type PaymentRow } from "@/lib/content/payment-page";
 import {
   cleanOptional,
   formatReviewAuthor,
@@ -18,6 +19,7 @@ import {
   parsePhone,
   parsePostalLine,
   parseRating,
+  parseWeroRecipient,
   splitOpeningLines,
   toE164,
 } from "@/lib/content/parse";
@@ -156,6 +158,28 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
   const geo = parseGeo(geoRaw);
   if (geoRaw && !isPlaceholder(geoRaw) && !geo) warnings.push(`GPS_Coordonnees illisible : « ${geoRaw} »`);
   if (!geo) warnings.push("GPS_Coordonnees non renseigné dans Notion (valeur de secours utilisée)");
+  // Règlement (page /paiement) : les coordonnées Wero ne sont publiées que si elles sont lisibles.
+  const weroRaw = g.text("Wero_Numero_Ou_Email");
+  const weroRecipient = parseWeroRecipient(weroRaw);
+  if (!weroRecipient)
+    warnings.push(
+      isPlaceholder(weroRaw)
+        ? "Wero_Numero_Ou_Email non renseigné : /paiement explique Wero sans afficher de numéro"
+        : `Wero_Numero_Ou_Email illisible : « ${weroRaw} » (numéro de mobile ou e-mail attendu) — non publié`,
+    );
+
+  // --- Page_Paiement (textes de /paiement) : base vide => instantané de secours ; sinon Notion fait foi
+  // (une section sans ligne est masquée, une ligne « Texte » facultative vide masque son élément).
+  const paymentRows: PaymentRow[] = sortRows(db.payment.filter(isPublished)).map((row) => ({
+    name: getText(row.properties, "Name"),
+    type: getText(row.properties, "Type"),
+    text: getText(row.properties, "Texte"),
+  }));
+  if (paymentRows.length === 0) warnings.push("Page_Paiement vide : texte de secours utilisé pour /paiement");
+  const paymentPage =
+    paymentRows.length > 0
+      ? buildPaymentPage(paymentRows, FALLBACK_CONTENT.payment.page, (message) => warnings.push(message))
+      : FALLBACK_CONTENT.payment.page;
 
   // --- Section A_Propos (+ expertises optionnelles Expertise_1_Titre / Expertise_1_Texte / Expertise_1_Icone …)
   const a = toKeyValue(db.about);
@@ -271,6 +295,15 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
       durationMinutes: parseInteger(durationLabel),
       price,
       reimbursement: required(g.text("Info_Remboursement"), F.consultation.reimbursement, "Info_Remboursement"),
+    },
+    payment: {
+      info: required(g.text("Info_Paiement"), F.payment.info, "Info_Paiement"),
+      wero: {
+        recipient: weroRecipient,
+        recipientName: cleanOptional(g.text("Wero_Nom_Beneficiaire")),
+      },
+      otherMethods: cleanOptional(g.text("Autres_Moyens_Paiement")),
+      page: paymentPage,
     },
     rating: ratingValue === null ? null : { value: ratingValue, count: parseInteger(g.text("Nombre_Avis_Google")) },
     openingHours,

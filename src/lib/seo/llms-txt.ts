@@ -28,6 +28,7 @@ export function buildLlmsTxt(c: SiteContent, siteUrl: string = SITE_URL): string
   lines.push(`- ${labels.duration} : ${c.consultation.durationLabel}`);
   if (c.consultation.price) lines.push(`- ${labels.price} : ${oneLine(c.consultation.price)}`);
   lines.push(`- ${labels.reimbursement} : ${oneLine(c.consultation.reimbursement)}`);
+  lines.push(`- ${labels.payment} : ${oneLine(c.payment.info)}`);
   const access: Array<[string, string | null]> = [
     [labels.train, c.access.train],
     [labels.bus, c.access.bus],
@@ -55,6 +56,7 @@ export function buildLlmsTxt(c: SiteContent, siteUrl: string = SITE_URL): string
   lines.push(`## ${L.pages}`, "");
   lines.push(`- [${L.home}](${siteUrl}/)`);
   lines.push(`- [${L.booking}](${c.booking.url})`);
+  lines.push(`- [${COPY.footer.payment}](${siteUrl}/paiement)`);
   lines.push(`- [${COPY.footer.legal}](${siteUrl}/mentions-legales)`);
   lines.push(`- [${COPY.footer.privacy}](${siteUrl}/confidentialite)`);
   lines.push("");

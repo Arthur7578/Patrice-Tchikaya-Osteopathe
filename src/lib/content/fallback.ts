@@ -195,6 +195,90 @@ export const FALLBACK_CONTENT: SiteContent = {
     reimbursement:
       "Consultations prises en charge par les mutuelles et assurances complémentaires de santé.",
   },
+  // Transmis par Patrice (via Arthur, 28/09/2026) : règlement après la séance, Wero parmi les options.
+  // Coordonnées Wero et autres moyens de paiement inconnus à cette date : rien d'inventé (null = masqué).
+  // Encart « Bon à savoir » : non souhaité pour l'instant (29/09/2026) -> null, activable depuis Notion.
+  // `page` = instantané de la base Notion Page_Paiement (créée le 29/09/2026, même texte que ses lignes).
+  payment: {
+    info: "Le règlement se fait après la séance. Wero fait partie des moyens de paiement acceptés.",
+    wero: { recipient: null, recipientName: null },
+    otherMethods: null,
+    page: {
+      eyebrow: "Paiement",
+      title: "Régler votre séance",
+      intro: "Voici comment payer avec Wero, en quelques secondes depuis votre téléphone.",
+      metaTitle: null,
+      metaDescription: null,
+      steps: {
+        title: "Payer avec Wero, étape par étape",
+        cards: [
+          {
+            title: "Ouvrez Wero",
+            text: "Dans l'application Wero, ou dans l'application de votre banque si Wero y est intégré.",
+          },
+          {
+            title: "Envoyez au cabinet",
+            text: "Choisissez l'envoi d'argent, puis saisissez le numéro de mobile ou l'adresse e-mail Wero du cabinet (à demander au cabinet s'ils ne sont pas indiqués sur cette page).",
+          },
+          {
+            title: "Indiquez le montant",
+            text: "Saisissez le montant de votre séance. En message, précisez le nom du patient et la date de la séance.",
+          },
+          {
+            title: "Vérifiez, puis validez",
+            text: "Contrôlez le nom du bénéficiaire affiché et le montant, puis validez avec votre empreinte, votre visage ou votre code. L'argent arrive en quelques secondes.",
+          },
+        ],
+      },
+      caution: null,
+      reassurance: {
+        title: "Un paiement simple et sûr",
+        cards: [
+          {
+            title: "Une solution des banques européennes",
+            text: "Wero est développé par l'European Payments Initiative (EPI), soutenue par de grandes banques européennes.",
+          },
+          {
+            title: "Aucune coordonnée bancaire à partager",
+            text: "Un numéro de mobile ou une adresse e-mail suffit : ni IBAN, ni numéro de carte.",
+          },
+          {
+            title: "Validé par vous seul",
+            text: "Aucun paiement ne part sans votre validation dans l'application : empreinte, reconnaissance faciale ou code.",
+          },
+          {
+            title: "Le bon destinataire, en quelques secondes",
+            text: "Wero affiche le nom du bénéficiaire avant que vous validiez, puis l'argent arrive en quelques secondes.",
+          },
+        ],
+      },
+      firstTime: {
+        title: "Première utilisation de Wero ?",
+        cards: [
+          {
+            title: "Votre banque est au Luxembourg",
+            text: "Téléchargez l'application Wero, puis reliez-la à votre compte : votre identité est vérifiée via LuxTrust ou l'application de votre banque.\nWero est proposé notamment par Spuerkeess, BGL BNP Paribas, BIL, Banque Raiffeisen et POST.\nVous utilisiez Payconiq ? Wero le remplace au Luxembourg depuis septembre 2026.",
+          },
+          {
+            title: "Votre banque est en France, en Belgique ou en Allemagne",
+            text: "Wero y est proposé par de nombreuses banques, souvent directement dans leur application : cherchez « Wero » dans ses menus.",
+          },
+        ],
+      },
+      help: {
+        title: "Pas de Wero, ou une question ?",
+        text: "Votre banque ne propose pas encore Wero, ou vous avez une question sur le règlement ? Appelez le cabinet :",
+      },
+      labels: {
+        phone: "Numéro Wero du cabinet",
+        email: "Adresse e-mail Wero du cabinet",
+        name: "Nom affiché par Wero",
+        price: "Tarif de la consultation",
+        caution: "Bon à savoir",
+        otherMethods: "Autres moyens de paiement acceptés",
+      },
+    },
+  },
   rating: { value: 5, count: null },
   openingHours: null,
   openingHoursLines: [],

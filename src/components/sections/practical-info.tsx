@@ -11,7 +11,9 @@ import {
   Receipt,
   SquareParking,
   TrainFront,
+  Wallet,
 } from "lucide-react";
+import Link from "next/link";
 import { Fragment } from "react";
 import type { ReactNode } from "react";
 import { BookingInline } from "@/components/booking/booking-inline";
@@ -29,7 +31,7 @@ const DL = "grid grid-cols-[auto_1fr] gap-x-4 gap-y-5";
 
 /** Infos pratiques : blocs réordonnables depuis Notion (Infos_Ordre) ; le bloc « Accès » groupe ses lignes (Acces_Ordre). */
 export function PracticalInfo({ content }: { content: SiteContent }) {
-  const { contact, consultation, openingHoursLines, languages, images, booking, rowOrder } = content;
+  const { contact, consultation, payment, openingHoursLines, languages, images, booking, rowOrder } = content;
   const { labels } = COPY.infos;
 
   // Chaque bloc vaut false/null tant qu'il n'a rien à afficher.
@@ -73,6 +75,17 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
     tarif: consultation.price && (
       <InfoRow icon={Euro} label={labels.price}>
         <p className="text-slate-600">{consultation.price}</p>
+      </InfoRow>
+    ),
+    reglement: (
+      <InfoRow icon={Wallet} label={labels.payment}>
+        <p className="text-slate-600">{payment.info}</p>
+        <Link
+          href="/paiement"
+          className="mt-1 inline-block text-sm font-semibold text-sage-700 underline underline-offset-4"
+        >
+          {COPY.infos.paymentLink}
+        </Link>
       </InfoRow>
     ),
     remboursement: (

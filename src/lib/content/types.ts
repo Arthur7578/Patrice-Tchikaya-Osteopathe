@@ -95,6 +95,49 @@ export type Booking = {
   calOrigin: string | null;
 };
 
+/** Coordonnées Wero du cabinet : Wero accepte un numéro de mobile ou une adresse e-mail. */
+export type WeroRecipient = { value: string; kind: "phone" | "email" };
+
+/** Carte de la page /paiement : titre + texte (un paragraphe par ligne). */
+export type PaymentCard = { title: string; text: string };
+
+/** Section de cartes : titre + cartes. Une section sans carte vaut `null` (masquée). */
+export type PaymentSection = { title: string; cards: PaymentCard[] };
+
+/** Textes de la page /paiement, éditables dans la base Notion Page_Paiement (mise en page fixe). */
+export type PaymentPage = {
+  eyebrow: string | null; // Surtitre
+  title: string; // Titre_Page (le <h1>)
+  intro: string | null; // Introduction, sous la phrase Info_Paiement
+  metaTitle: string | null; // Meta_Title ; null = titre par défaut
+  metaDescription: string | null; // Meta_Description ; null = description par défaut
+  steps: PaymentSection | null; // lignes de type « Étape »
+  caution: string | null; // Encart : encart « Bon à savoir » facultatif ; null = pas d'encart
+  reassurance: PaymentSection | null; // lignes de type « Sécurité »
+  firstTime: PaymentSection | null; // lignes de type « Première utilisation »
+  help: { title: string; text: string | null }; // Titre_Aide, Texte_Aide
+  /** Libellés du bloc de coordonnées, de l'encart et de l'aide (lignes Libelle_* de Page_Paiement). */
+  labels: {
+    phone: string; // Libelle_Numero : « Numéro Wero du cabinet »
+    email: string; // Libelle_Email : « Adresse e-mail Wero du cabinet »
+    name: string; // Libelle_Nom : « Nom affiché par Wero »
+    price: string; // Libelle_Tarif : « Tarif de la consultation »
+    caution: string; // Libelle_Encart : « Bon à savoir »
+    otherMethods: string; // Libelle_Autres_Moyens : « Autres moyens de paiement acceptés »
+  };
+};
+
+/** Règlement après la séance (page /paiement + ligne « Règlement » des infos pratiques). */
+export type Payment = {
+  info: string; // Info_Paiement (phrase courte : quand et comment régler)
+  wero: {
+    recipient: WeroRecipient | null; // Wero_Numero_Ou_Email ; null = non publié sur le site
+    recipientName: string | null; // Wero_Nom_Beneficiaire : nom affiché par Wero avant validation
+  };
+  otherMethods: string | null; // Autres_Moyens_Paiement (texte libre) ; null = bloc masqué
+  page: PaymentPage; // base Page_Paiement
+};
+
 export type SiteContent = {
   practitioner: { name: string; title: string };
   seo: { h1: string; heroSubtitle: string; metaTitle: string | null; metaDescription: string | null };
@@ -119,6 +162,7 @@ export type SiteContent = {
     price: string | null; // null si placeholder "[Mettre le tarif…]"
     reimbursement: string;
   };
+  payment: Payment;
   rating: Rating | null;
   /** Horaires structurés (JSON-LD) ; null si le texte Notion n'a pas pu être interprété. */
   openingHours: OpeningHoursRange[] | null;

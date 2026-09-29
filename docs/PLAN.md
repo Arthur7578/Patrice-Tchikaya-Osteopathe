@@ -135,6 +135,8 @@ Page « **Site web Ostéopathie Dudelange** » → sous-page « **Data utilisée
 | Avis_Patients | `3e84bf3fc7288023beb4d2739a387a17` | `Nom_Patient` (title), `Note` (text, ex. « 5 / 5 »), `Avis_Texte` (text), `Date` (date) | liste |
 | FAQ_SEO | `3e84bf3fc7288062883dc5d447128b28` | `Name` (title), `Reponse` (text) | liste |
 
+**Septième base (29/09/2026) :** `Page_Paiement` (`Name` title, `Type` select, `Texte` text, `Ordre` number) — textes de la page `/paiement` ; ID dans `NOTION_DATABASES.payment` (voir `docs/DECISIONS.md`).
+
 Le code ne stocke que les **IDs de base** (certains) et résout la « data source » via `databases.retrieve`.
 Pour information, IDs de data source vus par le connecteur (non utilisés par le code) : general
 `3e84bf3f-c728-8068-bc91-000b207fab12`, images `…-8086-8378-000bb12c49ee`, about `…-80e8-a9df-000b9df439c0`,
