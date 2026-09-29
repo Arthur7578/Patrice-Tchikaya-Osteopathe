@@ -19,7 +19,8 @@ export async function generateMetadata(): Promise<Metadata> {
     description,
     alternates: { canonical: "/" },
     openGraph: { url: "/", title, description },
-    twitter: { title, description },
+    // twitter remplace celui du layout en entier : `card` doit être redonné, sinon X retombe sur « summary ».
+    twitter: { card: "summary_large_image", title, description, images: ["/opengraph-image"] },
   };
 }
 
