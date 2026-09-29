@@ -1,6 +1,9 @@
-import type { FAQPage, Graph, MedicalBusiness, OpeningHoursSpecification, Person, WebPage, WebSite } from "schema-dts";
+import type {
+  BreadcrumbList, FAQPage, Graph, MedicalBusiness, MedicalWebPage, OpeningHoursSpecification, Person, WebPage, WebSite,
+} from "schema-dts";
 import { SITE_URL } from "@/config/site";
-import type { SiteContent } from "@/lib/content/types";
+import { COPY } from "@/content/ui-copy";
+import type { Motif, MotifPage, SiteContent } from "@/lib/content/types";
 import { googleMapsSearchUrl } from "@/lib/maps";
 
 export const ids = {
@@ -68,7 +71,12 @@ export function buildSiteGraph(c: SiteContent): Graph {
       name: "Motifs de consultation",
       itemListElement: c.motifs.map((m) => ({
         "@type": "Offer",
-        itemOffered: { "@type": "Service", name: m.title, description: m.description },
+        itemOffered: {
+          "@type": "Service",
+          name: m.title,
+          description: m.description,
+          url: m.page ? `${SITE_URL}/${m.slug}` : undefined, // page détaillée publiée (phase 9)
+        },
       })),
     },
   } as unknown as MedicalBusiness; // multi-type : schema-dts ne type pas les tableaux de @type
@@ -128,4 +136,40 @@ export function buildHomeGraph(c: SiteContent, meta: { title: string; descriptio
     });
   }
   return { "@context": "https://schema.org", "@graph": graph };
+}
+
+/**
+ * Graphe d'une page motif (phase 9) : MedicalWebPage relue par le praticien (reviewedBy → Person ;
+ * la case Notion « Page_Validée » en est la condition) + fil d'Ariane identique à celui affiché.
+ */
+export function buildMotifGraph(
+  c: SiteContent,
+  motif: Motif,
+  page: MotifPage,
+  meta: { path: string; title: string; description: string },
+): Graph {
+  const url = `${SITE_URL}${meta.path}`;
+  const breadcrumbId = `${url}#breadcrumb`;
+  const webpage: MedicalWebPage = {
+    "@type": "MedicalWebPage",
+    "@id": ids.webpage(meta.path),
+    url,
+    name: meta.title,
+    description: meta.description,
+    inLanguage: "fr-LU",
+    isPartOf: { "@id": ids.website },
+    publisher: { "@id": ids.organization },
+    reviewedBy: { "@id": ids.person },
+    lastReviewed: page.lastEdited.slice(0, 10),
+    breadcrumb: { "@id": breadcrumbId },
+  };
+  const breadcrumb: BreadcrumbList = {
+    "@type": "BreadcrumbList",
+    "@id": breadcrumbId,
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: COPY.motifPage.home, item: `${SITE_URL}/` },
+      { "@type": "ListItem", position: 2, name: motif.title, item: url },
+    ],
+  };
+  return { "@context": "https://schema.org", "@graph": [webpage, breadcrumb] };
 }

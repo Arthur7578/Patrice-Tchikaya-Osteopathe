@@ -20,3 +20,18 @@ export const NOTION_DATABASES = {
 } as const;
 
 export type NotionDatabaseKey = keyof typeof NOTION_DATABASES;
+
+/**
+ * Pages motifs (phase 9) : une page n'est publiée que si la case Notion est cochée (relecture de
+ * Patrice) ET si son corps atteint le seuil de mots (pas de contenu mince). Voir docs/DECISIONS.md.
+ */
+export const MOTIF_PAGES = { validatedProperty: "Page_Validée", minWords: 300 } as const;
+
+/**
+ * Routes de premier niveau déjà prises par le site : jamais utilisables comme slug de page motif
+ * (une route statique l'emporterait sur /[slug]). Les routes à point (robots.txt, llms.txt…) ne
+ * peuvent pas entrer en collision : un slug normalisé ne contient jamais de point.
+ */
+export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
+  "admin", "api", "apple-icon", "confidentialite", "mentions-legales", "opengraph-image",
+]);

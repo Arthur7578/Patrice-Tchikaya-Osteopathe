@@ -66,6 +66,39 @@ async function main() {
   const mobile = content.contact.mobilePhone;
   if (mobile) check(root.querySelectorAll(`a[href="tel:${mobile.e164}"]`).length >= 1, `lien tel:${mobile.e164} (mobile) présent`);
 
+  // Pages motifs (phase 9) : une page par motif publié (Page_Validée + seuil de mots), liée depuis
+  // l'accueil et le sitemap, avec ses propres métadonnées et son JSON-LD (MedicalWebPage + fil d'Ariane).
+  const published = content.motifs.filter((m) => m.page);
+  console.log(`ℹ pages motifs publiées : ${published.length}`);
+  const sitemap = await (await fetch(`${base}/sitemap.xml`)).text();
+  for (const m of published) {
+    const path = `/${m.slug}`;
+    check(root.querySelectorAll(`a[href="${path}"]`).length >= 1, `accueil : lien vers ${path}`);
+    check(sitemap.includes(`${path}</loc>`), `sitemap : ${path}`);
+    const r = await fetch(`${base}${path}`);
+    check(r.status === 200, `GET ${path} → ${r.status}`);
+    const page = parse(await r.text());
+    const pageH1 = page.querySelectorAll("h1");
+    check(pageH1.length === 1 && pageH1[0].text.includes(content.contact.locality), `${path} : un seul <h1>, avec « ${content.contact.locality} »`);
+    const pageTitle = page.querySelector("title")?.text ?? "";
+    check(pageTitle.length >= 30 && pageTitle.length <= 65, `${path} : <title> 30–65 car. (${pageTitle.length}) : ${pageTitle}`);
+    const pageDesc = page.querySelector('meta[name="description"]')?.getAttribute("content") ?? "";
+    check(pageDesc.length >= 70 && pageDesc.length <= 160, `${path} : meta description 70–160 car. (${pageDesc.length})`);
+    const pageCanonical = page.querySelector('link[rel="canonical"]')?.getAttribute("href") ?? "";
+    check(/^https:\/\//.test(pageCanonical) && pageCanonical.endsWith(path), `${path} : canonical ${pageCanonical}`);
+    check(Boolean(page.querySelector('meta[property="og:image"]')), `${path} : og:image présent`);
+    const pageTypes = page
+      .querySelectorAll('script[type="application/ld+json"]')
+      .flatMap((s) => (JSON.parse(s.textContent) as { "@graph"?: Array<Record<string, unknown>> })["@graph"] ?? [])
+      .flatMap((n) => [n["@type"]].flat() as string[]);
+    check(pageTypes.includes("MedicalWebPage") && pageTypes.includes("BreadcrumbList"), `${path} : JSON-LD MedicalWebPage + BreadcrumbList`);
+    check(!pageTypes.includes("Physician"), `${path} : pas de Physician`);
+    const pageBooking = page.querySelectorAll("a").filter((a) => a.getAttribute("href") === content.booking.url);
+    check(pageBooking.length >= 2, `${path} : liens RDV (${pageBooking.length})`);
+  }
+  const unknown = await fetch(`${base}/page-qui-n-existe-pas`);
+  check(unknown.status === 404, `slug inconnu → ${unknown.status} (404 attendu)`);
+
   for (const path of ["/robots.txt", "/sitemap.xml"]) {
     const r = await fetch(`${base}${path}`);
     check(r.status === 200, `GET ${path} → ${r.status}`);

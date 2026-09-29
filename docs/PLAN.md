@@ -2700,6 +2700,8 @@ vide, tests manuels Cal.com OK sur la preview.
 
 - Source : corps de la page Notion de chaque ligne `Motifs_Consultation` (blocs).
 - Générer une page **uniquement si le corps contient ≥ 300 mots** (éviter le contenu mince) ; sinon carte sans lien.
+- **Amendement du 28/09/2026 (voir `docs/DECISIONS.md`) :** et **uniquement si la case `Page_Validée` est cochée**
+  (relecture de Patrice). Case absente ou décochée = pas de page. Ne pas confondre avec `Publié`, qui masque la carte.
 - Route `src/app/[slug]/page.tsx` : `dynamicParams = false`, `generateStaticParams` depuis les motifs publiés,
   `generateMetadata` (title « {Motif} à Dudelange », description = `Description_Courte`, canonical `/{slug}`).
 - Rendu : fil d'Ariane (Accueil › Motif), `<h1>`, intro, blocs Notion (paragraph, heading_2/3, bulleted/numbered

@@ -39,7 +39,10 @@ export function buildLlmsTxt(c: SiteContent, siteUrl: string = SITE_URL): string
 
   if (c.motifs.length > 0) {
     lines.push(`## ${L.motifs}`, "");
-    for (const m of c.motifs) lines.push(`- ${m.title} : ${oneLine(m.description)}`);
+    for (const m of c.motifs) {
+      const title = m.page ? `[${m.title}](${siteUrl}/${m.slug})` : m.title; // page détaillée (phase 9)
+      lines.push(`- ${title} : ${oneLine(m.description)}`);
+    }
     lines.push("");
   }
 
