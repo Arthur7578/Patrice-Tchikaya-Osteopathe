@@ -14,6 +14,8 @@ export type OpeningHoursRange = {
   closes: string; // "19:00"
 };
 
+export type AccessItem = { kind: "bus" | "train" | "parking" | "pmr" | "other"; text: string };
+
 export type Expertise = { title: string; text: string };
 
 export type Geo = { latitude: number; longitude: number };
@@ -76,8 +78,12 @@ export type SiteContent = {
     reimbursement: string;
   };
   rating: { value: number; count: number | null } | null;
+  /** Horaires structurés (JSON-LD) ; null si le texte Notion n'a pas pu être interprété. */
   openingHours: OpeningHoursRange[] | null;
-  access: string | null; // Acces_Info (parking, bus…)
+  /** Horaires à afficher : mise en forme normalisée si lisibles, sinon texte Notion tel quel. */
+  openingHoursLines: string[];
+  /** Acces_Bus / Acces_Train / Acces_Parking / Acces_PMR / Acces_Info, dans cet ordre. */
+  access: AccessItem[];
   languages: string[]; // Langues_Parlees "Français, Anglais"
   about: {
     title: string;

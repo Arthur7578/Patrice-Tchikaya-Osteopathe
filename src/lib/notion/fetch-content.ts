@@ -3,7 +3,9 @@ import type { PageObjectResponse } from "@notionhq/client";
 import { NOTION_DATABASES, type NotionDatabaseKey } from "@/config/site";
 import { isAllowedImageUrl } from "@/config/images";
 import { FALLBACK_CONTENT } from "@/lib/content/fallback";
+import { formatOpeningHours } from "@/lib/content/format";
 import {
+  ACCESS_KEYS,
   cleanOptional,
   formatReviewAuthor,
   isPlaceholder,
@@ -14,6 +16,7 @@ import {
   parseOpeningHours,
   parsePostalLine,
   parseRating,
+  splitOpeningLines,
   toE164,
 } from "@/lib/content/parse";
 import type { ImageSlot, Motif, SiteContent, SiteImage } from "@/lib/content/types";
@@ -110,7 +113,8 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
   const ratingValue = parseRating(g.text("Note_Google"));
   const openingRaw = g.text("Horaires");
   const openingHours = parseOpeningHours(openingRaw);
-  if (openingRaw && !openingHours) warnings.push(`Horaires illisibles : « ${openingRaw} »`);
+  if (!isPlaceholder(openingRaw) && !openingHours)
+    warnings.push(`Horaires non structurés (affichés tels quels, absents du JSON-LD) : « ${openingRaw} »`);
   const phoneDisplay = required(g.text("Telephone_Display"), F.contact.phoneDisplay, "Telephone_Display");
   const durationLabel = required(g.text("Duree_Consultation"), F.consultation.durationLabel, "Duree_Consultation");
   const geoRaw = g.text("GPS_Coordonnees");
@@ -218,7 +222,11 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
     },
     rating: ratingValue === null ? null : { value: ratingValue, count: parseInteger(g.text("Nombre_Avis_Google")) },
     openingHours,
-    access: cleanOptional(g.text("Acces_Info")),
+    openingHoursLines: openingHours ? formatOpeningHours(openingHours) : splitOpeningLines(openingRaw),
+    access: ACCESS_KEYS.flatMap(([key, kind]) => {
+      const text = cleanOptional(g.text(key));
+      return text ? [{ kind, text }] : [];
+    }),
     languages,
     about: {
       education: cleanOptional(a.text("Formation")),

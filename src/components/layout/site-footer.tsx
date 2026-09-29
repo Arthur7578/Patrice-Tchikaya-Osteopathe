@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { NAV } from "@/content/ui-copy";
-import { formatOpeningHours } from "@/lib/content/format";
 import type { SiteContent } from "@/lib/content/types";
 
 type Props = { content: SiteContent };
 
 export function SiteFooter({ content }: Props) {
-  const { practitioner, contact, about, openingHours, googleBusinessUrl } = content;
+  const { practitioner, contact, about, openingHoursLines, googleBusinessUrl } = content;
   const year = new Date().getFullYear();
   const gtmEnabled = /^GTM-[A-Z0-9]+$/.test(process.env.NEXT_PUBLIC_GTM_ID ?? "");
   return (
@@ -29,9 +28,9 @@ export function SiteFooter({ content }: Props) {
                 {contact.phoneDisplay}
               </a>
             </address>
-            {openingHours && (
+            {openingHoursLines.length > 0 && (
               <ul className="mt-3 space-y-1 text-sm text-sage-100/80">
-                {formatOpeningHours(openingHours).map((line) => (
+                {openingHoursLines.map((line) => (
                   <li key={line}>{line}</li>
                 ))}
               </ul>

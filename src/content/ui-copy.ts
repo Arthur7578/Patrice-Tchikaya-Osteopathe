@@ -41,6 +41,7 @@ export const COPY = {
       address: "Adresse", phone: "Téléphone", duration: "Durée", price: "Tarif",
       reimbursement: "Remboursement", hours: "Horaires", access: "Accès", languages: "Langues",
     },
+    accessKinds: { bus: "Bus", train: "Train", parking: "Parking", pmr: "Accès PMR", other: "" },
     directions: "Itinéraire",
     map: "Voir sur Google Maps",
     bookingTitle: "Réserver votre séance en ligne",

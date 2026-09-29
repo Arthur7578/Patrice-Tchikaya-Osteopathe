@@ -42,7 +42,8 @@ export const FALLBACK_CONTENT: SiteContent = {
   },
   rating: { value: 5, count: null },
   openingHours: null,
-  access: null,
+  openingHoursLines: [],
+  access: [],
   languages: [],
   about: {
     education: null,

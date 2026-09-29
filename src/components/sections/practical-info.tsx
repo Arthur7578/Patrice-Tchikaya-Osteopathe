@@ -1,16 +1,22 @@
-import { Car, CalendarDays, Clock, Euro, Languages, MapPin, Navigation, Phone, Receipt } from "lucide-react";
+import {
+  Accessibility, Bus, CalendarDays, Car, Clock, Euro, Info, Languages, MapPin, Navigation, Phone, Receipt,
+  SquareParking, TrainFront, type LucideIcon,
+} from "lucide-react";
 import { BookingInline } from "@/components/booking/booking-inline";
 import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Section } from "@/components/ui/section";
 import { SiteImage } from "@/components/ui/site-image";
 import { COPY } from "@/content/ui-copy";
-import { formatOpeningHours } from "@/lib/content/format";
-import type { SiteContent } from "@/lib/content/types";
+import type { AccessItem, SiteContent } from "@/lib/content/types";
 import { googleMapsDirectionsUrl, googleMapsSearchUrl } from "@/lib/maps";
 
+const ACCESS_ICONS: Record<AccessItem["kind"], LucideIcon> = {
+  bus: Bus, train: TrainFront, parking: SquareParking, pmr: Accessibility, other: Info,
+};
+
 export function PracticalInfo({ content }: { content: SiteContent }) {
-  const { contact, consultation, openingHours, access, languages, images, googleBusinessUrl, booking } = content;
+  const { contact, consultation, openingHoursLines, access, languages, images, googleBusinessUrl, booking } = content;
   const { labels } = COPY.infos;
   const mapUrl = googleBusinessUrl ?? googleMapsSearchUrl(content);
 
@@ -104,14 +110,14 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
               <p className="text-slate-600">{consultation.reimbursement}</p>
             </dd>
 
-            {openingHours && (
+            {openingHoursLines.length > 0 && (
               <>
                 <dt className="text-sage-700">
                   <CalendarDays aria-hidden="true" className="size-5" />
                 </dt>
                 <dd>
                   <p className="font-semibold text-ink">{labels.hours}</p>
-                  {formatOpeningHours(openingHours).map((line) => (
+                  {openingHoursLines.map((line) => (
                     <p key={line} className="text-slate-600">
                       {line}
                     </p>
@@ -120,14 +126,28 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
               </>
             )}
 
-            {access && (
+            {access.length > 0 && (
               <>
                 <dt className="text-sage-700">
                   <Car aria-hidden="true" className="size-5" />
                 </dt>
                 <dd>
                   <p className="font-semibold text-ink">{labels.access}</p>
-                  <p className="text-slate-600">{access}</p>
+                  <ul className="mt-2 space-y-2">
+                    {access.map(({ kind, text }) => {
+                      const Icon = ACCESS_ICONS[kind];
+                      const label = COPY.infos.accessKinds[kind];
+                      return (
+                        <li key={kind} className="flex gap-2 text-slate-600">
+                          <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-sage-700" />
+                          <span>
+                            {label && <strong className="font-semibold text-ink">{label} : </strong>}
+                            {text}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </dd>
               </>
             )}
