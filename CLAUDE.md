@@ -15,6 +15,10 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
 - `npm run lint` · `npm run typecheck` · `npm test` · `npm run build` : **tous verts avant chaque commit**
 - `npm run notion:check` : diagnostic Notion (nécessite `NOTION_TOKEN` dans `.env.local`)
 - `npm run seo:smoke` : contrôles SEO sur un serveur lancé (`npm run build && npm start`)
+- `npm run test:coverage` : couverture v8 (rapport HTML dans `coverage/`, seuils sur `src/lib/**`)
+- `npm run test:e2e` : Playwright + axe sur le build (`npm run build` d'abord ; en cloud,
+  `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux*/chrome`)
+- `npm run test:mutation` : Stryker sur `src/lib/**` (lent, ponctuel ; `-- --mutate <fichier>` pour cibler)
 
 ## Environnement cloud
 
