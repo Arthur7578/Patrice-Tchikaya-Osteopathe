@@ -73,7 +73,7 @@ testent sur une **preview Vercel** (ou après autorisation de ces domaines dans 
 ### 2.3 Règles non négociables
 
 1. **Server Components par défaut.** `"use client"` uniquement pour : `BookingLink`, `BookingInline`,
-   `MobileActionBar`, `Reveal`.
+   `MobileActionBar`, `MobileMenu`, `Reveal`.
 2. **Aucun contenu éditorial en dur**, hors `src/lib/content/fallback.ts` (instantané Notion pour le dev) et
    `src/content/ui-copy.ts` (micro-copie d'interface : titres de section, libellés de boutons).
 3. **Images Notion :** uniquement la colonne `URL` (jamais les fichiers téléversés dans Notion : URL S3 temporaire
@@ -2700,6 +2700,8 @@ vide, tests manuels Cal.com OK sur la preview.
 
 - Source : corps de la page Notion de chaque ligne `Motifs_Consultation` (blocs).
 - Générer une page **uniquement si le corps contient ≥ 300 mots** (éviter le contenu mince) ; sinon carte sans lien.
+- **Amendement du 28/09/2026 (voir `docs/DECISIONS.md`) :** et **uniquement si la case `Page_Validée` est cochée**
+  (relecture de Patrice). Case absente ou décochée = pas de page. Ne pas confondre avec `Publié`, qui masque la carte.
 - Route `src/app/[slug]/page.tsx` : `dynamicParams = false`, `generateStaticParams` depuis les motifs publiés,
   `generateMetadata` (title « {Motif} à Dudelange », description = `Description_Courte`, canonical `/{slug}`).
 - Rendu : fil d'Ariane (Accueil › Motif), `<h1>`, intro, blocs Notion (paragraph, heading_2/3, bulleted/numbered

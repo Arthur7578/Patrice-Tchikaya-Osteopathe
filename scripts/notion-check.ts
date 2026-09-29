@@ -17,6 +17,10 @@ async function main() {
     for (const [slot, img] of Object.entries(content.images)) {
       console.log(`  image ${slot}: ${img.src ? "OK" : "placeholder"} — alt « ${img.alt} »`);
     }
+    // Pages motifs (phase 9) : publiées si Page_Validée est cochée et le texte assez long (sinon voir ⚠).
+    for (const m of content.motifs) {
+      console.log(`  page /${m.slug}: ${m.page ? `publiée (${m.page.wordCount} mots)` : "non publiée"}`);
+    }
     if (warnings.length === 0) console.log("✓ Aucun avertissement");
     for (const w of warnings) console.warn(`⚠ ${w}`);
   } catch (error) {

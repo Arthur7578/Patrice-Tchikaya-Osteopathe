@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { LucideIcon } from "lucide-react";
 import { Building2, Fingerprint, Info, Landmark, Lock, Phone, Receipt, Smartphone, UserCheck } from "lucide-react";
+import { BackToHome } from "@/components/layout/back-to-home";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { COPY } from "@/content/ui-copy";
 import { getSiteContent } from "@/lib/content/get-site-content";
@@ -177,6 +178,8 @@ export default async function PaiementPage() {
             {consultation.reimbursement}
           </p>
         </section>
+
+        <BackToHome className="mt-12" />
       </div>
     </main>
   );

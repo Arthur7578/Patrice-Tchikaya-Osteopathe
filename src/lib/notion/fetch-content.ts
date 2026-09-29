@@ -1,7 +1,8 @@
-import { collectPaginatedAPI, isFullDatabase, isFullPage } from "@notionhq/client";
+import { collectPaginatedAPI, isFullBlock, isFullDatabase, isFullPage } from "@notionhq/client";
 import type { PageObjectResponse } from "@notionhq/client";
-import { NOTION_DATABASES, type NotionDatabaseKey } from "@/config/site";
+import { MOTIF_PAGES, NOTION_DATABASES, RESERVED_SLUGS, type NotionDatabaseKey } from "@/config/site";
 import { isAllowedImageUrl } from "@/config/images";
+import { countWords } from "@/lib/content/blocks";
 import { FALLBACK_CONTENT } from "@/lib/content/fallback";
 import { formatOpeningHours } from "@/lib/content/format";
 import {
@@ -21,8 +22,9 @@ import {
   splitOpeningLines,
   toE164,
 } from "@/lib/content/parse";
-import type { ImageSlot, Motif, SiteContent, SiteImage } from "@/lib/content/types";
+import type { ImageSlot, Motif, MotifPage, SiteContent, SiteImage } from "@/lib/content/types";
 import { DEFAULT_EXPERTISE_ICONS, resolveIconName } from "@/lib/icons";
+import { normalizeNotionBlocks } from "./blocks";
 import type { NotionClient } from "./client";
 import { getCheckbox, getDateStart, getNumber, getText, getUrl } from "./properties";
 
@@ -82,6 +84,33 @@ const IMAGE_SIZES: Record<ImageSlot, { width: number; height: number; key: strin
   portrait: { width: 800, height: 1000, key: "Url_Photo_Portrait" },
   cabinet: { width: 1200, height: 800, key: "Url_Photo_Cabinet" },
 };
+
+/**
+ * Page détaillée d'un motif (phase 9) : corps de sa page Notion, lu seulement si la case
+ * « Page_Validée » est cochée (relecture de Patrice), publié seulement s'il atteint le seuil de mots.
+ */
+async function loadMotifPage(
+  notion: NotionClient,
+  row: PageObjectResponse,
+  motif: { title: string; slug: string },
+  warnings: string[],
+): Promise<MotifPage | null> {
+  if (getCheckbox(row.properties, MOTIF_PAGES.validatedProperty) !== true) return null;
+  const label = `Page « ${motif.title} »`;
+  if (RESERVED_SLUGS.has(motif.slug)) {
+    warnings.push(`${label} : slug « ${motif.slug} » déjà utilisé par le site, page non publiée`);
+    return null;
+  }
+  const raw = await collectPaginatedAPI(notion.blocks.children.list, { block_id: row.id, page_size: 100 });
+  const { blocks, warnings: blockWarnings } = normalizeNotionBlocks(raw.filter(isFullBlock));
+  for (const w of blockWarnings) warnings.push(`${label} : ${w}`);
+  const wordCount = countWords(blocks);
+  if (wordCount < MOTIF_PAGES.minWords) {
+    warnings.push(`${label} validée mais trop courte (${wordCount} mots, minimum ${MOTIF_PAGES.minWords}) : non publiée`);
+    return null;
+  }
+  return { blocks, wordCount, lastEdited: row.last_edited_time };
+}
 
 export type ContentResult = { content: SiteContent; warnings: string[] };
 
@@ -170,21 +199,29 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
     }),
   ) as Record<ImageSlot, SiteImage>;
 
-  // --- Motifs_Consultation
-  const motifs: Motif[] = sortRows(db.motifs.filter(isPublished)).flatMap((row) => {
-    const title = getText(row.properties, "Motif");
-    const slug = normalizeSlug(getText(row.properties, "slug URL") || title);
-    if (!title || !slug) return [];
-    return [{
-      title,
-      slug,
-      description: getText(row.properties, "Description_Courte"),
-      icon: resolveIconName(getText(row.properties, "Icone_Lucide"), (bad) =>
-        warnings.push(`Icône Lucide inconnue « ${bad} » pour « ${title} » (icône par défaut)`),
-      ),
-      notionPageId: row.id,
-    }];
-  });
+  // --- Motifs_Consultation (+ page détaillée si validée, phase 9)
+  if (db.motifs.length > 0 && getCheckbox(db.motifs[0].properties, MOTIF_PAGES.validatedProperty) === null) {
+    warnings.push(`Motifs_Consultation : colonne « ${MOTIF_PAGES.validatedProperty} » absente, aucune page motif publiée`);
+  }
+  const motifs: Motif[] = (
+    await Promise.all(
+      sortRows(db.motifs.filter(isPublished)).map(async (row): Promise<Motif | null> => {
+        const title = getText(row.properties, "Motif");
+        const slug = normalizeSlug(getText(row.properties, "slug URL") || title);
+        if (!title || !slug) return null;
+        return {
+          title,
+          slug,
+          description: getText(row.properties, "Description_Courte"),
+          icon: resolveIconName(getText(row.properties, "Icone_Lucide"), (bad) =>
+            warnings.push(`Icône Lucide inconnue « ${bad} » pour « ${title} » (icône par défaut)`),
+          ),
+          notionPageId: row.id,
+          page: await loadMotifPage(notion, row, { title, slug }, warnings),
+        };
+      }),
+    )
+  ).filter((motif): motif is Motif => motif !== null);
 
   // --- Avis_Patients (du plus récent au plus ancien)
   const reviews = db.reviews
@@ -272,7 +309,8 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
       longBio: required(a.text("Bio_Detaillee"), F.about.longBio, "A_Propos.Bio_Detaillee"),
       expertises: expertises.length > 0 ? expertises : F.about.expertises,
     },
-    motifs: motifs.length > 0 ? motifs : F.motifs,
+    // Cartes de secours sans page détaillée : jamais de texte de santé non relu dans Notion en production.
+    motifs: motifs.length > 0 ? motifs : F.motifs.map((m) => ({ ...m, page: null })),
     reviews,
     faq,
     images,

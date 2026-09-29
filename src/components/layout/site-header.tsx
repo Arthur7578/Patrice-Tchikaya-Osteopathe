@@ -2,7 +2,8 @@ import { MapPin } from "lucide-react";
 import Link from "next/link";
 import { BookingLink } from "@/components/booking/booking-link";
 import { buttonVariants } from "@/components/ui/button";
-import { NAV } from "@/content/ui-copy";
+import { MobileMenu } from "@/components/layout/mobile-menu";
+import { HOME_LINK, NAV } from "@/content/ui-copy";
 import type { SiteContent } from "@/lib/content/types";
 import { cn } from "@/lib/utils";
 
@@ -22,11 +23,11 @@ export function SiteHeader({ content }: Props) {
         </Link>
         <nav aria-label="Navigation principale" className="hidden lg:block">
           <ul className="flex items-center gap-8">
-            {NAV.map((item) => (
+            {[HOME_LINK, ...NAV].map((item) => (
               <li key={item.href}>
-                <a href={item.href} className="text-sm font-medium text-slate-600 hover:text-sage-700">
+                <Link href={item.href} className="text-sm font-medium text-slate-600 hover:text-sage-700">
                   {item.label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
@@ -42,6 +43,7 @@ export function SiteHeader({ content }: Props) {
           <BookingLink booking={booking} className={cn(buttonVariants({ size: "sm" }))}>
             Prendre RDV
           </BookingLink>
+          <MobileMenu />
         </div>
       </div>
     </header>

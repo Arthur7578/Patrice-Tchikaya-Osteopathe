@@ -27,7 +27,7 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
 ## Règles non négociables (détail : PLAN §2.3)
 
 1. Server Components par défaut ; `"use client"` seulement pour `BookingLink`, `BookingInline`,
-   `MobileActionBar`, `Reveal`.
+   `MobileActionBar`, `MobileMenu`, `Reveal`.
 2. Aucun contenu éditorial en dur hors `fallback.ts` et `src/content/ui-copy.ts` ; tout passe par `getSiteContent()`.
 3. Images Notion : colonne `URL` uniquement, jamais les fichiers Notion ; toujours l'`alt` Notion ; placeholder
    si pas d'URL (composant `SiteImage`).

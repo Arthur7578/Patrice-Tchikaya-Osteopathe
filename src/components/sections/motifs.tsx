@@ -1,3 +1,5 @@
+import { ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
 import { Eyebrow } from "@/components/ui/eyebrow";
@@ -22,12 +24,21 @@ export function Motifs({ content }: { content: SiteContent }) {
           return (
             <li key={motif.slug}>
               <Reveal delay={i * 0.08}>
-                <article className="h-full rounded-2xl border border-slate-200/80 bg-white p-6 transition hover:-translate-y-0.5 hover:border-sage-200 hover:shadow-md motion-reduce:transform-none md:p-8">
+                <article className="flex h-full flex-col rounded-2xl border border-slate-200/80 bg-white p-6 transition hover:-translate-y-0.5 hover:border-sage-200 hover:shadow-md motion-reduce:transform-none md:p-8">
                   <span className="grid size-12 place-items-center rounded-xl bg-sage-100 text-sage-700">
                     <Icon aria-hidden="true" className="size-6" />
                   </span>
                   <h3 className="mt-4 text-lg font-semibold text-ink">{motif.title}</h3>
                   <p className="mt-2 leading-relaxed text-slate-600">{motif.description}</p>
+                  {motif.page && (
+                    <Link
+                      href={`/${motif.slug}`}
+                      className="mt-auto inline-flex items-center gap-1.5 self-start pt-5 font-semibold text-sage-700 underline-offset-4 hover:underline"
+                    >
+                      {COPY.motifs.discover(motif.title)}
+                      <ArrowRight aria-hidden="true" className="size-4" />
+                    </Link>
+                  )}
                 </article>
               </Reveal>
             </li>
