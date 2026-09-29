@@ -73,7 +73,7 @@ testent sur une **preview Vercel** (ou après autorisation de ces domaines dans 
 ### 2.3 Règles non négociables
 
 1. **Server Components par défaut.** `"use client"` uniquement pour : `BookingLink`, `BookingInline`,
-   `MobileActionBar`, `Reveal`.
+   `MobileActionBar`, `MobileMenu`, `Reveal`.
 2. **Aucun contenu éditorial en dur**, hors `src/lib/content/fallback.ts` (instantané Notion pour le dev) et
    `src/content/ui-copy.ts` (micro-copie d'interface : titres de section, libellés de boutons).
 3. **Images Notion :** uniquement la colonne `URL` (jamais les fichiers téléversés dans Notion : URL S3 temporaire

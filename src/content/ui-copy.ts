@@ -1,3 +1,6 @@
+/** Lien « Accueil » du header et du menu mobile (absent du footer, qui réutilise `NAV`). */
+export const HOME_LINK = { href: "/", label: "Accueil" } as const;
+
 export const NAV = [
   { href: "/#a-propos", label: "À propos" },
   { href: "/#motifs", label: "Motifs" },
@@ -62,6 +65,8 @@ export const COPY = {
     bookingFallback: "Ouvrir l'agenda dans un nouvel onglet",
   },
   footer: { legal: "Mentions légales", privacy: "Confidentialité" },
+  backToHome: "Retour à l'accueil",
+  menu: { open: "Ouvrir le menu", close: "Fermer le menu", label: "Menu principal" },
   // /llms.txt : intitulés structurels ; tout le contenu vient de getSiteContent().
   llms: {
     practical: "Informations pratiques",
