@@ -1,8 +1,8 @@
 export const NAV = [
   { href: "/#a-propos", label: "À propos" },
   { href: "/#motifs", label: "Motifs" },
-  { href: "/#infos", label: "Infos & Tarifs" },
   { href: "/#faq", label: "FAQ" },
+  { href: "/#infos", label: "Infos & Tarifs" },
 ] as const;
 
 export const COPY = {
