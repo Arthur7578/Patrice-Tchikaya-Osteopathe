@@ -13,7 +13,7 @@ export const COPY = {
     reassurance: ["Sans ordonnance", "Facture pour votre mutuelle"], // + « Séance de {durée} » calculé
     cardSubtitle: "Sur rendez-vous · sans ordonnance",
   },
-  about: { eyebrow: "À propos", continuingEducation: "Formations continues" },
+  about: { eyebrow: "À propos", training: "Formation" }, // diplôme (Formation) + formations continues, une seule liste
   motifs: {
     eyebrow: "Motifs de consultation",
     title: (city: string) => `Pourquoi consulter un ostéopathe à ${city} ?`,

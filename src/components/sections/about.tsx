@@ -28,16 +28,16 @@ export function About({ content }: { content: SiteContent }) {
               <p key={paragraph}>{paragraph}</p>
             ))}
           </div>
-          {about.education && (
-            <p className="mt-4 flex items-center gap-2 text-sage-100">
-              <GraduationCap aria-hidden="true" className="size-5 shrink-0" />
-              {about.education}
-            </p>
-          )}
-          {about.continuingEducation.length > 0 && (
+          {(about.education || about.continuingEducation.length > 0) && (
             <div className="mt-6 border-t border-white/15 pt-5">
-              <h3 className="font-semibold text-white">{COPY.about.continuingEducation}</h3>
+              <h3 className="font-semibold text-white">{COPY.about.training}</h3>
               <ul className="mt-3 space-y-2 text-sage-100">
+                {about.education && (
+                  <li className="flex gap-2 text-white">
+                    <GraduationCap aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+                    {about.education}
+                  </li>
+                )}
                 {about.continuingEducation.map((item) => (
                   <li key={item} className="flex gap-2">
                     <BookOpenCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
