@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { isAllowedImageUrl } from "@/config/images";
 import {
-  cleanOptional, formatReviewAuthor, isPlaceholder, normalizeSlug, parseBookingUrl, parseGeo, parseOpeningHours,
-  parsePostalLine, parseRating, parseWeroRecipient, toE164,
+  cleanOptional, formatReviewAuthor, isPlaceholder, normalizeSlug, parseBookingUrl, parseGeo, parseOpeningHours, splitOpeningLines,
+  parseInteger, parseList, parsePhone, parsePostalLine, parseRating, parseWeroRecipient, toE164,
 } from "./parse";
 
 describe("parse", () => {
@@ -38,8 +38,28 @@ describe("parse", () => {
     expect(parseRating("5 / 5")).toBe(5);
     expect(parseRating("4,5")).toBe(4.5);
     expect(parseRating("12")).toBeNull();
+    expect(parseRating("[À COMPLÉTER : note Google, ex. « 5,0 »]")).toBeNull();
+    expect(parseInteger("[À COMPLÉTER : nombre d'avis, ex. « 12 »]")).toBeNull();
+    expect(parseInteger("45 minutes")).toBe(45);
+  });
+  it("découpe une liste saisie dans une cellule Notion", () => {
+    expect(parseList("Ostéopathie du sport (Institut A)\n- Ostéopathie périnatale ; • Dry needling\n\n")).toEqual([
+      "Ostéopathie du sport (Institut A)",
+      "Ostéopathie périnatale",
+      "Dry needling",
+    ]);
+    expect(parseList("[À COMPLÉTER (optionnel) : une formation par ligne]")).toEqual([]);
+    expect(parseList("")).toEqual([]);
     expect(formatReviewAuthor("Yves Schweicher")).toBe("Yves S.");
     expect(normalizeSlug("Ostéopathie du Sport")).toBe("osteopathie-du-sport");
+  });
+  it("parse le numéro secondaire (mobile), indicatif international obligatoire", () => {
+    expect(parsePhone("+352 691 044 147")).toEqual({ display: "+352 691 044 147", e164: "+352691044147" });
+    expect(parsePhone("  +352 691 044 147 ")).toEqual({ display: "+352 691 044 147", e164: "+352691044147" });
+    expect(parsePhone("")).toBeNull();
+    expect(parsePhone("[À COMPLÉTER]")).toBeNull();
+    expect(parsePhone("691 044 147")).toBeNull(); // sans indicatif : ne pas produire "tel:+691…"
+    expect(parsePhone("+352 691 044 147 / +352 51 92 92")).toBeNull(); // deux numéros dans une valeur
   });
   it("parse les horaires schema.org", () => {
     expect(parseOpeningHours("Mo-Fr 08:00-19:00; Sa 08:00-12:00")).toEqual([
@@ -47,6 +67,18 @@ describe("parse", () => {
       { days: ["Sa"], opens: "08:00", closes: "12:00" },
     ]);
     expect(parseOpeningHours("lundi 8h")).toBeNull();
+  });
+  it("parse les horaires saisis en français libre", () => {
+    expect(parseOpeningHours("Lundi au Vendredi, de 08:30-19:00 ; Samedi de 8h30 à 12h30")).toEqual([
+      { days: ["Mo", "Tu", "We", "Th", "Fr"], opens: "08:30", closes: "19:00" },
+      { days: ["Sa"], opens: "08:30", closes: "12:30" },
+    ]);
+    expect(parseOpeningHours("Lun, mer et ven : 9h-12h / 14h-18h")).toEqual([
+      { days: ["Mo", "We", "Fr"], opens: "09:00", closes: "12:00" },
+      { days: ["Mo", "We", "Fr"], opens: "14:00", closes: "18:00" },
+    ]);
+    expect(parseOpeningHours("Sur rendez-vous")).toBeNull();
+    expect(splitOpeningLines("Sur rendez-vous ; le samedi matin")).toEqual(["Sur rendez-vous", "le samedi matin"]);
   });
   it("parse les coordonnées GPS", () => {
     expect(parseGeo("49.481194, 6.084361")).toEqual({ latitude: 49.481194, longitude: 6.084361 });

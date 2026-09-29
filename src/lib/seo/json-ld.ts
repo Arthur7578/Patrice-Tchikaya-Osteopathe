@@ -79,6 +79,8 @@ export function buildSiteGraph(c: SiteContent): Graph {
     "@id": ids.person,
     name: c.practitioner.name,
     jobTitle: c.practitioner.title,
+    // Ligne directe (mobile) du praticien ; le cabinet (MedicalBusiness) garde le numéro principal du NAP.
+    telephone: c.contact.mobilePhone?.e164,
     description: c.about.longBio,
     image: c.images.portrait.src ?? undefined,
     worksFor: { "@id": ids.organization },

@@ -3,6 +3,7 @@ import type { PageObjectResponse } from "@notionhq/client";
 import { NOTION_DATABASES, type NotionDatabaseKey } from "@/config/site";
 import { isAllowedImageUrl } from "@/config/images";
 import { FALLBACK_CONTENT } from "@/lib/content/fallback";
+import { formatOpeningHours } from "@/lib/content/format";
 import {
   cleanOptional,
   formatReviewAuthor,
@@ -11,14 +12,17 @@ import {
   parseBookingUrl,
   parseGeo,
   parseInteger,
+  parseList,
   parseOpeningHours,
+  parsePhone,
   parsePostalLine,
   parseRating,
   parseWeroRecipient,
+  splitOpeningLines,
   toE164,
 } from "@/lib/content/parse";
 import type { ImageSlot, Motif, SiteContent, SiteImage } from "@/lib/content/types";
-import { resolveIconName } from "@/lib/icons";
+import { DEFAULT_EXPERTISE_ICONS, resolveIconName } from "@/lib/icons";
 import type { NotionClient } from "./client";
 import { getCheckbox, getDateStart, getNumber, getText, getUrl } from "./properties";
 
@@ -111,8 +115,13 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
   const ratingValue = parseRating(g.text("Note_Google"));
   const openingRaw = g.text("Horaires");
   const openingHours = parseOpeningHours(openingRaw);
-  if (openingRaw && !openingHours) warnings.push(`Horaires illisibles : « ${openingRaw} »`);
+  if (!isPlaceholder(openingRaw) && !openingHours)
+    warnings.push(`Horaires non structurés (affichés tels quels, absents du JSON-LD) : « ${openingRaw} »`);
   const phoneDisplay = required(g.text("Telephone_Display"), F.contact.phoneDisplay, "Telephone_Display");
+  // Numéro secondaire optionnel (mobile du praticien) : une seule clé, le lien tel: en est dérivé.
+  const mobileRaw = g.text("Telephone_Mobile");
+  const mobilePhone = parsePhone(mobileRaw);
+  if (!isPlaceholder(mobileRaw) && !mobilePhone) warnings.push(`Telephone_Mobile illisible : « ${mobileRaw} » (attendu : « +352 6XX XXX XXX ») — numéro masqué`);
   const durationLabel = required(g.text("Duree_Consultation"), F.consultation.durationLabel, "Duree_Consultation");
   const geoRaw = g.text("GPS_Coordonnees");
   const geo = parseGeo(geoRaw);
@@ -128,11 +137,19 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
         : `Wero_Numero_Ou_Email illisible : « ${weroRaw} » (numéro de mobile ou e-mail attendu) — non publié`,
     );
 
-  // --- Section A_Propos (+ expertises optionnelles Expertise_1_Titre / Expertise_1_Texte …)
+  // --- Section A_Propos (+ expertises optionnelles Expertise_1_Titre / Expertise_1_Texte / Expertise_1_Icone …)
   const a = toKeyValue(db.about);
-  const expertises = [1, 2, 3, 4]
-    .map((i) => ({ title: a.text(`Expertise_${i}_Titre`), text: a.text(`Expertise_${i}_Texte`) }))
-    .filter((e) => !isPlaceholder(e.title) && !isPlaceholder(e.text));
+  const expertises = [1, 2, 3, 4].flatMap((i) => {
+    const title = a.text(`Expertise_${i}_Titre`);
+    const text = a.text(`Expertise_${i}_Texte`);
+    if (isPlaceholder(title) || isPlaceholder(text)) return [];
+    const icon = resolveIconName(
+      cleanOptional(a.text(`Expertise_${i}_Icone`)) ?? "",
+      (bad) => warnings.push(`Icône Lucide inconnue « ${bad} » pour Expertise_${i}_Icone (icône par défaut)`),
+      DEFAULT_EXPERTISE_ICONS[(i - 1) % DEFAULT_EXPERTISE_ICONS.length],
+    );
+    return [{ title, text, icon }];
+  });
 
   // --- Medias_Images : colonne URL uniquement (jamais le fichier Notion : URL S3 temporaire ~1 h)
   const m = toKeyValue(db.images);
@@ -215,6 +232,7 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
       countryCode: "LU",
       phoneDisplay,
       phoneE164: toE164(g.text("Telephone_RAW") || phoneDisplay),
+      mobilePhone,
       geo: geo ?? F.contact.geo,
       email: cleanOptional(g.text("Email_Contact")),
     },
@@ -238,10 +256,17 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
     },
     rating: ratingValue === null ? null : { value: ratingValue, count: parseInteger(g.text("Nombre_Avis_Google")) },
     openingHours,
-    access: cleanOptional(g.text("Acces_Info")),
+    openingHoursLines: openingHours ? formatOpeningHours(openingHours) : splitOpeningLines(openingRaw),
+    access: {
+      train: cleanOptional(g.text("Acces_Train")),
+      bus: cleanOptional(g.text("Acces_Bus")),
+      parking: cleanOptional(g.text("Acces_Parking")),
+      accessibility: cleanOptional(g.text("Acces_PMR")),
+    },
     languages,
     about: {
       education: cleanOptional(a.text("Formation")),
+      continuingEducation: parseList(a.text("Formations_Continues")),
       title: required(a.text("Titre"), F.about.title, "A_Propos.Titre"),
       shortBio: required(a.text("Bio_Courte"), F.about.shortBio, "A_Propos.Bio_Courte"),
       longBio: required(a.text("Bio_Detaillee"), F.about.longBio, "A_Propos.Bio_Detaillee"),
