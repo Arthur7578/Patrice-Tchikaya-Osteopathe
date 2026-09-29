@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { isAllowedImageUrl } from "@/config/images";
 import {
-  formatReviewAuthor, isPlaceholder, normalizeSlug, parseBookingUrl, parseGeo, parseOpeningHours,
+  formatReviewAuthor, isPlaceholder, normalizeSlug, parseBookingUrl, parseGeo, parseOpeningHours, splitOpeningLines,
   parseInteger, parseList, parsePhone, parsePostalLine, parseRating, toE164,
 } from "./parse";
 
@@ -67,6 +67,18 @@ describe("parse", () => {
       { days: ["Sa"], opens: "08:00", closes: "12:00" },
     ]);
     expect(parseOpeningHours("lundi 8h")).toBeNull();
+  });
+  it("parse les horaires saisis en français libre", () => {
+    expect(parseOpeningHours("Lundi au Vendredi, de 08:30-19:00 ; Samedi de 8h30 à 12h30")).toEqual([
+      { days: ["Mo", "Tu", "We", "Th", "Fr"], opens: "08:30", closes: "19:00" },
+      { days: ["Sa"], opens: "08:30", closes: "12:30" },
+    ]);
+    expect(parseOpeningHours("Lun, mer et ven : 9h-12h / 14h-18h")).toEqual([
+      { days: ["Mo", "We", "Fr"], opens: "09:00", closes: "12:00" },
+      { days: ["Mo", "We", "Fr"], opens: "14:00", closes: "18:00" },
+    ]);
+    expect(parseOpeningHours("Sur rendez-vous")).toBeNull();
+    expect(splitOpeningLines("Sur rendez-vous ; le samedi matin")).toEqual(["Sur rendez-vous", "le samedi matin"]);
   });
   it("parse les coordonnées GPS", () => {
     expect(parseGeo("49.481194, 6.084361")).toEqual({ latitude: 49.481194, longitude: 6.084361 });

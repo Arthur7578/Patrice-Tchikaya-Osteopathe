@@ -96,7 +96,10 @@ export type SiteContent = {
     reimbursement: string;
   };
   rating: Rating | null;
+  /** Horaires structurés (JSON-LD) ; null si le texte Notion n'a pas pu être interprété. */
   openingHours: OpeningHoursRange[] | null;
+  /** Horaires à afficher : mise en forme normalisée si lisibles, sinon texte Notion tel quel. */
+  openingHoursLines: string[];
   access: AccessInfo;
   languages: string[]; // Langues_Parlees "Français, Anglais"
   about: {

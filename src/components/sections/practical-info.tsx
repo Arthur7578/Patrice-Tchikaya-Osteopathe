@@ -20,7 +20,6 @@ import { Eyebrow } from "@/components/ui/eyebrow";
 import { Section } from "@/components/ui/section";
 import { SiteImage } from "@/components/ui/site-image";
 import { COPY } from "@/content/ui-copy";
-import { formatOpeningHours } from "@/lib/content/format";
 import type { AccessInfo, SiteContent } from "@/lib/content/types";
 import { googleMapsDirectionsUrl, googleMapsSearchUrl } from "@/lib/maps";
 
@@ -33,7 +32,7 @@ const ACCESS_ROWS: Array<{ key: keyof AccessInfo; icon: LucideIcon }> = [
 ];
 
 export function PracticalInfo({ content }: { content: SiteContent }) {
-  const { contact, consultation, openingHours, access, languages, images, googleBusinessUrl, booking } = content;
+  const { contact, consultation, openingHoursLines, access, languages, images, googleBusinessUrl, booking } = content;
   const { labels } = COPY.infos;
   const mapUrl = googleBusinessUrl ?? googleMapsSearchUrl(content);
 
@@ -158,14 +157,14 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
               <p className="text-slate-600">{consultation.reimbursement}</p>
             </dd>
 
-            {openingHours && (
+            {openingHoursLines.length > 0 && (
               <>
                 <dt className="text-sage-700">
                   <CalendarDays aria-hidden="true" className="size-5" />
                 </dt>
                 <dd>
                   <p className="font-semibold text-ink">{labels.hours}</p>
-                  {formatOpeningHours(openingHours).map((line) => (
+                  {openingHoursLines.map((line) => (
                     <p key={line} className="text-slate-600">
                       {line}
                     </p>
