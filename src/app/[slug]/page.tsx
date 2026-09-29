@@ -2,6 +2,7 @@ import { CalendarDays, ChevronRight, Phone } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BackToHome } from "@/components/layout/back-to-home";
 import { BookingLink } from "@/components/booking/booking-link";
 import { ContentBlocks } from "@/components/content/content-blocks";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -139,6 +140,8 @@ export default async function MotifPage({ params }: PageProps<"/[slug]">) {
             </a>
           </div>
         </section>
+
+        <BackToHome className="mt-10" />
       </article>
 
       {others.length > 0 && (

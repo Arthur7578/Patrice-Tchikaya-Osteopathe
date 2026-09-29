@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BackToHome } from "@/components/layout/back-to-home";
 import { getSiteContent } from "@/lib/content/get-site-content";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -74,6 +75,7 @@ export default async function ConfidentialitePage() {
             </p>
           </section>
         </div>
+        <BackToHome className="mt-12" />
       </div>
     </main>
   );
