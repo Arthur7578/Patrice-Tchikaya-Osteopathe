@@ -50,5 +50,14 @@ export const COPY = {
     bookingFallback: "Ouvrir l'agenda dans un nouvel onglet",
   },
   footer: { legal: "Mentions légales", privacy: "Confidentialité" },
+  // /llms.txt : intitulés structurels ; tout le contenu vient de getSiteContent().
+  llms: {
+    practical: "Informations pratiques",
+    motifs: "Motifs de consultation",
+    faq: "Questions fréquentes",
+    pages: "Pages du site",
+    booking: "Prise de rendez-vous en ligne",
+    home: "Page d'accueil",
+  },
   newTab: "(nouvel onglet)",
 } as const;
