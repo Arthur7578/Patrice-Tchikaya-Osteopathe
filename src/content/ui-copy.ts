@@ -6,6 +6,7 @@ export const NAV = [
   { href: "/#motifs", label: "Motifs" },
   { href: "/#faq", label: "FAQ" },
   { href: "/#infos", label: "Infos & Tarifs" },
+  { href: "/#acces", label: "Accès" },
 ] as const;
 
 export const COPY = {
@@ -58,6 +59,7 @@ export const COPY = {
       reimbursement: "Remboursement", hours: "Horaires", languages: "Langues",
       train: "Train", bus: "Bus", parking: "Stationnement", accessibility: "Accès PMR",
     },
+    accessTitle: "Accès",
     directions: "Itinéraire",
     map: "Voir sur Google Maps",
     bookingTitle: "Réserver votre séance en ligne",

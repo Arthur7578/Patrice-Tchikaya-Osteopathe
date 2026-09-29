@@ -12,29 +12,89 @@ import {
   SquareParking,
   TrainFront,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { Fragment } from "react";
+import type { ReactNode } from "react";
 import { BookingInline } from "@/components/booking/booking-inline";
-import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { Eyebrow } from "@/components/ui/eyebrow";
+import { ImagePlaceholder } from "@/components/ui/image-placeholder";
+import { InfoRow } from "@/components/ui/info-row";
 import { Section } from "@/components/ui/section";
 import { SiteImage } from "@/components/ui/site-image";
 import { COPY } from "@/content/ui-copy";
-import type { AccessInfo, SiteContent } from "@/lib/content/types";
+import type { AccessRowId, InfoRowId } from "@/lib/content/rows";
+import type { SiteContent } from "@/lib/content/types";
 import { googleMapsDirectionsUrl, googleMapsSearchUrl } from "@/lib/maps";
 
-/** Venir au cabinet : chaque ligne n'apparaît que si elle est renseignée dans Notion. */
-const ACCESS_ROWS: Array<{ key: keyof AccessInfo; icon: LucideIcon }> = [
-  { key: "train", icon: TrainFront },
-  { key: "bus", icon: Bus },
-  { key: "parking", icon: SquareParking },
-  { key: "accessibility", icon: Accessibility },
-];
+const DL = "grid grid-cols-[auto_1fr] gap-x-4 gap-y-5";
 
+/** Infos pratiques : blocs réordonnables depuis Notion (Infos_Ordre) ; le bloc « Accès » groupe ses lignes (Acces_Ordre). */
 export function PracticalInfo({ content }: { content: SiteContent }) {
-  const { contact, consultation, openingHoursLines, access, languages, images, googleBusinessUrl, booking } = content;
+  const { contact, consultation, openingHoursLines, languages, images, booking, rowOrder } = content;
   const { labels } = COPY.infos;
-  const mapUrl = googleBusinessUrl ?? googleMapsSearchUrl(content);
+
+  // Chaque bloc vaut false/null tant qu'il n'a rien à afficher.
+  const blocks: Record<InfoRowId, ReactNode> = {
+    acces: (
+      <div id="acces">
+        <h3 className="mb-3 text-sm font-semibold tracking-wide text-sage-700 uppercase">{COPY.infos.accessTitle}</h3>
+        <dl className={DL}>
+          {rowOrder.access.map((id) => (
+            <Fragment key={id}>{accessRow(id, content)}</Fragment>
+          ))}
+        </dl>
+      </div>
+    ),
+    telephone: (
+      <InfoRow icon={Phone} label={labels.phone}>
+        <p className="text-slate-500">
+          {labels.phoneOffice}{" "}
+          <a href={`tel:${contact.phoneE164}`} className="whitespace-nowrap text-slate-600 hover:text-sage-700">
+            {contact.phoneDisplay}
+          </a>
+        </p>
+        {contact.mobilePhone && (
+          <p className="text-slate-500">
+            {labels.phoneMobile}{" "}
+            <a
+              href={`tel:${contact.mobilePhone.e164}`}
+              className="whitespace-nowrap text-slate-600 hover:text-sage-700"
+            >
+              {contact.mobilePhone.display}
+            </a>
+          </p>
+        )}
+      </InfoRow>
+    ),
+    duree: (
+      <InfoRow icon={Clock} label={labels.duration}>
+        <p className="text-slate-600">{consultation.durationLabel}</p>
+      </InfoRow>
+    ),
+    tarif: consultation.price && (
+      <InfoRow icon={Euro} label={labels.price}>
+        <p className="text-slate-600">{consultation.price}</p>
+      </InfoRow>
+    ),
+    remboursement: (
+      <InfoRow icon={Receipt} label={labels.reimbursement}>
+        <p className="text-slate-600">{consultation.reimbursement}</p>
+      </InfoRow>
+    ),
+    horaires: openingHoursLines.length > 0 && (
+      <InfoRow icon={CalendarDays} label={labels.hours}>
+        {openingHoursLines.map((line) => (
+          <p key={line} className="text-slate-600">
+            {line}
+          </p>
+        ))}
+      </InfoRow>
+    ),
+    langues: languages.length > 0 && (
+      <InfoRow icon={Languages} label={labels.languages}>
+        <p className="text-slate-600">{languages.join(", ")}</p>
+      </InfoRow>
+    ),
+  };
 
   return (
     <Section id="infos" labelledBy="infos-title">
@@ -53,138 +113,14 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
           <h2 id="infos-title" className="mt-3 text-3xl font-bold tracking-tight text-balance text-ink md:text-4xl">
             {COPY.infos.title}
           </h2>
-
-          <dl className="mt-8 grid grid-cols-[auto_1fr] gap-x-4 gap-y-5">
-            <dt className="text-sage-700">
-              <MapPin aria-hidden="true" className="size-5" />
-            </dt>
-            <dd>
-              <p className="font-semibold text-ink">{labels.address}</p>
-              <address className="not-italic text-slate-600">
-                {contact.street}
-                <br />
-                {contact.postalCode} {contact.locality}
-              </address>
-              <div className="mt-1 flex flex-wrap gap-x-4 text-sm">
-                <a
-                  href={googleMapsDirectionsUrl(content)}
-                  target="_blank"
-                  rel="noopener"
-                  className="inline-flex items-center gap-1 font-semibold text-sage-700 underline underline-offset-4"
-                >
-                  <Navigation aria-hidden="true" className="size-4" />
-                  {COPY.infos.directions}
-                  <span className="sr-only">{COPY.newTab}</span>
-                </a>
-                <a
-                  href={mapUrl}
-                  target="_blank"
-                  rel="noopener"
-                  className="font-semibold text-sage-700 underline underline-offset-4"
-                >
-                  {COPY.infos.map}
-                  <span className="sr-only">{COPY.newTab}</span>
-                </a>
-              </div>
-            </dd>
-
-            {ACCESS_ROWS.map(({ key, icon: Icon }) =>
-              access[key] ? (
-                <Fragment key={key}>
-                  <dt className="text-sage-700">
-                    <Icon aria-hidden="true" className="size-5" />
-                  </dt>
-                  <dd>
-                    <p className="font-semibold text-ink">{labels[key]}</p>
-                    <p className="text-slate-600">{access[key]}</p>
-                  </dd>
-                </Fragment>
-              ) : null,
-            )}
-
-            <dt className="text-sage-700">
-              <Phone aria-hidden="true" className="size-5" />
-            </dt>
-            <dd>
-              <p className="font-semibold text-ink">{labels.phone}</p>
-              <p className="text-slate-500">
-                {labels.phoneOffice}{" "}
-                <a
-                  href={`tel:${contact.phoneE164}`}
-                  className="whitespace-nowrap text-slate-600 hover:text-sage-700"
-                >
-                  {contact.phoneDisplay}
-                </a>
-              </p>
-              {contact.mobilePhone && (
-                <p className="text-slate-500">
-                  {labels.phoneMobile}{" "}
-                  <a
-                    href={`tel:${contact.mobilePhone.e164}`}
-                    className="whitespace-nowrap text-slate-600 hover:text-sage-700"
-                  >
-                    {contact.mobilePhone.display}
-                  </a>
-                </p>
-              )}
-            </dd>
-
-            <dt className="text-sage-700">
-              <Clock aria-hidden="true" className="size-5" />
-            </dt>
-            <dd>
-              <p className="font-semibold text-ink">{labels.duration}</p>
-              <p className="text-slate-600">{consultation.durationLabel}</p>
-            </dd>
-
-            {consultation.price && (
-              <>
-                <dt className="text-sage-700">
-                  <Euro aria-hidden="true" className="size-5" />
-                </dt>
-                <dd>
-                  <p className="font-semibold text-ink">{labels.price}</p>
-                  <p className="text-slate-600">{consultation.price}</p>
-                </dd>
-              </>
-            )}
-
-            <dt className="text-sage-700">
-              <Receipt aria-hidden="true" className="size-5" />
-            </dt>
-            <dd>
-              <p className="font-semibold text-ink">{labels.reimbursement}</p>
-              <p className="text-slate-600">{consultation.reimbursement}</p>
-            </dd>
-
-            {openingHoursLines.length > 0 && (
-              <>
-                <dt className="text-sage-700">
-                  <CalendarDays aria-hidden="true" className="size-5" />
-                </dt>
-                <dd>
-                  <p className="font-semibold text-ink">{labels.hours}</p>
-                  {openingHoursLines.map((line) => (
-                    <p key={line} className="text-slate-600">
-                      {line}
-                    </p>
-                  ))}
-                </dd>
-              </>
-            )}
-
-            {languages.length > 0 && (
-              <>
-                <dt className="text-sage-700">
-                  <Languages aria-hidden="true" className="size-5" />
-                </dt>
-                <dd>
-                  <p className="font-semibold text-ink">{labels.languages}</p>
-                  <p className="text-slate-600">{languages.join(", ")}</p>
-                </dd>
-              </>
-            )}
-          </dl>
+          <div className="mt-8 grid gap-y-5">
+            {rowOrder.infos.map((id) => {
+              const block = blocks[id];
+              if (!block) return null;
+              // Le bloc Accès porte déjà son propre <dl> ; chaque autre ligne a le sien (un <dl> ne contient que dt/dd).
+              return id === "acces" ? <Fragment key={id}>{block}</Fragment> : <dl key={id} className={DL}>{block}</dl>;
+            })}
+          </div>
         </div>
 
         <div id="rendez-vous">
@@ -206,4 +142,58 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
       </div>
     </Section>
   );
+}
+
+/** Une ligne du bloc Accès ; null tant que la valeur Notion est vide ou « [À …] ». */
+function accessRow(id: AccessRowId, content: SiteContent): ReactNode {
+  const { contact, access, googleBusinessUrl } = content;
+  const { labels } = COPY.infos;
+  const text = (icon: typeof Bus, label: string, value: string | null) =>
+    value && (
+      <InfoRow icon={icon} label={label}>
+        <p className="text-slate-600">{value}</p>
+      </InfoRow>
+    );
+
+  switch (id) {
+    case "adresse":
+      return (
+        <InfoRow icon={MapPin} label={labels.address}>
+          <address className="not-italic text-slate-600">
+            {contact.street}
+            <br />
+            {contact.postalCode} {contact.locality}
+          </address>
+          <div className="mt-1 flex flex-wrap gap-x-4 text-sm">
+            <a
+              href={googleMapsDirectionsUrl(content)}
+              target="_blank"
+              rel="noopener"
+              className="inline-flex items-center gap-1 font-semibold text-sage-700 underline underline-offset-4"
+            >
+              <Navigation aria-hidden="true" className="size-4" />
+              {COPY.infos.directions}
+              <span className="sr-only">{COPY.newTab}</span>
+            </a>
+            <a
+              href={googleBusinessUrl ?? googleMapsSearchUrl(content)}
+              target="_blank"
+              rel="noopener"
+              className="font-semibold text-sage-700 underline underline-offset-4"
+            >
+              {COPY.infos.map}
+              <span className="sr-only">{COPY.newTab}</span>
+            </a>
+          </div>
+        </InfoRow>
+      );
+    case "train":
+      return text(TrainFront, labels.train, access.train);
+    case "bus":
+      return text(Bus, labels.bus, access.bus);
+    case "parking":
+      return text(SquareParking, labels.parking, access.parking);
+    case "pmr":
+      return text(Accessibility, labels.accessibility, access.accessibility);
+  }
 }
