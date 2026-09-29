@@ -233,6 +233,8 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
         recipientName: cleanOptional(g.text("Wero_Nom_Beneficiaire")),
       },
       otherMethods: cleanOptional(g.text("Autres_Moyens_Paiement")),
+      messageTip: cleanOptional(g.text("Wero_Conseil_Message")),
+      caution: cleanOptional(g.text("Paiement_Mise_En_Garde")),
     },
     rating: ratingValue === null ? null : { value: ratingValue, count: parseInteger(g.text("Nombre_Avis_Google")) },
     openingHours,

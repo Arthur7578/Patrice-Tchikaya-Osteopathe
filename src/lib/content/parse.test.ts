@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { isAllowedImageUrl } from "@/config/images";
 import {
-  formatReviewAuthor, isPlaceholder, normalizeSlug, parseBookingUrl, parseGeo, parseOpeningHours,
+  cleanOptional, formatReviewAuthor, isPlaceholder, normalizeSlug, parseBookingUrl, parseGeo, parseOpeningHours,
   parsePostalLine, parseRating, parseWeroRecipient, toE164,
 } from "./parse";
 
@@ -64,6 +64,22 @@ describe("parse", () => {
     expect(parseWeroRecipient("51 92")).toBeNull();
     expect(parseWeroRecipient("cabinet@")).toBeNull();
     expect(parseWeroRecipient("Patrice")).toBeNull();
+  });
+  it("traite les lignes Notion « à compléter » de /paiement comme absentes (rien d'affiché)", () => {
+    // Valeurs exactes créées dans Informations_generales le 29/09/2026.
+    const placeholders = [
+      "[À COMPLÉTER : numéro de mobile ou adresse e-mail Wero du cabinet]",
+      "[À COMPLÉTER : nom tel qu'affiché par Wero avant la validation du paiement]",
+      "[À COMPLÉTER — facultatif : autres moyens de paiement acceptés, en texte libre. Laisser tel quel pour ne rien afficher]",
+      "[Facultatif — encart « Bon à savoir » sous les étapes de paiement. Laisser tel quel pour ne rien afficher]",
+    ];
+    for (const value of placeholders) {
+      expect(cleanOptional(value)).toBeNull();
+      expect(parseWeroRecipient(value)).toBeNull();
+    }
+    expect(cleanOptional("En message, précisez le nom du patient et la date de la séance.")).toBe(
+      "En message, précisez le nom du patient et la date de la séance.",
+    );
   });
   it("valide les hôtes d'images", () => {
     expect(isAllowedImageUrl("https://abc123.public.blob.vercel-storage.com/portrait.jpg")).toBe(true);

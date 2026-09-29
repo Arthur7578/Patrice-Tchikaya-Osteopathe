@@ -42,10 +42,13 @@ export const FALLBACK_CONTENT: SiteContent = {
   },
   // Transmis par Patrice (via Arthur, 28/09/2026) : règlement après la séance, Wero parmi les options.
   // Coordonnées Wero et autres moyens de paiement inconnus à cette date : rien d'inventé (null = masqué).
+  // Encart « Bon à savoir » : non souhaité pour l'instant (29/09/2026) -> null, activable depuis Notion.
   payment: {
     info: "Le règlement se fait après la séance. Wero fait partie des moyens de paiement acceptés.",
     wero: { recipient: null, recipientName: null },
     otherMethods: null,
+    messageTip: "En message, précisez le nom du patient et la date de la séance.",
+    caution: null,
   },
   rating: { value: 5, count: null },
   openingHours: null,

@@ -21,7 +21,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /**
  * Règlement après la séance : guide Wero pour les patients (page à partager par SMS / e-mail).
- * Coordonnées Wero et autres moyens de paiement : Notion ; rien n'est affiché s'ils manquent.
+ * Coordonnées Wero, autres moyens, conseil sur le message et encart « Bon à savoir » : Notion ;
+ * rien n'est affiché s'ils manquent.
  */
 export default async function PaiementPage() {
   const { payment, consultation, contact } = await getSiteContent();
@@ -30,7 +31,7 @@ export default async function PaiementPage() {
   const steps = [
     { title: copy.steps.open.title, text: copy.steps.open.text },
     { title: copy.steps.send.title, text: copy.steps.send.text(wero.recipient) },
-    { title: copy.steps.amount.title, text: copy.steps.amount.text(consultation.price) },
+    { title: copy.steps.amount.title, text: copy.steps.amount.text(consultation.price, payment.messageTip) },
     { title: copy.steps.confirm.title, text: copy.steps.confirm.text(wero.recipientName) },
   ];
 
@@ -92,12 +93,14 @@ export default async function PaiementPage() {
               </li>
             ))}
           </ol>
-          <p className="mt-6 flex gap-3 rounded-2xl border border-sage-200 bg-sage-50 p-5 text-slate-700">
-            <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-sage-700" />
-            <span>
-              <strong className="font-semibold text-ink">{copy.caution.title} :</strong> {copy.caution.text}
-            </span>
-          </p>
+          {payment.caution && (
+            <p className="mt-6 flex gap-3 rounded-2xl border border-sage-200 bg-sage-50 p-5 text-slate-700">
+              <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-sage-700" />
+              <span>
+                <strong className="font-semibold text-ink">{copy.caution.label} :</strong> {payment.caution}
+              </span>
+            </p>
+          )}
         </section>
 
         <section aria-labelledby="securite-title" className="mt-16 rounded-3xl bg-sage-700 p-8 text-white md:p-12">

@@ -64,6 +64,8 @@ export type Payment = {
     recipientName: string | null; // Wero_Nom_Beneficiaire : nom affiché par Wero avant validation
   };
   otherMethods: string | null; // Autres_Moyens_Paiement (texte libre) ; null = bloc masqué
+  messageTip: string | null; // Wero_Conseil_Message : conseil sur le message joint au paiement (étape 3) ; null = masqué
+  caution: string | null; // Paiement_Mise_En_Garde : encart « Bon à savoir » facultatif ; null = pas d'encart
 };
 
 export type SiteContent = {

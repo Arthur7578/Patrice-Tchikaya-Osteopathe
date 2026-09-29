@@ -73,29 +73,28 @@ export const COPY = {
         title: "Ouvrez Wero",
         text: "Dans l'application Wero, ou dans l'application de votre banque si Wero y est intégré.",
       },
-      // Espaces insécables ( ) : un numéro, un montant ou un nom entre guillemets ne se coupe pas en fin de ligne.
+      // Espaces insécables (\u00a0) : un numéro, un montant ou un nom entre guillemets ne se coupe pas en fin de ligne.
       send: {
         title: "Envoyez au cabinet",
         text: (recipient: WeroRecipient | null) =>
           recipient
-            ? `Choisissez l'envoi d'argent, puis saisissez ${recipient.kind === "email" ? "l'adresse e-mail" : "le numéro"} Wero du cabinet : ${recipient.value.replace(/ /g, " ")}.`
+            ? `Choisissez l'envoi d'argent, puis saisissez ${recipient.kind === "email" ? "l'adresse e-mail" : "le numéro"} Wero du cabinet : ${recipient.value.replace(/ /g, "\u00a0")}.`
             : "Choisissez l'envoi d'argent, puis saisissez le numéro de mobile ou l'adresse e-mail Wero du cabinet. Vous ne les avez pas ? Demandez-les au cabinet.",
       },
       amount: {
         title: "Indiquez le montant",
-        text: (price: string | null) =>
-          `Saisissez le montant de votre séance${price ? ` (${price.replace(/ /g, " ")} pour une consultation)` : ""}. En message, précisez le nom du patient et la date de la séance.`,
+        // `tip` : conseil optionnel sur le message joint au paiement (Notion : Wero_Conseil_Message).
+        text: (price: string | null, tip: string | null) =>
+          `Saisissez le montant de votre séance${price ? ` (${price.replace(/ /g, "\u00a0")} pour une consultation)` : ""}.${tip ? ` ${tip}` : ""}`,
       },
       confirm: {
         title: "Vérifiez, puis validez",
         text: (name: string | null) =>
-          `Contrôlez le nom du bénéficiaire affiché${name ? ` (« ${name} »)` : ""} et le montant, puis validez avec votre empreinte, votre visage ou votre code. L'argent arrive en quelques secondes.`,
+          `Contrôlez le nom du bénéficiaire affiché${name ? ` («\u00a0${name}\u00a0»)` : ""} et le montant, puis validez avec votre empreinte, votre visage ou votre code. L'argent arrive en quelques secondes.`,
       },
     },
-    caution: {
-      title: "Bon à savoir",
-      text: "un paiement Wero est immédiat et ne peut pas être annulé : vérifiez le destinataire et le montant avant de valider. Et ne communiquez jamais vos codes bancaires, à personne.",
-    },
+    // Encart facultatif : seul le libellé est ici, le texte vient de Notion (Paiement_Mise_En_Garde).
+    caution: { label: "Bon à savoir" },
     reassuranceTitle: "Un paiement simple et sûr",
     reassurance: [
       {
@@ -128,7 +127,7 @@ export const COPY = {
       {
         title: "Votre banque est en France, en Belgique ou en Allemagne",
         lines: [
-          "Wero y est proposé par de nombreuses banques, souvent directement dans leur application : cherchez « Wero » dans ses menus.",
+          "Wero y est proposé par de nombreuses banques, souvent directement dans leur application : cherchez «\u00a0Wero\u00a0» dans ses menus.",
         ],
       },
     ],
