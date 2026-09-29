@@ -1,4 +1,4 @@
-import type { Booking, Geo, OpeningHoursRange, Phone } from "./types";
+import type { Booking, Geo, OpeningHoursRange, Phone, WeroRecipient } from "./types";
 
 /** "[Mettre le tarif ex: 90 €]" ou vide => valeur non renseignée. */
 export function isPlaceholder(value: string | null | undefined): boolean {
@@ -71,6 +71,20 @@ export function parseGeo(value: string | null | undefined): Geo | null {
   const longitude = Number(m[2]);
   if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
   return { latitude, longitude };
+}
+
+/**
+ * Coordonnées Wero (Notion : `Wero_Numero_Ou_Email`) : Wero accepte un numéro de mobile ou une
+ * adresse e-mail. La saisie de Notion est gardée telle quelle pour l'affichage ("+352 691 123 456").
+ * Illisible ou placeholder -> null (rien n'est publié plutôt qu'une coordonnée fausse).
+ */
+export function parseWeroRecipient(value: string | null | undefined): WeroRecipient | null {
+  if (isPlaceholder(value)) return null;
+  const v = value!.trim();
+  if (v.includes("@")) return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? { value: v, kind: "email" } : null;
+  const digits = v.replace(/\D/g, "");
+  const phoneLike = /^\+?[\d\s().-]+$/.test(v);
+  return phoneLike && digits.length >= 8 && digits.length <= 15 ? { value: v, kind: "phone" } : null;
 }
 
 /** "5 / 5" | "4,5" | "5" -> 5 | 4.5 ; hors [0,5] ou illisible -> null */

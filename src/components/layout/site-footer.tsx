@@ -69,6 +69,11 @@ export function SiteFooter({ content }: Props) {
                 </li>
               )}
               <li>
+                <Link href="/paiement" className="text-sage-100/80 hover:text-white hover:underline">
+                  {COPY.footer.payment}
+                </Link>
+              </li>
+              <li>
                 <Link href="/mentions-legales" className="text-sage-100/80 hover:text-white hover:underline">
                   Mentions légales
                 </Link>

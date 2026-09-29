@@ -17,6 +17,7 @@ export const NOTION_DATABASES = {
   motifs: "3e84bf3fc72880f89f2cf61ae9b23382", // Motifs_Consultation
   reviews: "3e84bf3fc7288023beb4d2739a387a17", // Avis_Patients
   faq: "3e84bf3fc7288062883dc5d447128b28", // FAQ_SEO
+  payment: "09ea52854d4b47e9a522189081127d56", // Page_Paiement (textes de /paiement)
 } as const;
 
 export type NotionDatabaseKey = keyof typeof NOTION_DATABASES;
@@ -33,5 +34,5 @@ export const MOTIF_PAGES = { validatedProperty: "Page_Validée", minWords: 300 }
  * peuvent pas entrer en collision : un slug normalisé ne contient jamais de point.
  */
 export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
-  "admin", "api", "apple-icon", "confidentialite", "mentions-legales", "opengraph-image",
+  "admin", "api", "apple-icon", "confidentialite", "mentions-legales", "opengraph-image", "paiement",
 ]);

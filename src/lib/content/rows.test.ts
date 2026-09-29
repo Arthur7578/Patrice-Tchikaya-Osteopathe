@@ -9,7 +9,7 @@ describe("resolveRowOrder", () => {
 
   it("respecte l'ordre saisi et ajoute les lignes oubliées à la fin", () => {
     expect(resolveRowOrder("tarif, horaires", INFO_ROW_IDS)).toEqual([
-      "tarif", "horaires", "acces", "telephone", "duree", "remboursement", "langues",
+      "tarif", "horaires", "acces", "telephone", "duree", "reglement", "remboursement", "langues",
     ]);
   });
 
@@ -22,5 +22,10 @@ describe("resolveRowOrder", () => {
     const order = resolveRowOrder("parking, metro, adresse", ACCESS_ROW_IDS, (u) => unknown.push(u));
     expect(unknown).toEqual(["metro"]);
     expect(order).toEqual(["parking", "adresse", "train", "bus", "pmr"]);
+  });
+
+  it("« reglement » est un bloc réordonnable, placé juste après le tarif par défaut", () => {
+    expect(INFO_ROW_IDS.indexOf("reglement")).toBe(INFO_ROW_IDS.indexOf("tarif") + 1);
+    expect(resolveRowOrder("reglement, tarif", INFO_ROW_IDS).slice(0, 2)).toEqual(["reglement", "tarif"]);
   });
 });

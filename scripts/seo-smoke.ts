@@ -66,6 +66,15 @@ async function main() {
   const mobile = content.contact.mobilePhone;
   if (mobile) check(root.querySelectorAll(`a[href="tel:${mobile.e164}"]`).length >= 1, `lien tel:${mobile.e164} (mobile) présent`);
 
+  // Page /paiement (guide Wero) : liée depuis l'accueil, un seul <h1>, canonical propre.
+  check(root.querySelectorAll('a[href="/paiement"]').length >= 1, "lien vers /paiement présent sur l'accueil");
+  const payRes = await fetch(`${base}/paiement`);
+  check(payRes.status === 200, `GET /paiement → ${payRes.status}`);
+  const payRoot = parse(await payRes.text());
+  check(payRoot.querySelectorAll("h1").length === 1, "un seul <h1> sur /paiement");
+  const payCanonical = payRoot.querySelector('link[rel="canonical"]')?.getAttribute("href") ?? "";
+  check(payCanonical.endsWith("/paiement"), `canonical de /paiement : ${payCanonical}`);
+
   // Pages motifs (phase 9) : une page par motif publié (Page_Validée + seuil de mots), liée depuis
   // l'accueil et le sitemap, avec ses propres métadonnées et son JSON-LD (MedicalWebPage + fil d'Ariane).
   const published = content.motifs.filter((m) => m.page);

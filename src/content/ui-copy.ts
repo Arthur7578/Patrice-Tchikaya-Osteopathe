@@ -55,18 +55,30 @@ export const COPY = {
     eyebrow: "Infos pratiques",
     title: "Infos pratiques, accès & tarifs",
     labels: {
-      address: "Adresse", phone: "Téléphone", phoneOffice: "Cabinet\u00a0:", phoneMobile: "Mobile\u00a0:", duration: "Durée", price: "Tarif",
+      address: "Adresse", phone: "Téléphone", phoneOffice: "Cabinet\u00a0:", phoneMobile: "Mobile\u00a0:", duration: "Durée", price: "Tarif", payment: "Règlement",
       reimbursement: "Remboursement", hours: "Horaires", languages: "Langues",
       train: "Train", bus: "Bus", parking: "Stationnement", accessibility: "Accès PMR",
     },
     accessTitle: "Accès",
     directions: "Itinéraire",
     map: "Voir sur Google Maps",
+    paymentLink: "Comment payer avec Wero",
     bookingTitle: "Réserver votre séance en ligne",
     bookingText: "Choisissez un créneau : la confirmation vous est envoyée par e-mail.",
     bookingFallback: "Ouvrir l'agenda dans un nouvel onglet",
   },
-  footer: { legal: "Mentions légales", privacy: "Confidentialité" },
+  /**
+   * Page /paiement : seuls les métadonnées par défaut et le libellé lu par les lecteurs d'écran sont ici. Tous les
+   * textes visibles de la page (titres, étapes, libellés, aide…) viennent de la base Notion Page_Paiement
+   * (secours : fallback.ts).
+   */
+  payment: {
+    metaTitle: "Régler votre séance avec Wero",
+    metaDescription: (city: string) =>
+      `Régler votre séance d'ostéopathie à ${city} avec Wero : les étapes, pourquoi c'est sûr et que faire si vous n'avez pas encore Wero.`,
+    step: (n: number) => `Étape ${n} : `, // annoncé par les lecteurs d'écran (le numéro affiché est décoratif)
+  },
+  footer: { legal: "Mentions légales", privacy: "Confidentialité", payment: "Régler votre séance" },
   backToHome: "Retour à l'accueil",
   menu: { open: "Ouvrir le menu", close: "Fermer le menu", label: "Menu principal" },
   // /llms.txt : intitulés structurels ; tout le contenu vient de getSiteContent().

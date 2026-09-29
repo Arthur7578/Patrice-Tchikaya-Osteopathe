@@ -19,6 +19,8 @@ describe("buildLlmsTxt", () => {
     for (const f of FALLBACK_CONTENT.faq) expect(out).toContain(f.question);
     expect(out).toContain(`](${FALLBACK_CONTENT.booking.url})`);
     expect(out).toContain("(https://exemple.test/mentions-legales)");
+    expect(out).toContain(FALLBACK_CONTENT.payment.info);
+    expect(out).toContain("(https://exemple.test/paiement)");
   });
 
   it("n'écrit jamais « médecin » ni « Dr »", () => {
