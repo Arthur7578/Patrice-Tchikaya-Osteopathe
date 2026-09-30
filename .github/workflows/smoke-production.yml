@@ -3,9 +3,9 @@ name: Contrôle du site en production
 # Chaque matin, ou à la demande : seo:smoke sur https://osteopathe-tchikaya.lu, donc sur le contenu Notion réel
 # (le reste de la CI utilise le contenu de secours). Détecte par exemple un <h1> en double, une canonical fausse,
 # un lien de RDV cassé ou une page motif disparue après une modification dans Notion.
-# Le script compare le site au contenu Notion : ajouter le secret NOTION_TOKEN (intégration en lecture seule,
-# Settings > Secrets and variables > Actions). Sans lui, la comparaison se fait avec fallback.ts et peut signaler
-# des écarts qui n'en sont pas.
+# Secret recommandé : NOTION_TOKEN (intégration en lecture seule, Settings > Secrets and variables > Actions).
+# Avec lui, seo:smoke compare le site au contenu Notion et notion:check signale les problèmes de contenu ;
+# sans lui, la comparaison se fait avec fallback.ts et peut signaler des écarts qui n'en sont pas.
 on:
   schedule:
     - cron: "43 5 * * *"
@@ -18,6 +18,8 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -25,13 +27,13 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Secret NOTION_TOKEN
-        env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+      - name: Secret NOTION_TOKEN absent
+        if: env.NOTION_TOKEN == ''
         run: |
-          if [ -z "$NOTION_TOKEN" ]; then
-            echo "::warning::Secret NOTION_TOKEN absent : comparaison avec le contenu de secours (fallback.ts)."
-          fi
+          echo "::warning::Secret NOTION_TOKEN absent : comparaison avec le contenu de secours (fallback.ts), notion:check non lancé."
+      - name: Diagnostic du contenu Notion (notion:check)
+        if: env.NOTION_TOKEN != ''
+        run: |
+          printf 'NOTION_TOKEN=%s\n' "$NOTION_TOKEN" > .env.local
+          npm run notion:check
       - run: npm run seo:smoke -- https://osteopathe-tchikaya.lu
-        env:
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
