@@ -6,7 +6,12 @@ const PORT = Number(process.env.E2E_PORT ?? 3100);
 /**
  * e2e sur le build de production : `npm run build` d'abord (ou laisser CI le faire), puis `npm run test:e2e`.
  * Chromium préinstallé (env cloud) : PLAYWRIGHT_CHROMIUM_PATH ou /opt/pw-browsers ; jamais de `playwright install`.
+ * Safari (WebKit, projet « iphone ») : en CI seulement, l'environnement cloud n'a pas WebKit.
  */
+const chromium = {
+  launchOptions: process.env.PLAYWRIGHT_CHROMIUM_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH } : {},
+};
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
@@ -15,11 +20,12 @@ export default defineConfig({
   reporter: [["list"]],
   use: {
     baseURL: `http://localhost:${PORT}`,
-    launchOptions: process.env.PLAYWRIGHT_CHROMIUM_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH } : {},
   },
   projects: [
-    { name: "desktop", use: { ...devices["Desktop Chrome"] } },
-    { name: "mobile", use: { ...devices["Pixel 7"] } },
+    { name: "desktop", use: { ...devices["Desktop Chrome"], ...chromium } },
+    { name: "mobile", use: { ...devices["Pixel 7"], ...chromium } },
+    // Une grande part des visiteurs mobiles sont sur iPhone (Safari) : même parcours, moteur WebKit.
+    ...(process.env.CI ? [{ name: "iphone", use: { ...devices["iPhone 13"] } }] : []),
   ],
   webServer: {
     command: `npx next start -p ${PORT}`,

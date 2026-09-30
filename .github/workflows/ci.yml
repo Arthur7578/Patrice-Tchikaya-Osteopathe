@@ -34,8 +34,8 @@ jobs:
           npx next start -p 3200 > /tmp/next-smoke.log 2>&1 &
           for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:3200/ && break; sleep 1; done
           npm run seo:smoke -- http://localhost:3200
-      - name: Navigateur Playwright
-        run: npx playwright install --with-deps chromium
+      - name: Navigateurs Playwright (Chromium, et WebKit pour Safari / iPhone)
+        run: npx playwright install --with-deps chromium webkit
       - run: npm run test:e2e
         env:
           CI: "true"
