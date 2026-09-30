@@ -5,14 +5,15 @@ import { getSiteContent } from "@/lib/content/get-site-content";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
   const { motifs } = await getSiteContent();
+  // lastModified seulement quand une vraie date existe (édition Notion) : une date = heure de génération
+  // serait fausse à chaque requête et Google finirait par ignorer le champ pour tout le site.
   return [
-    { url: `${SITE_URL}/`, lastModified: now },
+    { url: `${SITE_URL}/` },
     // Pages motifs publiées (phase 9), datées de leur dernière modification dans Notion.
     ...motifs.flatMap((m) => (m.page ? [{ url: `${SITE_URL}/${m.slug}`, lastModified: new Date(m.page.lastEdited) }] : [])),
-    { url: `${SITE_URL}/paiement`, lastModified: now },
-    { url: `${SITE_URL}/mentions-legales`, lastModified: now },
-    { url: `${SITE_URL}/confidentialite`, lastModified: now },
+    { url: `${SITE_URL}/paiement` },
+    { url: `${SITE_URL}/mentions-legales` },
+    { url: `${SITE_URL}/confidentialite` },
   ];
 }
