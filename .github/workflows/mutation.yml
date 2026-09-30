@@ -60,7 +60,7 @@ jobs:
           key: stryker-${{ matrix.group }}-${{ hashFiles('src/**/*.test.ts', 'src/**/*.test.tsx', 'src/test/**', 'vitest.setup.ts', 'vitest.config.mts', 'stryker/**') }}-${{ github.run_id }}
           restore-keys: stryker-${{ matrix.group }}-${{ hashFiles('src/**/*.test.ts', 'src/**/*.test.tsx', 'src/test/**', 'vitest.setup.ts', 'vitest.config.mts', 'stryker/**') }}-
       - run: npm run test:mutation -- ${{ matrix.group }}
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: mutation-${{ matrix.group }}
