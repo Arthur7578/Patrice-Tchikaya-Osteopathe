@@ -10,7 +10,7 @@
  * Rapports : reports/mutation/<groupe>/index.html (+ mutation.json) ; incrémental : reports/incremental/<groupe>.json
  */
 import { spawnSync } from "node:child_process";
-import { appendFileSync, existsSync, globSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, globSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 
 /**
  * Version épinglée, hors package.json (ses dépendances apportent des alertes `npm audit`). Installée dans un
@@ -120,6 +120,7 @@ for (const group of groups.filter((g) => requested.length === 0 || requested.inc
   };
   const configFile = `${dir}/stryker.config.json`;
   writeFileSync(configFile, `${JSON.stringify(config, null, 2)}\n`);
+  rmSync(config.jsonReporter.fileName, { force: true }); // un résumé ne doit jamais reprendre un ancien rapport
   console.log(`\n### Groupe ${group.name} : ${files.length} fichier(s)`);
   const run = spawnSync(stryker, ["run", configFile], { stdio: "inherit" });
   if (run.status !== 0) failed = true;
