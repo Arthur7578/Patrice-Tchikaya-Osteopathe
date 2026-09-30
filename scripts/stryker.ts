@@ -14,6 +14,11 @@ import { appendFileSync, existsSync, globSync, mkdirSync, readFileSync, writeFil
 
 /** Version épinglée, lancée via npx et hors package.json : ses dépendances apportent des alertes `npm audit`. */
 const STRYKER = "@stryker-mutator/core@10.0.0";
+/**
+ * Stryker importe `typescript` (réécriture du tsconfig dans son bac à sable) : installé par npx à côté de lui,
+ * il ne voit pas celui du projet. On lui fournit donc la même version que le projet.
+ */
+const TYPESCRIPT = `typescript@${(JSON.parse(readFileSync("node_modules/typescript/package.json", "utf8")) as { version: string }).version}`;
 
 type Group = { name: string; include: string[]; exclude: string[] };
 
@@ -90,7 +95,8 @@ for (const group of groups.filter((g) => requested.length === 0 || requested.inc
   const config = {
     ...base,
     mutate: files,
-    commandRunner: { command: `npx vitest related --run --reporter=dot ${files.map(shellQuote).join(" ")}` },
+    // Binaire local (pas npx) : évite le démarrage de npm à chaque mutant.
+    commandRunner: { command: `node_modules/.bin/vitest related --run --reporter=dot ${files.map(shellQuote).join(" ")}` },
     incrementalFile: `reports/incremental/${group.name}.json`,
     htmlReporter: { fileName: `${dir}/index.html` },
     jsonReporter: { fileName: `${dir}/mutation.json` },
@@ -98,7 +104,7 @@ for (const group of groups.filter((g) => requested.length === 0 || requested.inc
   const configFile = `${dir}/stryker.config.json`;
   writeFileSync(configFile, `${JSON.stringify(config, null, 2)}\n`);
   console.log(`\n### Groupe ${group.name} : ${files.length} fichier(s)`);
-  const run = spawnSync("npx", ["--yes", STRYKER, "run", configFile], { stdio: "inherit" });
+  const run = spawnSync("npx", ["--yes", "-p", TYPESCRIPT, "-p", STRYKER, "stryker", "run", configFile], { stdio: "inherit" });
   if (run.status !== 0) failed = true;
   if (existsSync(config.jsonReporter.fileName)) {
     const summary = summarize(group.name, config.jsonReporter.fileName);
