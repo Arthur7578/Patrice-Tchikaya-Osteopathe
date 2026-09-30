@@ -1,9 +1,8 @@
 {
   "testRunner": "command",
-  "commandRunner": { "command": "npx vitest run --reporter=dot" },
   "coverageAnalysis": "off",
-  "mutate": [],
-  "reporters": ["clear-text", "html"],
+  "reporters": ["clear-text", "html", "json"],
+  "clearTextReporter": { "allowColor": false, "logTests": false },
   "concurrency": 4,
   "timeoutMS": 60000,
   "incremental": true,

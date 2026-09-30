@@ -1,16 +1,21 @@
 /**
- * Contrôle de mutations ciblé : casse volontairement une règle critique du code, puis vérifie que la suite
- * de tests concernée ÉCHOUE (mutant « tué »). Un mutant qui survit = un test manquant ou trop faible.
+ * Contrôle de mutations ciblé : casse volontairement une règle critique du code, puis vérifie qu'au moins une
+ * ASSERTION des tests concernés échoue (mutant « tué »). Un mutant qui survit = un test manquant ou trop faible.
  *
- * Pourquoi pas Stryker : essayé (voir docs/DECISIONS.md) ; avec vitest 5 le runner vitest tue presque
- * rien à tort, et le runner `command` est trop lent (plusieurs minutes par fichier). Ici la liste est
- * courte, écrite à la main, et ne couvre que ce qui protège les règles du site (sécurité, SEO, RDV, 404).
+ * Complément de Stryker (`npm run test:mutation`, nocturne) : Stryker génère des milliers de mutations
+ * automatiques mais ne bloque pas les PR ; cette liste courte, écrite à la main, protège les règles du site
+ * (sécurité, SEO, RDV, 404) et bloque la CI de chaque PR.
+ *
+ * Classement : « tué » si au moins un test échoue ; « erreur » si les tests n'ont pas pu s'exécuter (mutant
+ * qui ne compile pas : à corriger dans cette liste, ce n'est pas une détection) ; « délai » au-delà de 3 min.
  *
  * Usage : npm run test:mutants [-- filtre]   (le filtre est cherché dans le nom du mutant)
  * Nécessite que les fichiers mutés n'aient aucune modification non commitée (restauration via git).
  */
 import { execFileSync, spawnSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 type Mutant = { name: string; file: string; find: string; replace: string; tests: string[] };
 
@@ -90,14 +95,45 @@ const restore = () => {
 for (const signal of ["SIGINT", "SIGTERM"] as const) process.on(signal, () => (restore(), process.exit(130)));
 process.on("exit", restore);
 
+type Outcome = "passed" | "failed" | "error" | "timeout";
+
+/** Lance vitest (rapport JSON) : « failed » seulement si au moins une assertion échoue. */
+function runTests(tests: string[]): { outcome: Outcome; detail: string } {
+  const dir = mkdtempSync(join(tmpdir(), "mutants-"));
+  const report = join(dir, "vitest.json");
+  try {
+    const run = spawnSync("npx", ["vitest", "run", "--reporter=json", `--outputFile=${report}`, ...tests], {
+      stdio: "ignore",
+      timeout: 180_000,
+    });
+    if (run.signal || run.error) return { outcome: "timeout", detail: String(run.error ?? run.signal) };
+    const result = JSON.parse(readFileSync(report, "utf8")) as {
+      numFailedTests: number;
+      numFailedTestSuites: number;
+      testResults: Array<{ name: string; message?: string }>;
+    };
+    if (result.numFailedTests > 0) return { outcome: "failed", detail: `${result.numFailedTests} test(s) en échec` };
+    if (result.numFailedTestSuites > 0) {
+      const messages = result.testResults.filter((r) => r.message).map((r) => `${r.name} : ${r.message!.split("\n")[0]}`);
+      return { outcome: "error", detail: messages.join(" ; ") };
+    }
+    return { outcome: "passed", detail: "" };
+  } catch (error) {
+    return { outcome: "error", detail: `rapport vitest illisible (${String(error)})` };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
 // La suite doit d'abord passer sans mutation, sinon « tué » ne veut rien dire.
-const baseline = spawnSync("npx", ["vitest", "run", "--reporter=dot", ...new Set(selected.flatMap((m) => m.tests))], { encoding: "utf8" });
-if (baseline.status !== 0) {
-  console.error(`La suite échoue sans mutation :\n${baseline.stdout}\n${baseline.stderr}`);
+const baseline = runTests([...new Set(selected.flatMap((m) => m.tests))]);
+if (baseline.outcome !== "passed") {
+  console.error(`La suite échoue sans mutation (${baseline.outcome}) : ${baseline.detail}\nRelancer : npx vitest run`);
   process.exit(2);
 }
 
 const survivors: string[] = [];
+const invalid: string[] = [];
 for (const mutant of selected) {
   const source = readFileSync(mutant.file, "utf8");
   const occurrences = source.split(mutant.find).length - 1;
@@ -107,15 +143,24 @@ for (const mutant of selected) {
   }
   current = mutant.file;
   writeFileSync(mutant.file, source.replace(mutant.find, () => mutant.replace));
-  const run = spawnSync("npx", ["vitest", "run", "--reporter=dot", ...mutant.tests], { encoding: "utf8" });
+  const { outcome, detail } = runTests(mutant.tests);
   restore();
-  const killed = run.status !== 0;
-  console.log(`${killed ? "✓ tué    " : "✗ SURVIVANT"} ${mutant.name}`);
-  if (!killed) survivors.push(mutant.name);
+  if (outcome === "failed") console.log(`✓ tué      ${mutant.name}`);
+  else if (outcome === "passed") {
+    console.log(`✗ SURVIVANT ${mutant.name}`);
+    survivors.push(mutant.name);
+  } else {
+    console.log(`! ${outcome === "timeout" ? "DÉLAI" : "ERREUR"}    ${mutant.name} : ${detail}`);
+    invalid.push(mutant.name);
+  }
 }
 
-console.log(`\n${selected.length - survivors.length}/${selected.length} mutants tués.`);
+const killed = selected.length - survivors.length - invalid.length;
+console.log(`\n${killed}/${selected.length} mutants tués.`);
+if (invalid.length > 0) {
+  console.error(`Mutants invalides (les tests n'ont pas pu s'exécuter : corriger la mutation) :\n- ${invalid.join("\n- ")}`);
+}
 if (survivors.length > 0) {
   console.error(`Survivants (tests manquants ou trop faibles) :\n- ${survivors.join("\n- ")}`);
-  process.exit(1);
 }
+if (invalid.length > 0 || survivors.length > 0) process.exit(1);

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FALLBACK_CONTENT as C } from "@/lib/content/fallback";
 import type { SiteContent } from "@/lib/content/types";
 import { bookingAnchors, expectSiteRules, jsonLdNodes, renderPage, visibleText } from "@/test/render";
@@ -51,8 +51,10 @@ describe("page d'accueil", () => {
   it("la note Google en direct remplace celle de Notion", async () => {
     getGoogleRating.mockResolvedValue({ value: 4.7, count: 42 });
     const text = visibleText(await renderPage(Home));
-    expect(text).toContain("4,7");
-    expect(text).toContain("42");
+    expect(text).toContain("4,7/5 sur Google Maps"); // badge du hero
+    expect(text).toContain("42 avis sur Google Maps"); // encart des avis
+    getGoogleRating.mockResolvedValue(null);
+    expect(visibleText(await renderPage(Home))).not.toContain("4,7/5");
   });
 });
 
@@ -123,5 +125,18 @@ describe("pages motifs ([slug])", () => {
     const slugs = (await generateStaticParams()).map((p) => p.slug);
     expect(slugs).toEqual(C.motifs.map((m) => m.slug));
     expect(slugs).not.toContain("paiement");
+  });
+});
+
+describe("confidentialité : section Google Tag Manager", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it.each([
+    ["absente sans identifiant GTM", "", false],
+    ["absente avec un identifiant invalide", "GTM-abc'", false],
+    ["présente (#cookies, cible du lien « Gérer les cookies ») avec un identifiant valide", "GTM-ABC123", true],
+  ])("%s", async (_label, id, expected) => {
+    vi.stubEnv("NEXT_PUBLIC_GTM_ID", id);
+    expect(Boolean((await renderPage(Confidentialite)).querySelector("#cookies"))).toBe(expected);
   });
 });

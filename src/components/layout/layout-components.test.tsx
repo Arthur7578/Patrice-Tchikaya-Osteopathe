@@ -73,3 +73,11 @@ describe("SkipLink et BackToHome", () => {
     expect(render(<BackToHome />).querySelector("a")?.getAttribute("href")).toBe("/");
   });
 });
+
+describe("SiteFooter : horaires", () => {
+  it("liste les horaires seulement s'ils existent", () => {
+    const withHours = { ...C, openingHoursLines: ["Lundi : 8h – 19h"] };
+    expect(visibleText(render(<SiteFooter content={withHours} />))).toContain("Lundi : 8h – 19h");
+    expect(visibleText(render(<SiteFooter content={{ ...C, openingHoursLines: [] }} />))).not.toContain("Lundi");
+  });
+});

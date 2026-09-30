@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { E2E_ADMIN_UPLOAD_SECRET } from "./e2e/constants";
 
 const PORT = Number(process.env.E2E_PORT ?? 3100);
 
@@ -25,5 +26,7 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
+    // Active l'outil d'upload (/admin/photos) pour le tester ; sans BLOB_READ_WRITE_TOKEN, aucun envoi réel.
+    env: { ADMIN_UPLOAD_SECRET: E2E_ADMIN_UPLOAD_SECRET },
   },
 });

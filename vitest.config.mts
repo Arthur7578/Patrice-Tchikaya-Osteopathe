@@ -10,7 +10,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"], // inclut les fichiers jamais importés par un test
-      exclude: ["src/**/*.test.{ts,tsx}"],
+      exclude: ["src/**/*.test.{ts,tsx}", "src/test/**"],
       reporter: ["text-summary", "html", "lcov"],
       // Seuils sur la logique pure uniquement : pages et composants relèvent de l'e2e (Playwright).
       thresholds: {

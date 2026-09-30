@@ -16,7 +16,8 @@
     "seo:smoke": "tsx scripts/seo-smoke.ts",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "test:mutants": "tsx scripts/mutation-check.ts"
+    "test:mutants": "tsx scripts/mutation-check.ts",
+    "test:mutation": "tsx scripts/stryker.ts"
   },
   "dependencies": {
     "@calcom/embed-react": "^1.5.3",
