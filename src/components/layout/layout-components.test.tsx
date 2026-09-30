@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { NAV } from "@/content/ui-copy";
 import { FALLBACK_CONTENT as C } from "@/lib/content/fallback";
 import type { SiteContent } from "@/lib/content/types";
@@ -79,5 +79,18 @@ describe("SiteFooter : horaires", () => {
     const withHours = { ...C, openingHoursLines: ["Lundi : 8h – 19h"] };
     expect(visibleText(render(<SiteFooter content={withHours} />))).toContain("Lundi : 8h – 19h");
     expect(visibleText(render(<SiteFooter content={{ ...C, openingHoursLines: [] }} />))).not.toContain("Lundi");
+  });
+});
+
+describe("SiteFooter : lien « Gérer les cookies »", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it.each([
+    ["absent sans identifiant GTM", "", false],
+    ["absent avec un identifiant invalide", "GTM-abc", false],
+    ["présent (rouvre la bannière) avec un identifiant valide", "GTM-ABC123", true],
+  ])("%s", (_label, id, expected) => {
+    vi.stubEnv("NEXT_PUBLIC_GTM_ID", id);
+    expect(Boolean(render(<SiteFooter content={C} />).querySelector('a[href="#cookies"]'))).toBe(expected);
   });
 });

@@ -79,4 +79,25 @@ describe("MobileMenu", () => {
     act(() => mqListener?.());
     expect(screen.getByRole("button", { name: COPY.menu.open })).toHaveAttribute("aria-expanded", "false");
   });
+
+  it("une autre touche qu'Échap, ou un clic dans le menu, le laissent ouvert", () => {
+    render(<MobileMenu />);
+    fireEvent.click(toggle());
+    fireEvent.keyDown(document, { key: "Enter" });
+    fireEvent.pointerDown(screen.getByRole("navigation", { name: COPY.menu.label }));
+    expect(screen.getByRole("button", { name: COPY.menu.close })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("repasser sous 1024 px ne ferme pas le menu ; fermé, il ne réagit plus à Échap", () => {
+    render(<MobileMenu />);
+    fireEvent.click(toggle());
+    act(() => mqListener?.()); // mqMatches reste false
+    expect(screen.getByRole("button", { name: COPY.menu.close })).toHaveAttribute("aria-expanded", "true");
+    fireEvent.keyDown(document, { key: "Escape" });
+    const button = toggle();
+    button.blur();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(button).not.toHaveFocus(); // plus d'écouteur : le focus n'est pas repris
+  });
 });
+

@@ -192,3 +192,39 @@ describe("PracticalInfo : horaires", () => {
     expect(visibleText(render(<PracticalInfo content={{ ...C, openingHoursLines: [] }} />))).not.toContain("Lundi");
   });
 });
+
+describe("PracticalInfo : photo, langues, accès", () => {
+  const image = (src: string | null) => ({ src, alt: "La salle de consultation", width: 1200, height: 800 });
+
+  it("photo du cabinet seulement si une URL est renseignée (avec l'alt Notion)", () => {
+    const withPhoto = { ...C, images: { ...C.images, cabinet: image("https://exemple.test/c.jpg") } };
+    expect(render(<PracticalInfo content={withPhoto} />).querySelector('img[alt="La salle de consultation"]')).not.toBeNull();
+    expect(render(<PracticalInfo content={{ ...C, images: { ...C.images, cabinet: image(null) } }} />).querySelector('img[alt="La salle de consultation"]')).toBeNull();
+  });
+
+  it("langues : ligne affichée seulement si des langues sont renseignées", () => {
+    expect(visibleText(render(<PracticalInfo content={{ ...C, languages: ["Français", "Italien"] }} />))).toContain("Français, Italien");
+    expect(visibleText(render(<PracticalInfo content={{ ...C, languages: [] }} />))).not.toContain(COPY.infos.labels.languages);
+  });
+
+  it("accès : chaque ligne (train, bus, stationnement, PMR) seulement si elle est renseignée", () => {
+    const all = { ...C, access: { train: "Gare à 280 m", bus: "Lignes 8, 9", parking: "Parking à 150 m", accessibility: "Ascenseur" } };
+    const none = { ...C, access: { train: null, bus: null, parking: null, accessibility: null } };
+    const text = visibleText(render(<PracticalInfo content={all} />));
+    for (const value of Object.values(all.access)) expect(text).toContain(value);
+    const empty = visibleText(render(<PracticalInfo content={none} />));
+    for (const label of [COPY.infos.labels.train, COPY.infos.labels.bus, COPY.infos.labels.parking, COPY.infos.labels.accessibility]) {
+      expect(empty).not.toContain(label);
+    }
+  });
+
+  it("carte : fiche Google si elle existe, sinon recherche Google Maps ; itinéraire toujours proposé (nouvel onglet)", () => {
+    const withProfile = render(<PracticalInfo content={{ ...C, googleBusinessUrl: "https://g.page/r/ABC" }} />);
+    expect(withProfile.querySelector('a[href="https://g.page/r/ABC"]')).not.toBeNull();
+    const without = render(<PracticalInfo content={{ ...C, googleBusinessUrl: null }} />);
+    expect(without.querySelector('a[href^="https://www.google.com/maps/search/"]')).not.toBeNull();
+    const directions = without.querySelector('a[href^="https://www.google.com/maps/dir/"]')!;
+    expect(directions.getAttribute("target")).toBe("_blank");
+    expect(directions.getAttribute("rel")).toBe("noopener");
+  });
+});

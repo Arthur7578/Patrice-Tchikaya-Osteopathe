@@ -326,3 +326,21 @@ describe("fetchSiteContent : lecture des bases Notion", () => {
     );
   });
 });
+
+describe("fetchSiteContent : avertissements remontés par les réglages d'affichage", () => {
+  it("Page_Paiement : les avertissements de construction de la page sont remontés", async () => {
+    const payment = [
+      row({ Name: prop.title("Titre_Page"), Type: prop.text("Texte"), Texte: prop.text("Payer") }),
+      row({ Name: prop.title("Cle_Inconnue"), Type: prop.text("Texte"), Texte: prop.text("x") }),
+    ];
+    const { content, warnings } = await fetchSiteContent(fakeNotion({ payment }));
+    expect(content.payment.page.title).toBe("Payer");
+    expect(warnings).toContain("Page_Paiement : clé « Cle_Inconnue » inconnue, ligne ignorée");
+  });
+
+  it("Acces_Ordre : identifiant inconnu signalé, avec la liste des identifiants attendus", async () => {
+    const { content, warnings } = await fetchSiteContent(fakeNotion({ general: general({ Acces_Ordre: "bus, metro" }) }));
+    expect(content.rowOrder.access[0]).toBe("bus");
+    expect(warnings).toContain("Acces_Ordre : identifiant inconnu « metro » (attendus : adresse, train, bus, parking, pmr)");
+  });
+});

@@ -12,10 +12,10 @@ export default defineConfig({
       include: ["src/**/*.{ts,tsx}"], // inclut les fichiers jamais importés par un test
       exclude: ["src/**/*.test.{ts,tsx}", "src/test/**"],
       reporter: ["text-summary", "html", "lcov"],
-      // Seuils sur la logique pure uniquement : pages et composants relèvent de l'e2e (Playwright).
-      thresholds: {
-        "src/lib/**": { statements: 70, branches: 55, functions: 65, lines: 70 },
-      },
+      // Seuils globaux, juste sous le niveau atteint (99,7 % des instructions, 99,2 % des branches, 30/09/2026) :
+      // du code ajouté sans test fait échouer la CI. Les rares lignes non couvertes sont inatteignables
+      // (ref React nulle, `?? ""` de typage) ou vérifiées en e2e (chargement différé des animations).
+      thresholds: { statements: 98, branches: 96, functions: 97, lines: 98 },
     },
   },
 });
