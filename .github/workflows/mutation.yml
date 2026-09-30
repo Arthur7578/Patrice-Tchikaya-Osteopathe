@@ -1,0 +1,65 @@
+name: Mutation testing (Stryker)
+
+# Non bloquant : ne tourne ni sur les PR ni sur main. Chaque nuit, ou à la demande (onglet Actions > Run workflow).
+# Un mutant « survivant » = un changement du code que les tests ne remarquent pas. Rapport HTML en artefact.
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mutation
+  cancel-in-progress: true
+
+jobs:
+  stryker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: content, mutate: "src/lib/content/*.ts,!src/lib/content/*.test.ts,!src/lib/content/fallback.ts,!src/lib/content/types.ts", tests: "src/lib/content" }
+          - { name: notion, mutate: "src/lib/notion/*.ts,!src/lib/notion/*.test.ts", tests: "src/lib/notion" }
+          - { name: seo, mutate: "src/lib/seo/*.ts,!src/lib/seo/*.test.ts", tests: "src/lib/seo" }
+          - { name: google, mutate: "src/lib/google/*.ts,!src/lib/google/*.test.ts", tests: "src/lib/google" }
+          - { name: lib-misc, mutate: "src/lib/icons.ts,src/lib/maps.ts,src/lib/utils.ts", tests: "src/lib/maps.test.ts" }
+          - { name: routes, mutate: "src/app/api/**/route.ts,src/app/robots.ts,src/app/sitemap.ts", tests: "src/app/api src/app/robots.test.ts src/app/sitemap.test.ts" }
+          - { name: pages, mutate: "src/app/paiement/page.tsx,src/app/[[]slug]/page.tsx,src/app/page.tsx,src/app/mentions-legales/page.tsx,src/app/confidentialite/page.tsx", tests: "src/app" }
+          - { name: components, mutate: "src/components/**/*.tsx,!src/components/**/*.test.tsx", tests: "src/components" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Mode incrémental : seuls les mutants dont le CODE a changé sont rejoués. Avec le runner « command »,
+      # Stryker ne voit pas les modifications de tests (vérifié : 192/192 résultats réutilisés après avoir
+      # modifié un test). La clé contient donc le hash des tests : test modifié = cache manqué = passage complet.
+      - uses: actions/cache@v4
+        with:
+          path: reports/incremental/${{ matrix.name }}.json
+          key: stryker-${{ matrix.name }}-${{ hashFiles('src/**/*.test.ts', 'src/**/*.test.tsx', 'src/test/**', 'vitest.setup.ts', 'vitest.config.mts') }}-${{ github.run_id }}
+          restore-keys: stryker-${{ matrix.name }}-${{ hashFiles('src/**/*.test.ts', 'src/**/*.test.tsx', 'src/test/**', 'vitest.setup.ts', 'vitest.config.mts') }}-
+      - name: Stryker (${{ matrix.name }})
+        run: scripts/stryker-group.sh "${{ matrix.name }}" "${{ matrix.mutate }}" "${{ matrix.tests }}" | tee "reports/${{ matrix.name }}.log"
+      - name: Résumé
+        if: always()
+        run: |
+          {
+            echo "### Mutation testing : ${{ matrix.name }}"
+            echo '```'
+            grep -E "^(File|All files|-{5,}| [A-Za-z0-9_.-]+\.tsx? +\|)" "reports/${{ matrix.name }}.log" || echo "(pas de tableau : voir les logs)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutation-${{ matrix.name }}
+          path: reports/mutation/${{ matrix.name }}
+          if-no-files-found: ignore
+          retention-days: 14

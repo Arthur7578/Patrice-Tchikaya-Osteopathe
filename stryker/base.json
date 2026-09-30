@@ -1,0 +1,12 @@
+{
+  "testRunner": "command",
+  "commandRunner": { "command": "npx vitest run --reporter=dot" },
+  "coverageAnalysis": "off",
+  "mutate": [],
+  "reporters": ["clear-text", "html"],
+  "concurrency": 4,
+  "timeoutMS": 60000,
+  "incremental": true,
+  "ignorePatterns": ["e2e", "coverage", ".next", "reports", "playwright-report", "test-results", "stryker"],
+  "thresholds": { "high": 80, "low": 60, "break": null }
+}
