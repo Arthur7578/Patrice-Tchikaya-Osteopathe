@@ -97,6 +97,30 @@ describe("fetchSiteContent : Informations_generales", () => {
     expect(content.contact.phoneE164).toBe("+352519293");
   });
 
+  it("lien tel: : Telephone_RAW au format « 00 » converti ; placeholder ignoré (numéro affiché utilisé)", async () => {
+    const zero = await fetchSiteContent(fakeNotion({ general: general({ Telephone_RAW: "00352 519 293" }) }));
+    expect(zero.content.contact.phoneE164).toBe("+352519293");
+    const placeholder = await fetchSiteContent(
+      fakeNotion({ general: general({ Telephone_Display: "+352 51 92 94", Telephone_RAW: "[À COMPLÉTER]" }) }),
+    );
+    expect(placeholder.content.contact.phoneE164).toBe("+352519294");
+    for (const { warnings } of [zero, placeholder]) expect(warnings.filter((w) => !OTHER_DATABASES.test(w))).toEqual([]);
+  });
+
+  it("numéro d'appel illisible (sans indicatif, ou texte) : numéro de secours pour les liens tel: et avertissement", async () => {
+    const noCode = await fetchSiteContent(fakeNotion({ general: general({ Telephone_RAW: "51 92 93" }) }));
+    expect(noCode.content.contact.phoneE164).toBe(F.contact.phoneE164);
+    expect(noCode.warnings).toContain(
+      "Numéro d'appel illisible : « 51 92 93 » (Telephone_RAW, sinon Telephone_Display ; attendu : « +352 51 92 92 ») — numéro de secours utilisé",
+    );
+    const text = await fetchSiteContent(fakeNotion({ general: general({ Telephone_Display: "Sur rendez-vous" }) }));
+    expect(text.content.contact.phoneDisplay).toBe("Sur rendez-vous");
+    expect(text.content.contact.phoneE164).toBe(F.contact.phoneE164);
+    expect(text.warnings.filter((w) => w.startsWith("Numéro d'appel illisible"))).toEqual([
+      "Numéro d'appel illisible : « Sur rendez-vous » (Telephone_RAW, sinon Telephone_Display ; attendu : « +352 51 92 92 ») — numéro de secours utilisé",
+    ]);
+  });
+
   it("note sans nombre d'avis : nombre inconnu (null), la note reste affichée", async () => {
     const { content } = await fetchSiteContent(fakeNotion({ general: general({ Nombre_Avis_Google: null }) }));
     expect(content.rating).toEqual({ value: 4.8, count: null });

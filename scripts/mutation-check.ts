@@ -86,6 +86,8 @@ const MUTANTS: Mutant[] = [
   { name: "BookingInline : pas de repli si Cal.com est indisponible", file: "src/components/booking/booking-inline.tsx", find: '() => setStatus("failed"),', replace: '() => setStatus("loading"),', tests: ["src/components/booking/booking-inline.test.tsx"] },
   // --- Contenu Notion ---
   { name: "parseList : texte d'attente publié par morceaux (filtrage ligne par ligne)", file: "src/lib/content/parse.ts", find: "if (isPlaceholder(value)) return [];\n  return value!\n    .split(/[\\n;]+/)", replace: "if (!value) return [];\n  return value!\n    .split(/[\\n;]+/)", tests: ["src/lib/content/parse.test.ts"] },
+  { name: "téléphone : numéro illisible publié dans les liens tel:", file: "src/lib/notion/fetch-content.ts", find: "phoneE164: isE164(phoneE164) ? phoneE164 : F.contact.phoneE164,", replace: "phoneE164,", tests: ["src/lib/notion/fetch-content.general.test.ts"] },
+  { name: "téléphone : préfixe 00 non converti (+00352…)", file: "src/lib/content/parse.ts", find: '.replace(/^00/, "+")', replace: "", tests: ["src/lib/content/parse.test.ts"] },
   { name: "safeHref : domaine Notion nu accepté comme lien", file: "src/lib/notion/blocks.ts", find: "/(^|\\.)notion\\.(so|site|com)$/", replace: "/\\.notion\\.(so|site|com)$/", tests: ["src/lib/notion/blocks.test.ts"] },
   // --- Server Components ---
   { name: "admin : gestionnaire d'événement dans un Server Component (erreur 500)", file: "src/app/admin/photos/page.tsx", find: 'aria-label="URL publique de la photo"', replace: 'aria-label="URL publique de la photo"\n              onFocus={() => undefined}', tests: ["src/test/architecture.test.ts"] },

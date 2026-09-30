@@ -17,11 +17,18 @@ export function parsePostalLine(value: string) {
   return { postalCode: m[1], locality: m[2].trim(), countryName: (m[3] ?? "Luxembourg").trim() };
 }
 
-/** Garde uniquement "+" et les chiffres : "+352 51 92 92" -> "+352519292" */
+/**
+ * Numéro des liens tel: et du JSON-LD : "+352 51 92 92" -> "+352519292". Le préfixe « 00 » devient « + » et le « (0) »
+ * de la notation « +33 (0)1 … » disparaît ; sans « + » ni « 00 », « + » est ajouté ("352 51 92 92" -> "+352519292").
+ * Le résultat n'est pas garanti valide : voir `isE164`.
+ */
 export function toE164(value: string): string {
-  const digits = value.replace(/[^\d+]/g, "");
+  const digits = value.replace(/\(0\)/g, "").replace(/[^\d+]/g, "").replace(/^00/, "+");
   return digits.startsWith("+") ? digits : `+${digits}`;
 }
+
+/** Forme E.164 : « + », indicatif sans 0 initial, 7 à 15 chiffres en tout. */
+export const isE164 = (value: string) => /^\+[1-9]\d{6,14}$/.test(value);
 
 /**
  * Numéro optionnel, indicatif international obligatoire : "+352 691 044 147" -> { display, e164: "+352691044147" }.
@@ -31,7 +38,7 @@ export function parsePhone(value: string | null | undefined): Phone | null {
   if (isPlaceholder(value)) return null;
   const display = value!.trim();
   const e164 = toE164(display);
-  return display.startsWith("+") && /^\+[1-9]\d{6,14}$/.test(e164) ? { display, e164 } : null;
+  return display.startsWith("+") && isE164(e164) ? { display, e164 } : null;
 }
 
 /** Hôtes Cal.com connus (UE et global) : seuls ceux-ci activent l'intégration embarquée. */

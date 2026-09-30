@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { isAllowedImageUrl } from "@/config/images";
 import {
   cleanOptional, formatReviewAuthor, isPlaceholder, normalizeSlug, parseBookingUrl, parseGeo, parseOpeningHours, splitOpeningLines,
-  parseInteger, parseList, parsePhone, parsePostalLine, parseRating, parseWeroRecipient, toE164,
+  isE164, parseInteger, parseList, parsePhone, parsePostalLine, parseRating, parseWeroRecipient, toE164,
 } from "./parse";
 
 describe("parse", () => {
@@ -141,9 +141,24 @@ describe("parse : cas limites", () => {
     expect(parsePostalLine("Dudelange")).toBeNull();
   });
 
-  it("toE164 : ne garde que « + » et les chiffres, ajoute « + » s'il manque", () => {
-    expect(toE164("+352 (0) 51-92-92")).toBe("+3520519292");
+  it("toE164 : ne garde que « + » et les chiffres, « 00 » devient « + », « (0) » disparaît, « + » ajouté s'il manque", () => {
+    expect(toE164("+352 (0) 51-92-92")).toBe("+352519292");
+    expect(toE164("00352 51 92 92")).toBe("+352519292");
+    expect(toE164(" 0033 (0)1 23 45 67 89")).toBe("+33123456789");
     expect(toE164("352 51 92 92")).toBe("+352519292");
+    expect(toE164("+352 5100 92")).toBe("+352510092"); // « 00 » au milieu : inchangé
+  });
+
+  it("isE164 : « + », indicatif sans 0 initial, 7 à 15 chiffres", () => {
+    expect(isE164("+352519292")).toBe(true);
+    expect(isE164("+3525192")).toBe(true); // 7 chiffres
+    expect(isE164("+352519292123456")).toBe(true); // 15 chiffres
+    expect(isE164("+352519")).toBe(false); // 6 chiffres
+    expect(isE164("+3525192921234567")).toBe(false); // 16 chiffres
+    expect(isE164("+0352519292")).toBe(false);
+    expect(isE164("352519292")).toBe(false);
+    expect(isE164("+352519292 ")).toBe(false);
+    expect(isE164("+")).toBe(false);
   });
 
   it("URL de réservation : https uniquement ; hôte Cal.com sans chemin = lien simple ; www. ignoré", () => {
