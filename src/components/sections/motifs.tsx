@@ -8,7 +8,8 @@ import { MOTIF_ICONS, type MotifIconName } from "@/lib/icons";
 import type { SiteContent } from "@/lib/content/types";
 
 export function Motifs({ content }: { content: SiteContent }) {
-  const { motifs, contact } = content;
+  const { motifs, guides, contact } = content;
+  const publishedGuides = guides.filter((g) => g.page);
 
   return (
     <Section id="motifs" labelledBy="motifs-title">
@@ -45,6 +46,25 @@ export function Motifs({ content }: { content: SiteContent }) {
           );
         })}
       </ul>
+
+      {publishedGuides.length > 0 && (
+        <div className="mt-10">
+          <h3 className="text-lg font-semibold text-ink">{COPY.motifs.guidesTitle}</h3>
+          <ul className="mt-3 space-y-2">
+            {publishedGuides.map((guide) => (
+              <li key={guide.slug}>
+                <Link
+                  href={`/${guide.slug}`}
+                  className="inline-flex items-center gap-1.5 font-semibold text-sage-700 underline-offset-4 hover:underline"
+                >
+                  {guide.title}
+                  <ArrowRight aria-hidden="true" className="size-4" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <p className="mt-8 text-slate-600">
         {COPY.motifs.helpLine}{" "}

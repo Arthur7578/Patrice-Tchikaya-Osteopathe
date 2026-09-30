@@ -311,6 +311,7 @@ export const FALLBACK_CONTENT: SiteContent = {
       },
     ],
   },
+  guides: [], // pages d'information : uniquement depuis Notion (validées par Patrice)
   motifs: [
     {
       title: "Ostéopathie du Sport",

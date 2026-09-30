@@ -18,6 +18,7 @@ export const NOTION_DATABASES = {
   reviews: "3e84bf3fc7288023beb4d2739a387a17", // Avis_Patients
   faq: "3e84bf3fc7288062883dc5d447128b28", // FAQ_SEO
   payment: "09ea52854d4b47e9a522189081127d56", // Page_Paiement (textes de /paiement)
+  guides: "c82d87af45214bf895a7de03d428639e", // Pages_Guides (pages d'information hors motifs)
 } as const;
 
 export type NotionDatabaseKey = keyof typeof NOTION_DATABASES;
@@ -25,6 +26,10 @@ export type NotionDatabaseKey = keyof typeof NOTION_DATABASES;
 /**
  * Pages motifs (phase 9) : une page n'est publiée que si la case Notion est cochée (relecture de
  * Patrice) ET si son corps atteint le seuil de mots (pas de contenu mince). Voir docs/DECISIONS.md.
+ */
+/**
+ * Pages d'information (Pages_Guides : ostéopathe/kiné, sans ordonnance, région frontalière…) : même
+ * règle que les pages motifs (case Page_Validée + seuil de mots), mêmes colonnes, autre base.
  */
 export const MOTIF_PAGES = { validatedProperty: "Page_Validée", minWords: 300 } as const;
 

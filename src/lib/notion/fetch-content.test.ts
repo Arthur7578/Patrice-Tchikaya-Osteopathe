@@ -197,6 +197,56 @@ describe("fetchSiteContent : pages motifs (phase 9)", () => {
   });
 });
 
+/** Ligne de Pages_Guides : mêmes colonnes que les motifs, sauf le titre (« Titre »). */
+function guideRow(id: string, slug: string, validated: boolean) {
+  const row = motifRow(id, slug, validated);
+  const { Motif: title, ...properties } = row.properties;
+  return { ...row, properties: { ...properties, Titre: title } };
+}
+
+describe("fetchSiteContent : pages d'information (Pages_Guides)", () => {
+  it("publie un guide validé, sans l'afficher parmi les motifs", async () => {
+    const { content } = await fetchSiteContent(
+      fakeNotion({ guides: [guideRow("g1", "osteopathe-kinesitherapeute-difference", true)] }, { g1: [paragraph(320)] }),
+    );
+    expect(content.guides).toHaveLength(1);
+    expect(content.guides[0]).toMatchObject({ title: "Motif g1", slug: "osteopathe-kinesitherapeute-difference" });
+    expect(content.guides[0].page?.wordCount).toBe(320);
+    expect(content.motifs.map((m) => m.slug)).toEqual(FALLBACK_CONTENT.motifs.map((m) => m.slug));
+  });
+
+  it("ne lit pas le corps d'un guide non validé", async () => {
+    const reads: string[] = [];
+    const { content } = await fetchSiteContent(fakeNotion({ guides: [guideRow("g1", "a", false)] }, { g1: [paragraph(500)] }, reads));
+    expect(reads).toEqual([]);
+    expect(content.guides[0].page).toBeNull();
+  });
+
+  it("refuse un guide dont le slug est déjà pris par un motif", async () => {
+    const { content, warnings } = await fetchSiteContent(
+      fakeNotion(
+        { motifs: [motifRow("m1", "bilan", true)], guides: [guideRow("g1", "bilan", true)] },
+        { m1: [paragraph(400)], g1: [paragraph(400)] },
+      ),
+    );
+    expect(content.guides).toEqual([]);
+    expect(content.motifs[0].page).not.toBeNull();
+    expect(warnings.some((w) => w.includes("slug « bilan » déjà pris"))).toBe(true);
+  });
+
+  it("base Pages_Guides absente : le reste du site n'est pas touché", async () => {
+    const notion = fakeNotion({});
+    const retrieve = notion.databases.retrieve.bind(notion.databases);
+    notion.databases.retrieve = (async (args: { database_id: string }) => {
+      if (args.database_id === NOTION_DATABASES.guides) throw new Error("introuvable");
+      return retrieve(args);
+    }) as typeof notion.databases.retrieve;
+    const { content, warnings } = await fetchSiteContent(notion);
+    expect(content.guides).toEqual([]);
+    expect(warnings.some((w) => w.startsWith("Pages_Guides illisible"))).toBe(true);
+  });
+});
+
 describe("fetchSiteContent : ordre des blocs Infos pratiques / lignes Accès", () => {
   it("applique Infos_Ordre et Acces_Ordre, signale les identifiants inconnus", async () => {
     const { content, warnings } = await fetchSiteContent(

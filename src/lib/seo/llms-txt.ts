@@ -47,6 +47,13 @@ export function buildLlmsTxt(c: SiteContent, siteUrl: string = SITE_URL): string
     lines.push("");
   }
 
+  const guides = c.guides.filter((g) => g.page);
+  if (guides.length > 0) {
+    lines.push(`## ${L.guides}`, "");
+    for (const g of guides) lines.push(`- [${g.title}](${siteUrl}/${g.slug}) : ${oneLine(g.description)}`);
+    lines.push("");
+  }
+
   if (c.faq.length > 0) {
     lines.push(`## ${L.faq}`, "");
     for (const f of c.faq) lines.push(`- ${oneLine(f.question)} ${oneLine(f.answer)}`);

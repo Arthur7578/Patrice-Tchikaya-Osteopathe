@@ -11,35 +11,40 @@ import { RESERVED_SLUGS } from "@/config/site";
 import { COPY } from "@/content/ui-copy";
 import { getSiteContent } from "@/lib/content/get-site-content";
 import { MOTIF_ICONS, type MotifIconName } from "@/lib/icons";
-import { buildMotifGraph } from "@/lib/seo/json-ld";
-import { motifMeta } from "@/lib/seo/metadata";
+import { buildGuideGraph, buildMotifGraph } from "@/lib/seo/json-ld";
+import { guideMeta, motifMeta } from "@/lib/seo/metadata";
 import { cn } from "@/lib/utils";
 
 /** Seules les adresses connues au build existent : toute autre URL de premier niveau renvoie une 404. */
 export const dynamicParams = false;
 
 /**
- * Tous les motifs, pas seulement ceux déjà publiés : un motif validé plus tard dans Notion devient
- * une page par simple revalidation, sans redéploiement ; tant qu'il ne l'est pas, son adresse
+ * Tous les motifs et guides, pas seulement ceux déjà publiés : une page validée plus tard dans Notion
+ * devient une page par simple revalidation, sans redéploiement ; tant qu'elle ne l'est pas, son adresse
  * renvoie une 404 (notFound ci-dessous). Voir docs/DECISIONS.md.
  */
 export async function generateStaticParams() {
-  const { motifs } = await getSiteContent();
-  return motifs.filter((m) => !RESERVED_SLUGS.has(m.slug)).map((m) => ({ slug: m.slug }));
+  const { motifs, guides } = await getSiteContent();
+  return [...motifs, ...guides].filter((m) => !RESERVED_SLUGS.has(m.slug)).map((m) => ({ slug: m.slug }));
 }
 
-/** Motif dont la page est publiée (case Page_Validée cochée + seuil de mots), sinon null. */
+/**
+ * Motif ou guide dont la page est publiée (case Page_Validée cochée + seuil de mots), sinon null.
+ * Les deux ont la même forme ; `kind` ne change que le titre, le JSON-LD et les liens « à lire aussi ».
+ */
 async function findMotifPage(slug: string) {
   const content = await getSiteContent();
   const motif = content.motifs.find((m) => m.slug === slug);
-  return motif?.page ? { content, motif, page: motif.page } : null;
+  const guide = motif ? undefined : content.guides.find((g) => g.slug === slug);
+  const entry = motif ?? guide;
+  return entry?.page ? { content, motif: entry, page: entry.page, kind: motif ? ("motif" as const) : ("guide" as const) } : null;
 }
 
 export async function generateMetadata({ params }: PageProps<"/[slug]">): Promise<Metadata> {
   const found = await findMotifPage((await params).slug);
   if (!found) return {};
-  const { content, motif } = found;
-  const { path, title, description } = motifMeta(content, motif);
+  const { content, motif, kind } = found;
+  const { path, title, description } = (kind === "motif" ? motifMeta : guideMeta)(content, motif);
   const siteName = `${content.practitioner.name} – ${content.practitioner.title}`;
   // openGraph / twitter d'une page remplacent ceux du layout en entier : l'image de partage du site
   // (app/opengraph-image.tsx) doit donc être redonnée ici, sinon les pages motifs n'en ont pas.
@@ -61,15 +66,21 @@ export async function generateMetadata({ params }: PageProps<"/[slug]">): Promis
 export default async function MotifPage({ params }: PageProps<"/[slug]">) {
   const found = await findMotifPage((await params).slug);
   if (!found) notFound();
-  const { content, motif, page } = found;
+  const { content, motif, page, kind } = found;
   const { contact, booking, consultation } = content;
-  const meta = motifMeta(content, motif);
-  const others = content.motifs.filter((m) => m.page && m.slug !== motif.slug);
+  const meta = (kind === "motif" ? motifMeta : guideMeta)(content, motif);
+  const otherMotifs = content.motifs.filter((m) => m.page && m.slug !== motif.slug);
+  const otherGuides = content.guides.filter((g) => g.page && g.slug !== motif.slug);
+  // Maillage interne : les pages de même nature d'abord, puis l'autre famille.
+  const related =
+    kind === "motif"
+      ? [{ id: "autres-motifs", title: COPY.motifPage.others, entries: otherMotifs }, { id: "bon-a-savoir", title: COPY.motifPage.guides, entries: otherGuides }]
+      : [{ id: "bon-a-savoir", title: COPY.motifPage.guides, entries: otherGuides }, { id: "autres-motifs", title: COPY.motifPage.others, entries: otherMotifs }];
   const Icon = MOTIF_ICONS[motif.icon as MotifIconName];
 
   return (
     <main id="contenu">
-      <JsonLd data={buildMotifGraph(content, motif, page, meta)} />
+      <JsonLd data={(kind === "motif" ? buildMotifGraph : buildGuideGraph)(content, motif, page, meta)} />
 
       <article className="mx-auto max-w-3xl px-4 pt-8 pb-16 sm:px-6 md:pb-24 lg:px-8">
         <nav aria-label={COPY.motifPage.breadcrumb}>
@@ -93,7 +104,7 @@ export default async function MotifPage({ params }: PageProps<"/[slug]">) {
             <Icon aria-hidden="true" className="size-6" />
           </span>
           <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-balance text-ink sm:text-5xl">
-            {COPY.motifPage.h1(motif.title, contact.locality)}
+            {kind === "motif" ? COPY.motifPage.h1(motif.title, contact.locality) : motif.title}
           </h1>
           <p className="mt-5 text-lg text-pretty text-slate-600">{motif.description}</p>
           {/* id="hero-cta" : repère de la barre d'action mobile (visible quand ces boutons sortent de l'écran). */}
@@ -144,35 +155,38 @@ export default async function MotifPage({ params }: PageProps<"/[slug]">) {
         <BackToHome className="mt-10" />
       </article>
 
-      {others.length > 0 && (
-        <section aria-labelledby="autres-motifs-title" className="border-t border-slate-200/80 bg-white">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-            <h2 id="autres-motifs-title" className="text-2xl font-bold tracking-tight text-ink">
-              {COPY.motifPage.others}
-            </h2>
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {others.map((other) => {
-                const OtherIcon = MOTIF_ICONS[other.icon as MotifIconName];
-                return (
-                  <li key={other.slug}>
-                    <Link
-                      href={`/${other.slug}`}
-                      className="group flex h-full items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 transition hover:border-sage-200 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-700"
-                    >
-                      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-sage-100 text-sage-700">
-                        <OtherIcon aria-hidden="true" className="size-5" />
-                      </span>
-                      <span>
-                        <span className="font-semibold text-ink group-hover:text-sage-700">{other.title}</span>
-                        <span className="mt-1 block text-sm text-slate-600">{other.description}</span>
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </section>
+      {related.map(
+        ({ id, title, entries }) =>
+          entries.length > 0 && (
+            <section key={id} aria-labelledby={`${id}-title`} className="border-t border-slate-200/80 bg-white">
+              <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+                <h2 id={`${id}-title`} className="text-2xl font-bold tracking-tight text-ink">
+                  {title}
+                </h2>
+                <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {entries.map((other) => {
+                    const OtherIcon = MOTIF_ICONS[other.icon as MotifIconName];
+                    return (
+                      <li key={other.slug}>
+                        <Link
+                          href={`/${other.slug}`}
+                          className="group flex h-full items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 transition hover:border-sage-200 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-700"
+                        >
+                          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-sage-100 text-sage-700">
+                            <OtherIcon aria-hidden="true" className="size-5" />
+                          </span>
+                          <span>
+                            <span className="font-semibold text-ink group-hover:text-sage-700">{other.title}</span>
+                            <span className="mt-1 block text-sm text-slate-600">{other.description}</span>
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </section>
+          ),
       )}
     </main>
   );

@@ -5,7 +5,8 @@ import type { SiteContent } from "@/lib/content/types";
 type Props = { content: SiteContent };
 
 export function SiteFooter({ content }: Props) {
-  const { practitioner, contact, about, openingHoursLines, googleBusinessUrl } = content;
+  const { practitioner, contact, about, openingHoursLines, googleBusinessUrl, guides } = content;
+  const publishedGuides = guides.filter((g) => g.page);
   const year = new Date().getFullYear();
   const gtmEnabled = /^GTM-[A-Z0-9]+$/.test(process.env.NEXT_PUBLIC_GTM_ID ?? "");
   return (
@@ -54,6 +55,13 @@ export function SiteFooter({ content }: Props) {
                   <a href={item.href} className="text-sage-100/80 hover:text-white hover:underline">
                     {item.label}
                   </a>
+                </li>
+              ))}
+              {publishedGuides.map((guide) => (
+                <li key={guide.slug}>
+                  <Link href={`/${guide.slug}`} className="text-sage-100/80 hover:text-white hover:underline">
+                    {guide.title}
+                  </Link>
                 </li>
               ))}
               {googleBusinessUrl && (

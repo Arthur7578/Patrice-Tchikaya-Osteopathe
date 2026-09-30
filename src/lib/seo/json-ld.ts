@@ -140,19 +140,21 @@ export function buildHomeGraph(c: SiteContent, meta: { title: string; descriptio
 }
 
 /**
- * Graphe d'une page motif (phase 9) : MedicalWebPage relue par le praticien (reviewedBy → Person ;
- * la case Notion « Page_Validée » en est la condition) + fil d'Ariane identique à celui affiché.
+ * Graphe d'une page détaillée (phase 9) : relue par le praticien (reviewedBy → Person ; la case Notion
+ * « Page_Validée » en est la condition) + fil d'Ariane identique à celui affiché. Un motif est une
+ * MedicalWebPage ; un guide (kiné, ordonnance, région frontalière…) une WebPage ordinaire.
  */
-export function buildMotifGraph(
+function buildPageGraph(
   c: SiteContent,
-  motif: Motif,
+  entry: Motif,
   page: MotifPage,
   meta: { path: string; title: string; description: string },
+  type: "MedicalWebPage" | "WebPage",
 ): Graph {
   const url = `${SITE_URL}${meta.path}`;
   const breadcrumbId = `${url}#breadcrumb`;
-  const webpage: MedicalWebPage = {
-    "@type": "MedicalWebPage",
+  const webpage = {
+    "@type": type,
     "@id": ids.webpage(meta.path),
     url,
     name: meta.title,
@@ -163,14 +165,22 @@ export function buildMotifGraph(
     reviewedBy: { "@id": ids.person },
     lastReviewed: page.lastEdited.slice(0, 10),
     breadcrumb: { "@id": breadcrumbId },
-  };
+  } as MedicalWebPage | WebPage;
   const breadcrumb: BreadcrumbList = {
     "@type": "BreadcrumbList",
     "@id": breadcrumbId,
     itemListElement: [
       { "@type": "ListItem", position: 1, name: COPY.motifPage.home, item: `${SITE_URL}/` },
-      { "@type": "ListItem", position: 2, name: motif.title, item: url },
+      { "@type": "ListItem", position: 2, name: entry.title, item: url },
     ],
   };
   return { "@context": "https://schema.org", "@graph": [webpage, breadcrumb] };
 }
+
+type PageMeta = { path: string; title: string; description: string };
+
+export const buildMotifGraph = (c: SiteContent, motif: Motif, page: MotifPage, meta: PageMeta): Graph =>
+  buildPageGraph(c, motif, page, meta, "MedicalWebPage");
+
+export const buildGuideGraph = (c: SiteContent, guide: Motif, page: MotifPage, meta: PageMeta): Graph =>
+  buildPageGraph(c, guide, page, meta, "WebPage");

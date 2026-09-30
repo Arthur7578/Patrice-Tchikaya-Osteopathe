@@ -25,6 +25,7 @@ export const COPY = {
       `Au cabinet de ${city}, chaque séance commence par un bilan complet pour traiter la cause de la douleur, pas seulement le symptôme.`,
     helpLine: "Un doute sur votre situation ? Appelez le cabinet :",
     discover: (title: string) => `Découvrir : ${title}`, // lien descriptif vers la page détaillée (phase 9)
+    guidesTitle: "Bon à savoir", // liens vers les pages d'information (Pages_Guides), sous les cartes
   },
   // Pages motifs (phase 9) : seul l'habillage est ici, le texte vient du corps de la page Notion.
   motifPage: {
@@ -36,6 +37,7 @@ export const COPY = {
     ctaText: (duration: string) =>
       `Séance de ${duration}, sans ordonnance. Réservez en ligne, ou appelez le cabinet si vous avez une question avant de venir.`,
     others: "Les autres motifs de consultation",
+    guides: "Bon à savoir",
   },
   reviews: {
     eyebrow: "Avis patients",
@@ -78,13 +80,14 @@ export const COPY = {
       `Régler votre séance d'ostéopathie à ${city} avec Wero : les étapes, pourquoi c'est sûr et que faire si vous n'avez pas encore Wero.`,
     step: (n: number) => `Étape ${n} : `, // annoncé par les lecteurs d'écran (le numéro affiché est décoratif)
   },
-  footer: { legal: "Mentions légales", privacy: "Confidentialité", payment: "Régler votre séance" },
+  footer: { legal: "Mentions légales", privacy: "Confidentialité", payment: "Régler votre séance", guides: "Bon à savoir" },
   backToHome: "Retour à l'accueil",
   menu: { open: "Ouvrir le menu", close: "Fermer le menu", label: "Menu principal" },
   // /llms.txt : intitulés structurels ; tout le contenu vient de getSiteContent().
   llms: {
     practical: "Informations pratiques",
     motifs: "Motifs de consultation",
+    guides: "Pages d'information",
     faq: "Questions fréquentes",
     pages: "Pages du site",
     booking: "Prise de rendez-vous en ligne",
