@@ -27,5 +27,11 @@
     "high": 80,
     "low": 60,
     "break": null
-  }
+  },
+  "appendPlugins": [
+    "./stryker/ignore-class-names.mjs"
+  ],
+  "ignorers": [
+    "className"
+  ]
 }

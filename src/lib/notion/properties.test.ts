@@ -75,3 +75,11 @@ describe("getNumber / getCheckbox / getDateStart", () => {
     expect(getDateStart(p, "n")).toBeNull();
   });
 });
+
+describe("getText : valeurs vides des propriétés e-mail et téléphone", () => {
+  it("renvoie '' (jamais « null »)", () => {
+    const p = props({ e: { type: "email", email: null }, t: { type: "phone_number", phone_number: null } });
+    expect(getText(p, "e")).toBe("");
+    expect(getText(p, "t")).toBe("");
+  });
+});

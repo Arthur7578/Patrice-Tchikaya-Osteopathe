@@ -133,3 +133,110 @@ describe("safeHref", () => {
     expect(warnings).toHaveLength(3);
   });
 });
+
+describe("safeHref : cas limites", () => {
+  const collect = () => {
+    const warnings: string[] = [];
+    return { warnings, warn: (m: string) => warnings.push(m) };
+  };
+
+  it("tout hôte Notion est retiré (domaine nu ou sous-domaine, .so/.site/.com), avec un avertissement explicite", () => {
+    const { warnings, warn } = collect();
+    for (const href of ["https://notion.so/abc", "https://patrice.notion.site/page", "https://www.notion.com/x"]) {
+      expect(safeHref(href, warn), href).toBeUndefined();
+    }
+    expect(warnings[0]).toBe("lien vers une page Notion retiré (https://notion.so/abc) : le site public n'y a pas accès");
+  });
+
+  it("hôtes qui ressemblent à Notion sans l'être : gardés", () => {
+    const { warnings, warn } = collect();
+    expect(safeHref("https://mynotion.so/x", warn)).toBe("https://mynotion.so/x");
+    expect(safeHref("https://notion.so.exemple.test/x", warn)).toBe("https://notion.so.exemple.test/x");
+    expect(warnings).toEqual([]);
+  });
+
+  it("protocoles : http accepté, ftp et data refusés avec un avertissement qui cite le lien", () => {
+    const { warnings, warn } = collect();
+    expect(safeHref("http://exemple.test/", warn)).toBe("http://exemple.test/");
+    expect(safeHref("ftp://exemple.test/f", warn)).toBeUndefined();
+    expect(safeHref("data:text/html,x", warn)).toBeUndefined();
+    expect(warnings).toEqual(["lien retiré (protocole non autorisé) : ftp://exemple.test/f", "lien retiré (protocole non autorisé) : data:text/html,x"]);
+  });
+
+  it("liens vers le site : « www. » ignoré, chemin + paramètres + ancre gardés ; un autre sous-domaine reste absolu", () => {
+    const { warn } = collect();
+    const host = new URL(SITE_URL).hostname.replace(/^www\./, "");
+    expect(safeHref(`https://www.${host}/paiement?x=1#aide`, warn)).toBe("/paiement?x=1#aide");
+    expect(safeHref(`https://blog.${host}/article`, warn)).toBe(`https://blog.${host}/article`);
+  });
+
+  it("chaîne vide : aucun lien, aucun avertissement", () => {
+    const { warnings, warn } = collect();
+    expect(safeHref("", warn)).toBeUndefined();
+    expect(warnings).toEqual([]);
+  });
+});
+
+describe("normalizeNotionBlocks : cas limites", () => {
+  it("segments de texte vides ignorés ; blocs vides (titre, citation, élément de liste) ignorés", () => {
+    const { blocks } = run([
+      block("paragraph", { rich_text: [rt(""), rt("Texte")], color: "default" }),
+      text("heading_2", "   "),
+      text("quote", ""),
+      text("bulleted_list_item", "  "),
+      text("bulleted_list_item", "Élément"),
+    ]);
+    expect(blocks).toEqual([
+      { type: "paragraph", text: [{ text: "Texte" }] },
+      { type: "list", ordered: false, items: [[{ text: "Élément" }]] },
+    ]);
+  });
+
+  it("listes : puces puis numéros = deux listes ; un paragraphe entre deux listes les sépare", () => {
+    const { blocks } = run([
+      text("bulleted_list_item", "a"),
+      text("numbered_list_item", "1"),
+      text("numbered_list_item", "2"),
+      text("paragraph", "entre"),
+      text("numbered_list_item", "3"),
+    ]);
+    expect(blocks.map((b) => (b.type === "list" ? `${b.ordered ? "ol" : "ul"}×${b.items.length}` : b.type))).toEqual([
+      "ul×1",
+      "ol×2",
+      "paragraph",
+      "ol×1",
+    ]);
+  });
+
+  it("avertissements précis et dédoublonnés (contenu imbriqué, titres 1 et 4, bloc inconnu)", () => {
+    const { warnings } = run([
+      text("paragraph", "a", { has_children: true }),
+      text("paragraph", "b", { has_children: true }),
+      text("heading_1", "Titre 1"),
+      text("heading_4", "Titre 4"),
+      block("table", { table_width: 2 }),
+    ]);
+    expect(warnings).toEqual([
+      "contenu imbriqué dans un bloc « paragraph » ignoré (un seul niveau est affiché)",
+      "titre 1 affiché comme titre 2 (la page a déjà son titre principal)",
+      "titre 4 affiché comme titre 3",
+      "bloc « table » non pris en charge : ignoré",
+    ]);
+  });
+
+  it("images : messages d'avertissement précis ; légende rognée", () => {
+    const image = (img: object) => block("image", { caption: [], ...img });
+    const { blocks, warnings } = run([
+      image({ type: "external", external: { url: "https://images.unsplash.com/p.jpg" }, caption: [rt("  Salle  ")] }),
+      image({ type: "file", file: { url: "https://s3.test/x.jpg", expiry_time: "" } }),
+      image({ type: "external", external: { url: "https://pirate.test/x.jpg" }, caption: [rt("x")] }),
+      image({ type: "external", external: { url: "https://images.unsplash.com/q.jpg" }, caption: [rt("   ")] }),
+    ]);
+    expect(blocks).toEqual([{ type: "image", src: "https://images.unsplash.com/p.jpg", alt: "Salle" }]);
+    expect(warnings).toEqual([
+      "image téléversée dans Notion ignorée (lien temporaire) : utiliser une image hébergée à l'extérieur",
+      "image ignorée : hôte non autorisé (https://pirate.test/x.jpg) — voir src/config/images.ts",
+      "image sans légende ignorée : la légende sert de texte alternatif",
+    ]);
+  });
+});
