@@ -2,6 +2,7 @@
 
 import Cal from "@calcom/embed-react";
 import { useEffect, useRef, useState } from "react";
+import { COPY } from "@/content/ui-copy";
 import type { Booking } from "@/lib/content/types";
 import { CAL_CONFIG, CAL_INLINE_NAMESPACE, waitForCalScript } from "./cal";
 
@@ -52,15 +53,15 @@ export function BookingInline({ booking }: { booking: Booking }) {
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8 text-center text-slate-600">
           {status === "failed" ? (
             <>
-              <p>L&apos;agenda n&apos;a pas pu se charger ici.</p>
+              <p>{COPY.bookingInline.failed}</p>
               <a href={booking.url} className="font-semibold text-sage-700 underline underline-offset-4">
-                Ouvrir l&apos;agenda de réservation
+                {COPY.bookingInline.open}
               </a>
             </>
           ) : (
             <>
               <div className="size-10 animate-pulse rounded-full bg-sage-100" aria-hidden="true" />
-              <p className="text-sm">Chargement de l&apos;agenda…</p>
+              <p className="text-sm">{COPY.bookingInline.loading}</p>
             </>
           )}
         </div>

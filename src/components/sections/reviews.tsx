@@ -31,7 +31,7 @@ export function Reviews({ content }: { content: SiteContent }) {
             <div>
               <StarRating value={rating.value} />
               <p className="mt-1 text-sm text-slate-500">
-                {rating.count ? `${rating.count} avis` : COPY.reviews.ratingLabel} {COPY.ratingOn}{" "}
+                {rating.count ? COPY.reviews.ratingCount(rating.count) : COPY.reviews.ratingLabel} {COPY.ratingOn}{" "}
                 <GoogleMapsAttribution />
               </p>
             </div>
@@ -41,7 +41,7 @@ export function Reviews({ content }: { content: SiteContent }) {
 
       <div
         tabIndex={0}
-        aria-label="Avis patients"
+        aria-label={COPY.reviews.listLabel}
         className="relative mt-10 -mx-4 flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0"
       >
         {reviews.map((review, i) => (

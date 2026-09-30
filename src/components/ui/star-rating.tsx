@@ -1,4 +1,5 @@
 import { Star } from "lucide-react";
+import { COPY } from "@/content/ui-copy";
 import { formatRating } from "@/lib/content/format";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +29,7 @@ export function StarRating({
           {full}/5
         </span>
       )}
-      <span className="sr-only">Note : {formatRating(value)} sur 5</span>
+      <span className="sr-only">{COPY.starRating(formatRating(value))}</span>
     </span>
   );
 }

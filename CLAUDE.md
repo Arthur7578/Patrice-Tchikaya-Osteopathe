@@ -44,6 +44,7 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
    `MobileActionBar`, `MobileMenu`, `Reveal`, et `CookieConsent` (écart GTM du 27/09, `docs/DECISIONS.md`).
    Liste vérifiée par `src/test/architecture.test.ts`.
 2. Aucun contenu éditorial en dur hors `fallback.ts` et `src/content/ui-copy.ts` ; tout passe par `getSiteContent()`.
+   Vérifié sur le JSX par `src/test/architecture.test.ts` (exceptions listées : pages juridiques, outil d'upload, icône).
 3. Images Notion : colonne `URL` uniquement, jamais les fichiers Notion ; toujours l'`alt` Notion ; placeholder
    si pas d'URL (composant `SiteImage`).
 4. Aucune animation sur le hero / l'élément LCP ; respecter `prefers-reduced-motion`.
