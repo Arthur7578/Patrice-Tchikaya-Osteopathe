@@ -28,6 +28,8 @@ const BOOKING = "src/components/booking/booking-link.test.tsx";
 const MENU = "src/components/layout/mobile-menu.test.tsx";
 const SECTIONS = "src/components/sections/sections.test.tsx";
 const LAYOUT = "src/components/layout/layout-components.test.tsx";
+const LAYOUT_ROOT = "src/app/layout.test.tsx";
+const COOKIES = "src/components/analytics/cookie-consent.test.tsx";
 
 const MUTANTS: Mutant[] = [
   // --- JSON-LD (règles 7 et 10) ---
@@ -76,6 +78,17 @@ const MUTANTS: Mutant[] = [
   { name: "SiteImage : alt Notion non injecté", file: "src/components/ui/site-image.tsx", find: "alt={image.alt}", replace: 'alt=""', tests: ["src/components/ui/site-image.test.tsx"] },
   { name: "Footer : mobile affiché sans numéro", file: "src/components/layout/site-footer.tsx", find: "{contact.mobilePhone && (", replace: "{true && (", tests: [LAYOUT] },
   { name: "PracticalInfo : mobile affiché sans numéro", file: "src/components/sections/practical-info.tsx", find: "{contact.mobilePhone && (", replace: "{true && (", tests: [SECTIONS] },
+  // --- Consentement cookies (RGPD) ---
+  { name: "cookies : GTM chargé sans consentement", file: "src/components/analytics/cookie-consent.tsx", find: '{consent === "accepted" && (', replace: "{true && (", tests: [COOKIES] },
+  { name: "cookies : identifiant GTM non filtré (injection dans le script)", file: "src/components/analytics/cookie-consent.tsx", find: "/^GTM-[A-Z0-9]+$/.test(id)", replace: "true", tests: [COOKIES] },
+  // --- Sans JavaScript ---
+  { name: "layout : <noscript> des animations retiré", file: "src/app/layout.tsx", find: "{`[data-reveal]{opacity:1!important;transform:none!important}`}", replace: '{""}', tests: [LAYOUT_ROOT] },
+  { name: "BookingInline : pas de repli si Cal.com est indisponible", file: "src/components/booking/booking-inline.tsx", find: '() => setStatus("failed"),', replace: '() => setStatus("loading"),', tests: ["src/components/booking/booking-inline.test.tsx"] },
+  // --- Contenu Notion ---
+  { name: "parseList : texte d'attente publié par morceaux (filtrage ligne par ligne)", file: "src/lib/content/parse.ts", find: "if (isPlaceholder(value)) return [];\n  return value!\n    .split(/[\\n;]+/)", replace: "if (!value) return [];\n  return value!\n    .split(/[\\n;]+/)", tests: ["src/lib/content/parse.test.ts"] },
+  { name: "safeHref : domaine Notion nu accepté comme lien", file: "src/lib/notion/blocks.ts", find: "/(^|\\.)notion\\.(so|site|com)$/", replace: "/\\.notion\\.(so|site|com)$/", tests: ["src/lib/notion/blocks.test.ts"] },
+  // --- Server Components ---
+  { name: "admin : gestionnaire d'événement dans un Server Component (erreur 500)", file: "src/app/admin/photos/page.tsx", find: 'aria-label="URL publique de la photo"', replace: 'aria-label="URL publique de la photo"\n              onFocus={() => undefined}', tests: ["src/test/architecture.test.ts"] },
 ];
 
 const filter = process.argv[2] ?? "";
