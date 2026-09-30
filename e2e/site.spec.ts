@@ -50,7 +50,8 @@ test.describe("toutes les pages du sitemap", () => {
   });
 
   test("budgets de poids (plan §11.2) : JS ≤ 195 Ko, CSS ≤ 15 Ko, HTML ≤ 80 Ko transférés, une seule police", async ({
-    page,
+    browser,
+    baseURL,
     request,
     browserName,
     isMobile,
@@ -59,22 +60,26 @@ test.describe("toutes les pages du sitemap", () => {
     test.setTimeout(120_000);
     const KIB = 1024;
     for (const path of await sitemapPaths(request)) {
+      // Contexte neuf pour chaque page : cache vide, comme une première visite (sinon les fichiers communs
+      // viendraient du cache et ne compteraient que pour la première page).
+      const context = await browser.newContext({ baseURL });
+      const page = await context.newPage();
       const bytes: Record<string, number> = {};
       const files: Record<string, number> = {};
       const pending: Promise<void>[] = [];
-      const onFinished = (req: import("@playwright/test").Request) =>
+      page.on("requestfinished", (req) =>
         pending.push(
           req.sizes().then(({ responseBodySize }) => {
             const type = req.resourceType();
             bytes[type] = (bytes[type] ?? 0) + responseBodySize;
             files[type] = (files[type] ?? 0) + 1;
           }),
-        );
-      page.on("requestfinished", onFinished);
+        ),
+      );
       await page.goto(path);
       await page.waitForLoadState("networkidle"); // chargements différés compris (animations)
       await Promise.all(pending);
-      page.off("requestfinished", onFinished);
+      await context.close();
       // Tailles compressées (gzip de `next start`), comme les mesures du plan (§11.1). JS : plafond à 195 Ko au lieu
       // des 190 Ko du plan, dépassés sur l'accueil le 30/09 (191,7 Ko) ; il empêche toute hausse (docs/DECISIONS.md).
       expect.soft(bytes.script ?? 0, `${path} : JS transféré (octets)`).toBeLessThanOrEqual(195 * KIB);
