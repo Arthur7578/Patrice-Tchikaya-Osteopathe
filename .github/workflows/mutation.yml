@@ -54,11 +54,12 @@ jobs:
       # Mode incrémental : seuls les mutants dont le CODE a changé sont rejoués. Avec le runner « command »,
       # Stryker ne voit pas les modifications de tests (vérifié : 192/192 résultats réutilisés après avoir
       # modifié un test). La clé contient donc le hash des tests : test modifié = cache manqué = passage complet.
+      # Même chose si la configuration change (stryker/*.json, *.mjs, scripts/stryker.ts) ; pas pour EQUIVALENTS.md.
       - uses: actions/cache@v5
         with:
           path: reports/incremental/${{ matrix.group }}.json
-          key: stryker-${{ matrix.group }}-${{ hashFiles('src/**/*.test.ts', 'src/**/*.test.tsx', 'src/test/**', 'vitest.setup.ts', 'vitest.config.mts', 'stryker/**') }}-${{ github.run_id }}
-          restore-keys: stryker-${{ matrix.group }}-${{ hashFiles('src/**/*.test.ts', 'src/**/*.test.tsx', 'src/test/**', 'vitest.setup.ts', 'vitest.config.mts', 'stryker/**') }}-
+          key: stryker-${{ matrix.group }}-${{ hashFiles('src/**/*.test.ts', 'src/**/*.test.tsx', 'src/test/**', 'vitest.setup.ts', 'vitest.config.mts', 'stryker/*.json', 'stryker/*.mjs', 'scripts/stryker.ts') }}-${{ github.run_id }}
+          restore-keys: stryker-${{ matrix.group }}-${{ hashFiles('src/**/*.test.ts', 'src/**/*.test.tsx', 'src/test/**', 'vitest.setup.ts', 'vitest.config.mts', 'stryker/*.json', 'stryker/*.mjs', 'scripts/stryker.ts') }}-
       - run: npm run test:mutation -- ${{ matrix.group }}
       - uses: actions/upload-artifact@v7
         if: always()

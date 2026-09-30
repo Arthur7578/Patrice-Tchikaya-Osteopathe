@@ -94,6 +94,17 @@ describe("parse", () => {
     expect(parseOpeningHours("Dimanche : fermé")).toBeNull(); // aucune plage ouverte
     expect(parseOpeningHours("Lundi 9h-12h ; Fermé")).toBeNull(); // « Fermé » sans jour : illisible
   });
+  it("isPlaceholder : seul un texte entièrement entre crochets est un texte d'attente", () => {
+    expect(isPlaceholder("90 € [tarif 2026]")).toBe(false);
+    expect(isPlaceholder("[Tarif] 90 €")).toBe(false);
+    expect(isPlaceholder("  [À COMPLÉTER]  ")).toBe(true);
+  });
+  it("horaires : « jusqu'au », avec ou sans apostrophe, relie deux jours", () => {
+    const monToFri = { days: ["Mo", "Tu", "We", "Th", "Fr"], opens: "09:00", closes: "18:00" };
+    expect(parseOpeningHours("Du lundi jusqu’au vendredi : 9h-18h")).toEqual([monToFri]);
+    expect(parseOpeningHours("Lundi jusquau vendredi 9h-18h")).toEqual([monToFri]);
+    expect(parseOpeningHours("Lundi jusqua mercredi 9h-12h")).toEqual([{ days: ["Mo", "Tu", "We"], opens: "09:00", closes: "12:00" }]);
+  });
   it("isClosedDayLine : un jour (ou plusieurs), « fermé » et aucun chiffre", () => {
     expect(isClosedDayLine("Dimanche : fermé")).toBe(true);
     expect(isClosedDayLine("samedi et dimanche fermés")).toBe(true);

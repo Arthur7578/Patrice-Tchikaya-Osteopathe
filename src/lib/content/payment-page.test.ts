@@ -67,6 +67,29 @@ describe("buildPaymentPage (textes de /paiement depuis Notion)", () => {
     expect(warnings).toContain("Champ obligatoire vide dans Page_Paiement : Titre_Etapes (valeur de secours utilisée)");
   });
 
+  it("texte vide ou fait d'espaces : absent (secours et avertissement si obligatoire, masqué sinon)", () => {
+    const { page, warnings } = build([texte("Titre_Page", "   "), texte("Introduction", ""), texte("Surtitre", " \n ")]);
+    expect(page.title).toBe(F.title);
+    expect(page.intro).toBeNull();
+    expect(page.eyebrow).toBeNull();
+    expect(warnings).toContain("Champ obligatoire vide dans Page_Paiement : Titre_Page (valeur de secours utilisée)");
+  });
+
+  it("chaque champ obligatoire manquant est signalé sous le nom de sa ligne Notion", () => {
+    const cards: PaymentRow[] = [
+      { name: "Ouvrez Wero", type: "Étape", text: "x" },
+      { name: "Paiement sûr", type: "Sécurité", text: "x" },
+      { name: "Pas encore Wero ?", type: "Première utilisation", text: "x" },
+    ];
+    const { warnings } = build(cards);
+    expect(warnings).toEqual(
+      [
+        "Titre_Page", "Titre_Etapes", "Titre_Securite", "Titre_Premiere_Utilisation", "Titre_Aide", "Libelle_Numero",
+        "Libelle_Email", "Libelle_Nom", "Libelle_Tarif", "Libelle_Encart", "Libelle_Autres_Moyens",
+      ].map((label) => `Champ obligatoire vide dans Page_Paiement : ${label} (valeur de secours utilisée)`),
+    );
+  });
+
   it("carte sans titre ignorée ; clé ou type inconnus signalés et ignorés", () => {
     const { page, warnings } = build([
       { name: "[Titre]", type: "Étape", text: "Orpheline." },
