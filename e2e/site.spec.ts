@@ -81,7 +81,7 @@ test.describe("toutes les pages du sitemap", () => {
       await Promise.all(pending);
       await context.close();
       // Tailles compressées (gzip de `next start`), comme les mesures du plan (§11.1). JS : plafond à 195 Ko au lieu
-      // des 190 Ko du plan, dépassés sur l'accueil le 30/09 (191,7 Ko) ; il empêche toute hausse (docs/DECISIONS.md).
+      // des 190 Ko du plan, dépassés sur l'accueil le 30/09 (191,1 Ko) ; il empêche toute hausse (docs/DECISIONS.md).
       expect.soft(bytes.script ?? 0, `${path} : JS transféré (octets)`).toBeLessThanOrEqual(195 * KIB);
       expect.soft(bytes.stylesheet ?? 0, `${path} : CSS transféré (octets)`).toBeLessThanOrEqual(15 * KIB);
       expect.soft(bytes.document ?? 0, `${path} : HTML transféré (octets)`).toBeLessThanOrEqual(80 * KIB);
