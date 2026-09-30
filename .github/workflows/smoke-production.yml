@@ -2,7 +2,8 @@ name: Contrôle du site en production
 
 # Chaque matin, ou à la demande : seo:smoke sur https://osteopathe-tchikaya.lu, donc sur le contenu Notion réel
 # (le reste de la CI utilise le contenu de secours). Détecte par exemple un <h1> en double, une canonical fausse,
-# un lien de RDV cassé ou une page motif disparue après une modification dans Notion.
+# un lien de RDV cassé ou une page motif disparue après une modification dans Notion. Signale aussi, en avertissement,
+# les textes d'attente (« [À COMPLÉTER …] ») encore visibles sur une page du sitemap.
 # Secret recommandé : NOTION_TOKEN (intégration en lecture seule, Settings > Secrets and variables > Actions).
 # Avec lui, seo:smoke compare le site au contenu Notion et notion:check signale les problèmes de contenu ;
 # sans lui, la comparaison se fait avec fallback.ts et peut signaler des écarts qui n'en sont pas.

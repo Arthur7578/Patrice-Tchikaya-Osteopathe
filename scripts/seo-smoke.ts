@@ -105,6 +105,17 @@ async function main() {
     const pageBooking = page.querySelectorAll("a").filter((a) => a.getAttribute("href") === content.booking.url);
     check(pageBooking.length >= 2, `${path} : liens RDV (${pageBooking.length})`);
   }
+  // Textes d'attente encore visibles (« [À COMPLÉTER …] ») sur chaque page du sitemap : critère de mise en ligne
+  // du plan (§J). Signalés sans faire échouer : seules des données du cabinet peuvent les remplacer.
+  const sitemapPaths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
+  for (const path of sitemapPaths) {
+    const text = parse(await (await fetch(`${base}${path}`)).text()).querySelector("main")?.text ?? "";
+    for (const placeholder of text.match(/\[[^\]]*(?:à compléter|à valider|mettre le)[^\]]*\]/gi) ?? []) {
+      console.log(`⚠ ${path} : texte d'attente visible « ${placeholder} »`);
+      if (process.env.GITHUB_ACTIONS) console.log(`::warning title=Texte d'attente visible (${path})::${placeholder}`);
+    }
+  }
+
   const unknown = await fetch(`${base}/page-qui-n-existe-pas`);
   check(unknown.status === 404, `slug inconnu → ${unknown.status} (404 attendu)`);
 
