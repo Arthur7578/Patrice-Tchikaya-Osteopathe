@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { SITE_URL } from "@/config/site";
 import { FALLBACK_CONTENT } from "@/lib/content/fallback";
+import type { SiteContent } from "@/lib/content/types";
 import { buildLlmsTxt } from "./llms-txt";
 
 describe("buildLlmsTxt", () => {
@@ -36,5 +38,123 @@ describe("buildLlmsTxt", () => {
   it("omet les champs vides", () => {
     const out2 = buildLlmsTxt({ ...FALLBACK_CONTENT, consultation: { ...FALLBACK_CONTENT.consultation, price: null } });
     expect(out2).not.toContain("Tarif :");
+  });
+});
+
+describe("buildLlmsTxt : sortie exacte (contrat du fichier /llms.txt)", () => {
+  const C = FALLBACK_CONTENT;
+  const full: SiteContent = {
+    ...C,
+    practitioner: { name: "Jeanne Test", title: "Ostéopathe D.O." },
+    contact: {
+      ...C.contact,
+      street: "1 rue A",
+      postalCode: "1000",
+      locality: "Ville",
+      countryName: "Luxembourg",
+      phoneDisplay: "+352 1",
+      mobilePhone: { display: "+352 691 1", e164: "+3526911" },
+      email: "a@b.lu",
+    },
+    about: { ...C.about, shortBio: "Bio  sur\nplusieurs   lignes" },
+    openingHoursLines: ["Lundi : 8h – 12h", "Mardi : fermé"],
+    languages: ["Français", "Anglais"],
+    consultation: { ...C.consultation, durationLabel: "45 minutes", price: "90\n€", reimbursement: "Mutuelles\n remboursent" },
+    payment: { ...C.payment, info: "Après  la séance." },
+    access: { train: "Gare\nproche", bus: null, parking: "Parking", accessibility: null },
+    motifs: [
+      { ...C.motifs[0]!, title: "Dos", slug: "dos", description: "Lombalgies\n aiguës" },
+      { ...C.motifs[1]!, title: "Sport", slug: "sport", description: "Entorses", page: null },
+    ],
+    faq: [{ question: "Q1\n ?", answer: "R1  longue." }],
+    booking: { ...C.booking, url: "https://cal.eu/x" },
+  };
+
+  const pages = [
+    "## Pages du site",
+    "",
+    "- [Page d'accueil](https://exemple.test/)",
+    "- [Prise de rendez-vous en ligne](https://cal.eu/x)",
+    "- [Régler votre séance](https://exemple.test/paiement)",
+    "- [Mentions légales](https://exemple.test/mentions-legales)",
+    "- [Confidentialité](https://exemple.test/confidentialite)",
+    "",
+  ];
+
+  it("tous les champs renseignés : espaces normalisés, lien seulement vers les pages publiées", () => {
+    expect(buildLlmsTxt(full, "https://exemple.test").split("\n")).toEqual([
+      "# Jeanne Test – Ostéopathe D.O., Ville",
+      "",
+      "> Bio sur plusieurs lignes",
+      "",
+      "## Informations pratiques",
+      "",
+      "- Adresse : 1 rue A, 1000 Ville, Luxembourg",
+      "- Téléphone : +352 1",
+      "- Mobile : +352 691 1",
+      "- E-mail : a@b.lu",
+      "- Horaires : Lundi : 8h – 12h ; Mardi : fermé",
+      "- Langues : Français, Anglais",
+      "- Durée : 45 minutes",
+      "- Tarif : 90 €",
+      "- Remboursement : Mutuelles remboursent",
+      "- Règlement : Après la séance.",
+      "- Train : Gare proche",
+      "- Stationnement : Parking",
+      "",
+      "## Motifs de consultation",
+      "",
+      "- [Dos](https://exemple.test/dos) : Lombalgies aiguës",
+      "- Sport : Entorses",
+      "",
+      "## Questions fréquentes",
+      "",
+      "- Q1 ? R1 longue.",
+      "",
+      ...pages,
+    ]);
+  });
+
+  it("champs facultatifs vides : lignes et sections omises (jamais de ligne vide ou « null »)", () => {
+    const minimal: SiteContent = {
+      ...full,
+      contact: { ...full.contact, mobilePhone: null, email: null },
+      openingHoursLines: [],
+      languages: [],
+      consultation: { ...full.consultation, price: null },
+      access: { train: null, bus: null, parking: null, accessibility: null },
+      motifs: [],
+      faq: [],
+    };
+    expect(buildLlmsTxt(minimal, "https://exemple.test").split("\n")).toEqual([
+      "# Jeanne Test – Ostéopathe D.O., Ville",
+      "",
+      "> Bio sur plusieurs lignes",
+      "",
+      "## Informations pratiques",
+      "",
+      "- Adresse : 1 rue A, 1000 Ville, Luxembourg",
+      "- Téléphone : +352 1",
+      "- Durée : 45 minutes",
+      "- Remboursement : Mutuelles remboursent",
+      "- Règlement : Après la séance.",
+      "",
+      ...pages,
+    ]);
+  });
+
+  it("les quatre lignes d'accès, dans l'ordre train, bus, stationnement, PMR", () => {
+    const access = { train: "T", bus: "B", parking: "P", accessibility: "A" };
+    const lines = buildLlmsTxt({ ...full, access }, "https://exemple.test").split("\n");
+    expect(lines.filter((l) => /^- (Train|Bus|Stationnement|Accès PMR) : /.test(l))).toEqual([
+      "- Train : T",
+      "- Bus : B",
+      "- Stationnement : P",
+      "- Accès PMR : A",
+    ]);
+  });
+
+  it("sans URL explicite : utilise l'URL du site (SITE_URL)", () => {
+    expect(buildLlmsTxt(full)).toContain(`- [Régler votre séance](${SITE_URL}/paiement)`);
   });
 });

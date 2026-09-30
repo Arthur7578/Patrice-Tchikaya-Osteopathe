@@ -1,0 +1,37 @@
+name: Contrôle du site en production
+
+# Chaque matin, ou à la demande : seo:smoke sur https://osteopathe-tchikaya.lu, donc sur le contenu Notion réel
+# (le reste de la CI utilise le contenu de secours). Détecte par exemple un <h1> en double, une canonical fausse,
+# un lien de RDV cassé ou une page motif disparue après une modification dans Notion.
+# Le script compare le site au contenu Notion : ajouter le secret NOTION_TOKEN (intégration en lecture seule,
+# Settings > Secrets and variables > Actions). Sans lui, la comparaison se fait avec fallback.ts et peut signaler
+# des écarts qui n'en sont pas.
+on:
+  schedule:
+    - cron: "43 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Secret NOTION_TOKEN
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          if [ -z "$NOTION_TOKEN" ]; then
+            echo "::warning::Secret NOTION_TOKEN absent : comparaison avec le contenu de secours (fallback.ts)."
+          fi
+      - run: npm run seo:smoke -- https://osteopathe-tchikaya.lu
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}

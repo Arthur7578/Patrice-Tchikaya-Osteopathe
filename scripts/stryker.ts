@@ -10,7 +10,7 @@
  * Rapports : reports/mutation/<groupe>/index.html (+ mutation.json) ; incrémental : reports/incremental/<groupe>.json
  */
 import { spawnSync } from "node:child_process";
-import { globSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, globSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
 /** Version épinglée, lancée via npx et hors package.json : ses dépendances apportent des alertes `npm audit`. */
 const STRYKER = "@stryker-mutator/core@10.0.0";
@@ -33,6 +33,49 @@ function groupFiles(group: Group): string[] {
 }
 
 const shellQuote = (s: string) => `'${s.replaceAll("'", `'\\''`)}'`;
+
+type Mutant = {
+  mutatorName: string;
+  replacement?: string;
+  status: string;
+  location: { start: { line: number; column: number } };
+};
+
+/**
+ * Résumé Markdown d'un groupe (score, survivants avec fichier:ligne) depuis le rapport JSON de Stryker.
+ * Score = (tués + délais) / (tués + délais + survivants + non couverts), comme Stryker.
+ */
+function summarize(name: string, reportFile: string): string {
+  const report = JSON.parse(readFileSync(reportFile, "utf8")) as { files: Record<string, { mutants: Mutant[] }> };
+  const rows: string[] = [];
+  const survivors: string[] = [];
+  let detected = 0;
+  let valid = 0;
+  for (const [file, { mutants }] of Object.entries(report.files).sort(([a], [b]) => a.localeCompare(b))) {
+    const count = (...statuses: string[]) => mutants.filter((m) => statuses.includes(m.status)).length;
+    const fileDetected = count("Killed", "Timeout");
+    const fileValid = fileDetected + count("Survived", "NoCoverage");
+    detected += fileDetected;
+    valid += fileValid;
+    const score = fileValid ? ((100 * fileDetected) / fileValid).toFixed(1) : "–";
+    rows.push(`| ${file} | ${score} % | ${fileDetected} | ${count("Survived")} | ${count("NoCoverage")} |`);
+    for (const m of mutants.filter((m) => m.status === "Survived" || m.status === "NoCoverage")) {
+      const replacement = (m.replacement ?? "").replace(/\s+/g, " ").slice(0, 80);
+      survivors.push(`- \`${file}:${m.location.start.line}\` ${m.mutatorName} → \`${replacement}\`${m.status === "NoCoverage" ? " (non couvert)" : ""}`);
+    }
+  }
+  const total = valid ? ((100 * detected) / valid).toFixed(1) : "–";
+  return [
+    `### Mutation testing : ${name} — score ${total} % (${detected}/${valid})`,
+    "",
+    "| Fichier | Score | Tués | Survivants | Non couverts |",
+    "| --- | --- | --- | --- | --- |",
+    ...rows,
+    "",
+    survivors.length > 0 ? `<details><summary>${survivors.length} mutant(s) non détecté(s)</summary>\n\n${survivors.join("\n")}\n\n</details>` : "Aucun survivant.",
+    "",
+  ].join("\n");
+}
 
 let failed = false;
 for (const group of groups.filter((g) => requested.length === 0 || requested.includes(g.name))) {
@@ -57,5 +100,10 @@ for (const group of groups.filter((g) => requested.length === 0 || requested.inc
   console.log(`\n### Groupe ${group.name} : ${files.length} fichier(s)`);
   const run = spawnSync("npx", ["--yes", STRYKER, "run", configFile], { stdio: "inherit" });
   if (run.status !== 0) failed = true;
+  if (existsSync(config.jsonReporter.fileName)) {
+    const summary = summarize(group.name, config.jsonReporter.fileName);
+    writeFileSync(`${dir}/summary.md`, summary);
+    if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
+  }
 }
 process.exit(failed ? 1 : 0);

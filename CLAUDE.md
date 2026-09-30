@@ -15,20 +15,26 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
 - `npm run lint` · `npm run typecheck` · `npm test` · `npm run build` : **tous verts avant chaque commit**
 - `npm run notion:check` : diagnostic Notion (nécessite `NOTION_TOKEN` dans `.env.local`)
 - `npm run seo:smoke` : contrôles SEO sur un serveur lancé (`npm run build && npm start`)
-- `npm run test:coverage` : couverture v8 (rapport HTML dans `coverage/`, seuils sur `src/lib/**`)
+- `npm run test:coverage` : couverture v8 (rapport HTML dans `coverage/`, seuils dans `vitest.config.mts`)
 - `npm run test:e2e` : Playwright + axe sur le build (`npm run build` d'abord ; en cloud,
-  `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux*/chrome`)
-- `npm run test:mutants` : casse volontairement ~40 règles critiques, les tests doivent échouer (`scripts/mutation-check.ts` ;
-  ajouter une entrée quand on ajoute une règle ; nécessite des fichiers commités ; ~3 min)
-- `scripts/stryker-group.sh <nom> "<globs>" "<tests>"` : Stryker (runner `command`, tests ciblés) sur un groupe ; en CI :
-  `.github/workflows/mutation.yml` (nuit + manuel, non bloquant, rapport HTML en artefact). Ne pas ajouter Stryker à `package.json`.
+  `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux*/chrome`). Parcourt chaque URL du sitemap.
+- `npm run test:mutants` : casse volontairement ~40 règles critiques, au moins un test doit échouer à chaque fois
+  (`scripts/mutation-check.ts` ; ajouter une entrée quand on ajoute une règle ; fichiers commités requis ; ~3 min)
+- `npm run test:mutation [-- <groupe>]` : Stryker (runner `command` + `vitest related`), groupes dans
+  `stryker/groups.json` ; long (voir `docs/DECISIONS.md`), lancé chaque nuit par `.github/workflows/mutation.yml`.
+  Ne pas ajouter Stryker à `package.json` (version épinglée dans `scripts/stryker.ts`).
 - Tests de pages/sections : `src/test/render.tsx` (rendu statique + `expectSiteRules`) ; toute nouvelle page a son test.
+  `src/test/architecture.test.ts` : règle 1 et aucun gestionnaire `on…={}` dans un Server Component.
+- CI : `.github/workflows/ci.yml` (lint, typecheck, couverture, build, `seo:smoke`, e2e, `test:mutants`) ;
+  `smoke-production.yml` lance `seo:smoke` chaque matin sur la production (secret `NOTION_TOKEN` recommandé).
 
 ## Environnement cloud
 
 - Bloqués par la politique réseau : `api.notion.com`, `cal.eu`, `app.cal.eu`, `app.cal.com`, `ui.shadcn.com`.
   Sans `NOTION_TOKEN`, le build utilise `src/lib/content/fallback.ts` : c'est normal. Tester Notion et Cal.com
   sur la preview Vercel.
+- `*.vercel.app` et `osteopathe-tchikaya.lu` sont aussi bloqués (proxy, 403). Le connecteur Vercel
+  (`web_fetch_vercel_url`) lit la production, mais pas les previews protégées par l'authentification Vercel.
 - Pas de CLI shadcn : écrire les composants à la main (PLAN §6.14 et §7.6).
 - Chromium : `/opt/pw-browsers` ; Lighthouse via la variable `CHROME_PATH` (PLAN §15.2).
 

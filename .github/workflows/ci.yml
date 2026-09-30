@@ -9,29 +9,37 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   checks:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
-      # Couverture + tests unitaires/composants ; échoue si les seuils de src/lib/** ne sont plus tenus.
+      # Tests unitaires et de composants + couverture ; échoue si les seuils de vitest.config.mts ne sont plus tenus.
       - run: npm run test:coverage
       # Sans NOTION_TOKEN, le build utilise fallback.ts (voir CLAUDE.md) : suffisant pour l'e2e.
       - run: npm run build
+      - name: Contrôles SEO (seo:smoke) sur le build
+        run: |
+          npx next start -p 3200 > /tmp/next-smoke.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:3200/ && break; sleep 1; done
+          npm run seo:smoke -- http://localhost:3200
       - name: Navigateur Playwright
         run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
         env:
           CI: "true"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: rapports-tests
@@ -42,16 +50,15 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  # Casse volontairement les règles critiques (sécurité, SEO, RDV, 404) : les tests doivent échouer.
+  # Casse volontairement les règles critiques (sécurité, SEO, RDV, 404) : au moins un test doit échouer à chaque fois.
   mutants:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx next typegen
       - run: npm run test:mutants
