@@ -12,13 +12,29 @@
 import { spawnSync } from "node:child_process";
 import { appendFileSync, existsSync, globSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
-/** Version épinglée, lancée via npx et hors package.json : ses dépendances apportent des alertes `npm audit`. */
-const STRYKER = "@stryker-mutator/core@10.0.0";
 /**
- * Stryker importe `typescript` (réécriture du tsconfig dans son bac à sable) : installé par npx à côté de lui,
- * il ne voit pas celui du projet. On lui fournit donc la même version que le projet.
+ * Version épinglée, hors package.json (ses dépendances apportent des alertes `npm audit`). Installée dans un
+ * sous-dossier du projet : Stryker y importe le `typescript` du projet (résolution par les dossiers parents),
+ * ce qu'une installation par npx, isolée dans le cache npm, ne permet pas (ERR_MODULE_NOT_FOUND).
  */
-const TYPESCRIPT = `typescript@${(JSON.parse(readFileSync("node_modules/typescript/package.json", "utf8")) as { version: string }).version}`;
+const STRYKER_VERSION = "10.0.0";
+const STRYKER_DIR = ".stryker-bin";
+
+function ensureStryker(): string {
+  const manifest = `${STRYKER_DIR}/node_modules/@stryker-mutator/core/package.json`;
+  const installed = existsSync(manifest) && (JSON.parse(readFileSync(manifest, "utf8")) as { version: string }).version === STRYKER_VERSION;
+  if (!installed) {
+    mkdirSync(STRYKER_DIR, { recursive: true });
+    writeFileSync(`${STRYKER_DIR}/package.json`, '{ "private": true }\n');
+    const install = spawnSync(
+      "npm",
+      ["install", "--prefix", STRYKER_DIR, "--no-save", "--no-package-lock", "--no-audit", "--no-fund", `@stryker-mutator/core@${STRYKER_VERSION}`],
+      { stdio: "inherit" },
+    );
+    if (install.status !== 0) process.exit(2);
+  }
+  return `${STRYKER_DIR}/node_modules/.bin/stryker`;
+}
 
 type Group = { name: string; include: string[]; exclude: string[] };
 
@@ -82,6 +98,7 @@ function summarize(name: string, reportFile: string): string {
   ].join("\n");
 }
 
+const stryker = ensureStryker();
 let failed = false;
 for (const group of groups.filter((g) => requested.length === 0 || requested.includes(g.name))) {
   const files = groupFiles(group);
@@ -104,7 +121,7 @@ for (const group of groups.filter((g) => requested.length === 0 || requested.inc
   const configFile = `${dir}/stryker.config.json`;
   writeFileSync(configFile, `${JSON.stringify(config, null, 2)}\n`);
   console.log(`\n### Groupe ${group.name} : ${files.length} fichier(s)`);
-  const run = spawnSync("npx", ["--yes", "-p", TYPESCRIPT, "-p", STRYKER, "stryker", "run", configFile], { stdio: "inherit" });
+  const run = spawnSync(stryker, ["run", configFile], { stdio: "inherit" });
   if (run.status !== 0) failed = true;
   if (existsSync(config.jsonReporter.fileName)) {
     const summary = summarize(group.name, config.jsonReporter.fileName);

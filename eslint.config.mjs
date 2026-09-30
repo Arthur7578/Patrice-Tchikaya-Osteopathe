@@ -18,6 +18,7 @@ const eslintConfig = defineConfig([
     "test-results/**",
     "reports/**",
     ".stryker-tmp/**",
+    ".stryker-bin/**",
   ]),
 ]);
 
