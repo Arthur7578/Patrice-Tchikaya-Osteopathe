@@ -104,7 +104,10 @@ export function parseInteger(value: string | null | undefined): number | null {
 
 /**
  * Liste saisie dans une cellule Notion : un élément par ligne (Maj+Entrée) ou séparé par « ; ».
- * Puces tapées à la main (« - », « • », « * ») retirées ; lignes vides ou placeholders ignorées.
+ * Puces tapées à la main (« - », « • », « * ») retirées ; éléments vides ignorés.
+ * Une cellule qui contient encore un texte d'attente (« à compléter »…) donne une liste vide, en entier :
+ * ce texte contient lui-même des « ; » et ne doit jamais être publié par morceaux (consigne Notion :
+ * « remplacer tout ce texte »).
  */
 export function parseList(value: string | null | undefined): string[] {
   if (isPlaceholder(value)) return [];

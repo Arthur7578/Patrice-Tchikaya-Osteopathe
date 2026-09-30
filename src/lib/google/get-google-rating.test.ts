@@ -34,17 +34,33 @@ describe("getGoogleRating", () => {
     fetchPlaceRating.mockResolvedValue({ name: "Cabinet", rating });
     expect(await getGoogleRating()).toBe(rating);
     expect(fetchPlaceRating).toHaveBeenCalledWith({ apiKey: "clé", placeId: "place", revalidate: 3600 });
+    expect(console.info).toHaveBeenCalledWith("[google] note de « Cabinet » : 4.9 (30 avis)");
+  });
+
+  it("journal : identifiant de la fiche si Google ne renvoie pas son nom, « ? » si le nombre d'avis est inconnu", async () => {
+    fetchPlaceRating.mockResolvedValue({ name: null, rating: { value: 5, count: null } });
+    await getGoogleRating();
+    expect(console.info).toHaveBeenCalledWith("[google] note de « place » : 5 (? avis)");
   });
 
   it("aucune note renvoyée : null + avertissement (repli sur Notion)", async () => {
     fetchPlaceRating.mockResolvedValue({ name: null, rating: null });
     expect(await getGoogleRating()).toBeNull();
-    expect(console.warn).toHaveBeenCalled();
+    expect(console.warn).toHaveBeenCalledWith("[google] « place » : aucune note renvoyée → Note_Google (Notion)");
+    fetchPlaceRating.mockResolvedValue({ name: "Cabinet", rating: null });
+    await getGoogleRating();
+    expect(console.warn).toHaveBeenCalledWith("[google] « Cabinet » : aucune note renvoyée → Note_Google (Notion)");
   });
 
   it("erreur API : jamais bloquant, null + avertissement", async () => {
     fetchPlaceRating.mockRejectedValue(new Error("timeout"));
     expect(await getGoogleRating()).toBeNull();
-    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining("timeout"));
+    expect(console.warn).toHaveBeenCalledWith("[google] note indisponible (timeout) → Note_Google (Notion)");
+  });
+
+  it("erreur qui n'est pas une Error : convertie en texte", async () => {
+    fetchPlaceRating.mockRejectedValue("réseau coupé");
+    expect(await getGoogleRating()).toBeNull();
+    expect(console.warn).toHaveBeenCalledWith("[google] note indisponible (réseau coupé) → Note_Google (Notion)");
   });
 });

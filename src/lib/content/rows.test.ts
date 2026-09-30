@@ -29,3 +29,36 @@ describe("resolveRowOrder", () => {
     expect(resolveRowOrder("reglement, tarif", INFO_ROW_IDS).slice(0, 2)).toEqual(["reglement", "tarif"]);
   });
 });
+
+describe("resolveRowOrder : cas limites", () => {
+  it("doublons : un identifiant n'apparaît qu'une fois (longueur inchangée)", () => {
+    const order = resolveRowOrder("Durée;\nTARIF, duree, tarif", INFO_ROW_IDS);
+    expect(order).toHaveLength(INFO_ROW_IDS.length);
+    expect(new Set(order).size).toBe(INFO_ROW_IDS.length);
+  });
+
+  it("ponctuation autour d'un identifiant tolérée (« tarif. », « durée! »)", () => {
+    const unknown: string[] = [];
+    expect(resolveRowOrder("tarif., durée!", INFO_ROW_IDS, (u) => unknown.push(u)).slice(0, 2)).toEqual(["tarif", "duree"]);
+    expect(unknown).toEqual([]);
+  });
+
+  it("valeur absente ou texte d'attente entre crochets : rien n'est signalé", () => {
+    const unknown: string[] = [];
+    resolveRowOrder(null, INFO_ROW_IDS, (u) => unknown.push(u));
+    resolveRowOrder(undefined, INFO_ROW_IDS, (u) => unknown.push(u));
+    resolveRowOrder("[À COMPLÉTER : ordre des blocs]", INFO_ROW_IDS, (u) => unknown.push(u));
+    expect(unknown).toEqual([]);
+  });
+
+  it("crochets au milieu d'une valeur : ce n'est pas un texte d'attente, l'erreur est signalée", () => {
+    const unknown: string[] = [];
+    resolveRowOrder("tarif [x], [x] duree", INFO_ROW_IDS, (u) => unknown.push(u));
+    expect(unknown).toEqual(["tarif [x]", "[x] duree"]);
+  });
+
+  it("identifiant inconnu sans fonction de signalement : ignoré sans erreur", () => {
+    expect(() => resolveRowOrder("inconnu, tarif", INFO_ROW_IDS)).not.toThrow();
+    expect(resolveRowOrder("inconnu, tarif", INFO_ROW_IDS)[0]).toBe("tarif");
+  });
+});

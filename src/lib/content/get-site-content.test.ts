@@ -26,6 +26,7 @@ describe("getSiteContent", () => {
   it("sans NOTION_TOKEN (dev/CI) : renvoie le contenu de secours", async () => {
     expect(await getSiteContent()).toBe(FALLBACK_CONTENT);
     expect(fetchSiteContent).not.toHaveBeenCalled();
+    expect(console.warn).toHaveBeenCalledWith("[content] NOTION_TOKEN absent → contenu de secours (src/lib/content/fallback.ts)");
   });
 
   it("sans NOTION_TOKEN en production Vercel : lève au lieu de servir le snapshot", async () => {

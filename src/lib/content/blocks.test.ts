@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MOTIF_PAGES } from "@/config/site";
-import { blockPlainText, blocksFromMarkdown, countWords } from "./blocks";
+import { blockPlainText, blocksFromMarkdown, countWords, richTextToString } from "./blocks";
 import { FALLBACK_CONTENT } from "./fallback";
 
 describe("countWords", () => {
@@ -58,5 +58,51 @@ describe("instantané des pages motifs (fallback.ts)", () => {
       expect(text, slug).not.toMatch(/médecin|\bDr\b/i);
       for (const b of page!.blocks) if (b.type === "heading") expect([2, 3], slug).toContain(b.level);
     }
+  });
+});
+
+describe("blocs : texte et mots", () => {
+  it("texte d'un bloc : segments collés, éléments de liste séparés par une espace", () => {
+    expect(richTextToString([{ text: "Ostéo" }, { text: "pathie", bold: true }])).toBe("Ostéopathie");
+    expect(countWords([{ type: "list", ordered: false, items: [[{ text: "un deux" }], [{ text: "trois" }]] }])).toBe(3);
+  });
+
+  it("citations et encadrés comptent comme du texte", () => {
+    expect(
+      countWords([
+        { type: "quote", text: [{ text: "une citation" }] },
+        { type: "callout", text: [{ text: "un encadré important" }] },
+      ]),
+    ).toBe(5);
+  });
+});
+
+describe("blocksFromMarkdown : cas limites", () => {
+  it("lignes vides ignorées, espaces autour d'une ligne retirés", () => {
+    expect(blocksFromMarkdown("Un.\n\n   \n  ## Titre  ")).toEqual([
+      { type: "paragraph", text: [{ text: "Un." }] },
+      { type: "heading", level: 2, text: [{ text: "Titre" }] },
+    ]);
+  });
+
+  it("titre de niveau 4 ou dièses en milieu de ligne : paragraphe", () => {
+    expect(blocksFromMarkdown("#### Trop profond")[0]!.type).toBe("paragraph");
+    expect(blocksFromMarkdown("Texte ## pas un titre")[0]!.type).toBe("paragraph");
+  });
+
+  it("listes : numéros à plusieurs chiffres, tiret en milieu de ligne = paragraphe, liste en première ligne", () => {
+    expect(blocksFromMarkdown("10. dixième")).toEqual([{ type: "list", ordered: true, items: [[{ text: "dixième" }]] }]);
+    expect(blocksFromMarkdown("Texte - pas une liste")[0]!.type).toBe("paragraph");
+    expect(blocksFromMarkdown("- a\n- b")).toEqual([{ type: "list", ordered: false, items: [[{ text: "a" }], [{ text: "b" }]] }]);
+  });
+
+  it("une liste qui suit un paragraphe commence une nouvelle liste", () => {
+    expect(blocksFromMarkdown("Intro\n- a").map((b) => b.type)).toEqual(["paragraph", "list"]);
+  });
+
+  it("gras : seulement entre deux paires d'astérisques", () => {
+    expect(blocksFromMarkdown("** pas gras")).toEqual([{ type: "paragraph", text: [{ text: "** pas gras" }] }]);
+    expect(blocksFromMarkdown("pas gras **")).toEqual([{ type: "paragraph", text: [{ text: "pas gras **" }] }]);
+    expect(blocksFromMarkdown("a **b** c")).toEqual([{ type: "paragraph", text: [{ text: "a " }, { text: "b", bold: true }, { text: " c" }] }]);
   });
 });
