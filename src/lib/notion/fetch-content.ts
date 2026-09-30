@@ -9,6 +9,7 @@ import { buildPaymentPage, type PaymentRow } from "@/lib/content/payment-page";
 import {
   cleanOptional,
   formatReviewAuthor,
+  isClosedDayLine,
   isE164,
   isPlaceholder,
   normalizeSlug,
@@ -313,7 +314,10 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
     },
     rating: ratingValue === null ? null : { value: ratingValue, count: parseInteger(g.text("Nombre_Avis_Google")) },
     openingHours,
-    openingHoursLines: openingHours ? formatOpeningHours(openingHours) : splitOpeningLines(openingRaw),
+    // Mise en forme normalisée si le texte est lisible ; tel quel s'il ne l'est pas, ou s'il cite un jour fermé
+    // (formatOpeningHours ne connaît que les plages ouvertes : « Dimanche : fermé » disparaîtrait de l'affichage).
+    openingHoursLines:
+      openingHours && !splitOpeningLines(openingRaw).some(isClosedDayLine) ? formatOpeningHours(openingHours) : splitOpeningLines(openingRaw),
     access: {
       train: cleanOptional(g.text("Acces_Train")),
       bus: cleanOptional(g.text("Acces_Bus")),

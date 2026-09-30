@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { isAllowedImageUrl } from "@/config/images";
 import {
-  cleanOptional, formatReviewAuthor, isPlaceholder, normalizeSlug, parseBookingUrl, parseGeo, parseOpeningHours, splitOpeningLines,
+  cleanOptional, formatReviewAuthor, isClosedDayLine, isPlaceholder, normalizeSlug, parseBookingUrl, parseGeo, parseOpeningHours, splitOpeningLines,
   isE164, parseInteger, parseList, parsePhone, parsePostalLine, parseRating, parseWeroRecipient, toE164,
 } from "./parse";
 
@@ -79,6 +79,30 @@ describe("parse", () => {
     ]);
     expect(parseOpeningHours("Sur rendez-vous")).toBeNull();
     expect(splitOpeningLines("Sur rendez-vous ; le samedi matin")).toEqual(["Sur rendez-vous", "le samedi matin"]);
+  });
+  it("horaires : un jour fermé est accepté et ne donne aucune plage (valeur Notion réelle du 30/09)", () => {
+    const real =
+      "Lundi : 08:30–19:00 ; Mardi : 07:00–16:45 ; Mercredi : 08:30–19:00 ; Jeudi : 08:30–19:00 ; Vendredi : 08:30–17:45 ; Samedi : 08:30–12:30 ; Dimanche : fermé";
+    expect(parseOpeningHours(real)).toEqual([
+      { days: ["Mo"], opens: "08:30", closes: "19:00" },
+      { days: ["Tu"], opens: "07:00", closes: "16:45" },
+      { days: ["We"], opens: "08:30", closes: "19:00" },
+      { days: ["Th"], opens: "08:30", closes: "19:00" },
+      { days: ["Fr"], opens: "08:30", closes: "17:45" },
+      { days: ["Sa"], opens: "08:30", closes: "12:30" },
+    ]);
+    expect(parseOpeningHours("Dimanche : fermé")).toBeNull(); // aucune plage ouverte
+    expect(parseOpeningHours("Lundi 9h-12h ; Fermé")).toBeNull(); // « Fermé » sans jour : illisible
+  });
+  it("isClosedDayLine : un jour (ou plusieurs), « fermé » et aucun chiffre", () => {
+    expect(isClosedDayLine("Dimanche : fermé")).toBe(true);
+    expect(isClosedDayLine("samedi et dimanche fermés")).toBe(true);
+    expect(isClosedDayLine("Dimanche : FERMÉE")).toBe(true);
+    expect(isClosedDayLine("Su closed")).toBe(true);
+    expect(isClosedDayLine("Fermé")).toBe(false); // aucun jour
+    expect(isClosedDayLine("Dimanche : fermeture à 12h")).toBe(false);
+    expect(isClosedDayLine("Dimanche : fermé à partir de 12h")).toBe(false); // un horaire : pas un jour fermé
+    expect(isClosedDayLine("Samedi : 8h30-12h30")).toBe(false);
   });
   it("parse les coordonnées GPS", () => {
     expect(parseGeo("49.481194, 6.084361")).toEqual({ latitude: 49.481194, longitude: 6.084361 });

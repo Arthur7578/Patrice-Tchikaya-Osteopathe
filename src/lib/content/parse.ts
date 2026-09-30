@@ -157,6 +157,18 @@ const TIME_TOKEN = /\b(\d{1,2})\s*(?::|h)\s*(\d{2})?\b/g;
 const normalize = (value: string) =>
   value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[’‘`]/g, "'");
 
+/** Mention d'un jour fermé, après `normalize` (sans accents) : « fermé », « fermée(s) », « closed ». */
+const CLOSED = /\b(?:fermee?s?|closed)\b/;
+
+/**
+ * Ligne d'un jour fermé, sans horaire : « Dimanche : fermé », « samedi et dimanche fermés ». Aucune plage n'en
+ * sort : en JSON-LD, un jour absent est un jour fermé (schema.org).
+ */
+export function isClosedDayLine(line: string): boolean {
+  const text = normalize(line);
+  return CLOSED.test(text) && !/\d/.test(text) && parseDays(text.replace(CLOSED, "")) !== null;
+}
+
 /** Lignes brutes d'un champ horaires (séparées par « ; » ou un retour à la ligne). */
 export function splitOpeningLines(value: string | null | undefined): string[] {
   if (isPlaceholder(value)) return [];
@@ -186,12 +198,13 @@ function parseDays(text: string): Day[] | null {
 /**
  * Lecture tolérante des horaires saisis dans Notion (clé Horaires). Accepte notamment :
  * « Mo-Fr 08:30-19:00; Sa 08:30-12:30 », « Lundi au Vendredi, de 08:30-19:00 ; Samedi de 8h30 à 12h30 »,
- * plusieurs plages par ligne (pause déjeuner). Retourne null si une ligne est incompréhensible :
- * l'affichage utilise alors le texte brut (`splitOpeningLines`) et seul le JSON-LD est omis.
+ * plusieurs plages par ligne (pause déjeuner), jours fermés (« Dimanche : fermé », ignorés). Retourne null si une
+ * ligne est incompréhensible : l'affichage utilise alors le texte brut (`splitOpeningLines`) et seul le JSON-LD est omis.
  */
 export function parseOpeningHours(value: string | null | undefined): OpeningHoursRange[] | null {
   const ranges: OpeningHoursRange[] = [];
   for (const line of splitOpeningLines(value)) {
+    if (isClosedDayLine(line)) continue;
     const text = normalize(line);
     const times = [...text.matchAll(TIME_TOKEN)];
     if (times.length < 2 || times.length % 2 !== 0) return null;

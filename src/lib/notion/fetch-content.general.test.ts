@@ -158,6 +158,17 @@ describe("fetchSiteContent : Informations_generales", () => {
     expect(warnings.filter((w) => w.startsWith("Horaires"))).toEqual([]);
   });
 
+  it("horaires avec un jour fermé (texte Notion réel) : JSON-LD structuré, affichage tel que saisi, sans avertissement", async () => {
+    const real =
+      "Lundi : 08:30–19:00 ; Mardi : 07:00–16:45 ; Mercredi : 08:30–19:00 ; Jeudi : 08:30–19:00 ; Vendredi : 08:30–17:45 ; Samedi : 08:30–12:30 ; Dimanche : fermé";
+    const { content, warnings } = await fetchSiteContent(fakeNotion({ general: general({ Horaires: real }) }));
+    expect(content.openingHours?.map((r) => `${r.days.join(",")} ${r.opens}-${r.closes}`)).toEqual([
+      "Mo 08:30-19:00", "Tu 07:00-16:45", "We 08:30-19:00", "Th 08:30-19:00", "Fr 08:30-17:45", "Sa 08:30-12:30",
+    ]);
+    expect(content.openingHoursLines).toEqual(real.split(" ; "));
+    expect(warnings.filter((w) => w.startsWith("Horaires"))).toEqual([]);
+  });
+
   it("valeurs illisibles : non publiées, avertissement précis (visible dans notion:check)", async () => {
     const rows = general({
       Horaires: "Sur rendez-vous uniquement",
