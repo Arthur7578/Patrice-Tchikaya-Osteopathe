@@ -19,14 +19,14 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
 - `npm run test:coverage` : couverture v8 (rapport HTML dans `coverage/`, seuils dans `vitest.config.mts`)
 - `npm run test:e2e` : Playwright + axe sur le build (`npm run build` d'abord ; en cloud,
   `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux*/chrome`). Parcourt chaque URL du sitemap.
-- `npm run test:mutants` : casse volontairement ~40 règles critiques, au moins un test doit échouer à chaque fois
+- `npm run test:mutants` : casse volontairement ~50 règles critiques, au moins un test doit échouer à chaque fois
   (`scripts/mutation-check.ts` ; ajouter une entrée quand on ajoute une règle ; fichiers commités requis ; ~3 min)
 - `npm run test:mutation [-- <groupe>]` : Stryker (runner `command` + `vitest related`), groupes dans
   `stryker/groups.json` ; long (voir `docs/DECISIONS.md`), lancé chaque nuit par `.github/workflows/mutation.yml`.
   Ne pas ajouter Stryker à `package.json` (version épinglée dans `scripts/stryker.ts`).
 - Tests de pages/sections : `src/test/render.tsx` (rendu statique + `expectSiteRules`) ; toute nouvelle page a son test.
-  `src/test/architecture.test.ts` : règle 1 et aucun gestionnaire `on…={}` dans un Server Component.
-- CI : `.github/workflows/ci.yml` (lint, typecheck, couverture, build, `seo:smoke`, e2e, `test:mutants`) ;
+  `src/test/architecture.test.ts` : règles 1 et 2, aucun gestionnaire `on…={}` dans un Server Component.
+- CI : `.github/workflows/ci.yml` (lint, typecheck, couverture, build, `seo:smoke`, e2e Chromium + WebKit, `test:mutants`) ;
   `smoke-production.yml` lance `seo:smoke` chaque matin sur la production (secret `NOTION_TOKEN` recommandé).
 
 ## Environnement cloud

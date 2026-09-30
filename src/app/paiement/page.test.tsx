@@ -106,10 +106,12 @@ describe("/paiement : ce qui n'est pas renseigné n'est pas affiché", () => {
     expect(root.querySelector("#aide-title")).not.toBeNull(); // l'aide reste toujours affichée
   });
 
-  it("l'encart « Bon à savoir » apparaît quand il est renseigné", async () => {
-    const t = await text(withPayment({}, { caution: "Un paiement Wero est irrévocable." }));
-    expect(t).toContain(`${C.payment.page.labels.caution} :`);
-    expect(t).toContain("Un paiement Wero est irrévocable.");
+  it("l'encart « Bon à savoir » apparaît quand il est renseigné, avec ou sans étapes", async () => {
+    for (const steps of [C.payment.page.steps, null]) {
+      const t = await text(withPayment({}, { steps, caution: "Un paiement Wero est irrévocable." }));
+      expect(t).toContain(`${C.payment.page.labels.caution} :`);
+      expect(t).toContain("Un paiement Wero est irrévocable.");
+    }
   });
 
   it("« Autres moyens de paiement » : affichés seulement s'ils sont renseignés", async () => {

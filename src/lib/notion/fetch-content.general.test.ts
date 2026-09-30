@@ -45,7 +45,8 @@ const GENERAL_VALUES: Record<string, string> = {
 function general(overrides: Record<string, string | null> = {}) {
   const booking = "Url_Booking" in overrides ? [] : [kv("Url_Booking", "Réserver", "https://cal.eu/cabinet/consultation")];
   const values = Object.entries({ ...GENERAL_VALUES, ...overrides }).filter((entry): entry is [string, string] => entry[1] !== null);
-  return [...booking, ...values.map(([key, value]) => kv(key, value))];
+  const blank = kv("", ""); // ligne vide, fréquente dans une base Notion : ignorée
+  return [...booking, blank, ...values.map(([key, value]) => kv(key, value))];
 }
 
 /** Avertissements liés aux autres bases (vides dans ces tests). */
@@ -260,6 +261,7 @@ describe("fetchSiteContent : Avis_Patients", () => {
     const { content } = await fetchSiteContent(
       fakeNotion({
         reviews: [
+          reviewRow("Paul Sans-Date", "Correct.", "4", null),
           reviewRow("Yves Schweicher", "Très bien.", "5", "2026-03-01"),
           reviewRow("Michelle", "Parfait.", "4,5", "2026-06-15", true),
           reviewRow("Caché Patient", "Masqué.", "5", "2026-07-01", false),
@@ -271,6 +273,7 @@ describe("fetchSiteContent : Avis_Patients", () => {
     expect(content.reviews).toEqual([
       { author: "Michelle", rating: 4.5, text: "Parfait.", date: "2026-06-15" },
       { author: "Yves S.", rating: 5, text: "Très bien.", date: "2026-03-01" },
+      { author: "Paul S.", rating: 4, text: "Correct.", date: null }, // sans date : après les avis datés, ordre de Notion
       { author: "Anne S.", rating: null, text: "Bien.", date: null },
     ]);
   });
