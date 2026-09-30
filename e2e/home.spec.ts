@@ -41,6 +41,26 @@ test.describe("page d'accueil", () => {
   });
 });
 
+test.describe("pages secondaires", () => {
+  for (const path of ["/paiement", "/mentions-legales", "/confidentialite"]) {
+    test(`${path} : un seul <h1>, canonique, sans script tiers, accessible (axe)`, async ({ page }) => {
+      const res = await page.goto(path);
+      expect(res?.status()).toBe(200);
+      await expect(page.locator("h1")).toHaveCount(1);
+      await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(`${path}$`));
+      await expect(page.locator("iframe")).toHaveCount(0);
+      const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+      expect(violations.map((v) => `${v.id} (${v.nodes.length})`)).toEqual([]);
+    });
+  }
+
+  test("/paiement est listé dans le sitemap et lié depuis le pied de page", async ({ page, request }) => {
+    expect(await (await request.get("/sitemap.xml")).text()).toContain("/paiement</loc>");
+    await page.goto("/");
+    await expect(page.locator('footer a[href="/paiement"]')).toHaveCount(1);
+  });
+});
+
 test.describe("menu mobile", () => {
   test.skip(({ isMobile }) => !isMobile, "projet mobile uniquement");
 

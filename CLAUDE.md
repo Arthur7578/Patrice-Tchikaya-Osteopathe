@@ -18,6 +18,9 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
 - `npm run test:coverage` : couverture v8 (rapport HTML dans `coverage/`, seuils sur `src/lib/**`)
 - `npm run test:e2e` : Playwright + axe sur le build (`npm run build` d'abord ; en cloud,
   `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux*/chrome`)
+- `npm run test:mutants` : casse volontairement ~40 règles critiques, les tests doivent échouer (`scripts/mutation-check.ts` ;
+  ajouter une entrée quand on ajoute une règle ; nécessite des fichiers commités ; ~3 min)
+- Tests de pages/sections : `src/test/render.tsx` (rendu statique + `expectSiteRules`) ; toute nouvelle page a son test.
 
 ## Environnement cloud
 

@@ -15,7 +15,8 @@
     "notion:check": "tsx --env-file=.env.local scripts/notion-check.ts",
     "seo:smoke": "tsx scripts/seo-smoke.ts",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:mutants": "tsx scripts/mutation-check.ts"
   },
   "dependencies": {
     "@calcom/embed-react": "^1.5.3",
