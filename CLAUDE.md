@@ -15,7 +15,8 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
 - `npm run lint` · `npm run typecheck` · `npm test` · `npm run build` : **tous verts avant chaque commit**
 - `npm run notion:check` : diagnostic Notion (nécessite `NOTION_TOKEN` dans `.env.local`)
 - `npm run seo:smoke` : contrôles SEO sur un serveur lancé (`npm run build && npm start`) ; signale aussi les textes
-  d'attente « [À COMPLÉTER …] » visibles (avertissement)
+  d'attente « [À COMPLÉTER …] » visibles (avertissement). Avec `SMOKE_CHECK_BOOKING=1` (production seulement),
+  vérifie que le lien de RDV répond chez le prestataire (404 ou 410 : échec ; autre réponse hors 2xx : avertissement)
 - `npm run test:coverage` : couverture v8 (rapport HTML dans `coverage/`, seuils dans `vitest.config.mts`)
 - `npm run test:e2e` : Playwright + axe sur le build (`npm run build` d'abord ; en cloud,
   `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux*/chrome`). Parcourt chaque URL du sitemap.
