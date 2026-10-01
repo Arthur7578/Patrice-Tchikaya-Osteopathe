@@ -36,6 +36,7 @@ describe("/llms.txt", () => {
   it("hors production : 404, sans lire le contenu (même politique que robots.txt)", async () => {
     const res = await (await loadRoute()).GET();
     expect(res.status).toBe(404);
+    expect(await res.text()).toBe("Not found");
     expect(getSiteContent).not.toHaveBeenCalled();
   });
 
@@ -71,6 +72,7 @@ describe("images générées", () => {
     expect(og.size).toEqual({ width: 1200, height: 630 });
     expect(og.contentType).toBe("image/png");
     expect(og.alt).not.toMatch(FORBIDDEN_TITLES);
+    expect(og.alt).toBe(`${C.practitioner.name}, ostéopathe D.O. à ${C.contact.locality}`); // statique : suit le contenu de secours
     const image = (await og.default()) as unknown as FakeImage;
     expect(image.options).toEqual(og.size);
     const text = visibleText(render(image.element));
@@ -127,6 +129,9 @@ describe("/admin/photos (outil temporaire d'upload)", () => {
       "Url_Photo_Cabinet",
     ]);
     expect(root.querySelectorAll("h1")).toHaveLength(1);
+    const text = visibleText(root);
+    expect(text).toContain("à coller dans la colonne URL de la ligne correspondante"); // mot « URL » séparé, en gras
+    expect(text).toContain("je colle cette URL sur la ligne <nom choisi> »");
     expect(root.querySelector("input[readonly]")).toBeNull();
   });
 

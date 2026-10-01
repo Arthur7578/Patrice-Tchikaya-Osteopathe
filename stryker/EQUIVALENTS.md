@@ -51,3 +51,13 @@ Un survivant absent de cette liste est un trou de test à examiner. Dernière re
 | Fichier | Code d'origine → mutant | Pourquoi rien ne change |
 | --- | --- | --- |
 | `places.ts` | `typeof d.userRatingCount === "number"` → `true` | `Number.isInteger` renvoie déjà `false` pour tout ce qui n'est pas un nombre. |
+
+## src/app (groupe `app`)
+
+| Fichier | Code d'origine → mutant | Pourquoi aucun test ne le tue |
+| --- | --- | --- |
+| `apple-icon.tsx`, `opengraph-image.tsx` | Styles de l'image (couleurs, tailles, `display`, polices) | Rendu graphique seulement (satori) ; le texte, la taille et le type de l'image sont testés. |
+| `paiement/page.tsx` | `stepColumns` : nombre de colonnes de la grille des étapes | Mise en page seulement ; le nombre d'étapes affichées est testé de 1 à 5. |
+| `paiement/page.tsx` | Clés React `` `${i}-${card.title}` `` | Une clé ne change pas le HTML rendu. |
+| `paiement/page.tsx` | `paragraphs` : `split(/\n+/)` sans `+`, `line.trim()` retiré | Lignes vides filtrées ensuite ; les espaces en début et fin de paragraphe ne s'affichent pas en HTML. |
+| `layout.tsx` | Options de `Plus_Jakarta_Sans` (`subsets`, `display`, `variable`) | `next/font` est remplacé dans les tests (il n'existe qu'au build) ; le build et l'e2e (une seule police chargée) le vérifient. |

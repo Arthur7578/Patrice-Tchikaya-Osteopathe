@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { SITE_URL } from "@/config/site";
 import { FALLBACK_CONTENT as C } from "@/lib/content/fallback";
 import type { MotifPage } from "@/lib/content/types";
 
@@ -23,5 +24,8 @@ describe("sitemap.xml", () => {
     expect(urls.some((u) => u.endsWith("/mentions-legales"))).toBe(true);
     expect(urls.some((u) => u.endsWith("/confidentialite"))).toBe(true);
     expect(entries.find((e) => e.url.endsWith(`/${published!.slug}`))!.lastModified).toEqual(new Date(page.lastEdited));
+    expect(urls).toEqual([
+      `${SITE_URL}/`, `${SITE_URL}/${published!.slug}`, `${SITE_URL}/paiement`, `${SITE_URL}/mentions-legales`, `${SITE_URL}/confidentialite`,
+    ]);
   });
 });

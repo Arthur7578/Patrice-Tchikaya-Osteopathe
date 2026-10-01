@@ -134,9 +134,80 @@ describe("confidentialité : section Google Tag Manager", () => {
   it.each([
     ["absente sans identifiant GTM", "", false],
     ["absente avec un identifiant invalide", "GTM-abc'", false],
+    ["absente si l'identifiant valide est précédé d'autre chose", "xGTM-ABC123", false],
+    ["absente si l'identifiant valide est suivi d'autre chose", "GTM-ABC123'", false],
     ["présente (#cookies, cible du lien « Gérer les cookies ») avec un identifiant valide", "GTM-ABC123", true],
   ])("%s", async (_label, id, expected) => {
     vi.stubEnv("NEXT_PUBLIC_GTM_ID", id);
     expect(Boolean((await renderPage(Confidentialite)).querySelector("#cookies"))).toBe(expected);
+  });
+});
+
+describe("mentions légales : contenu", () => {
+  const paragraphs = async (c: SiteContent) => {
+    getSiteContent.mockResolvedValue(c);
+    return (await renderPage(Mentions)).querySelectorAll("main p").map((p) => p.text.replace(/\s+/g, " ").trim()).join(" | ");
+  };
+
+  it("métadonnées : titre et description avec le praticien et la ville", async () => {
+    expect(await mentionsMetadata()).toMatchObject({
+      title: "Mentions légales",
+      description: `Mentions légales du site de ${C.practitioner.name}, ${C.practitioner.title} à ${C.contact.locality}.`,
+    });
+  });
+
+  it("valeurs Notion affichées à leur place", async () => {
+    const text = await paragraphs({
+      ...C,
+      contact: { ...C.contact, email: "cabinet@exemple.lu" },
+      legal: { authorizationNumber: "M-123", vatStatus: "Non assujetti" },
+      about: { ...C.about, education: "D.O., 2010" },
+    });
+    expect(text).toContain(`Téléphone : ${C.contact.phoneDisplay}`);
+    expect(text).toContain("E-mail : cabinet@exemple.lu");
+    expect(text).toContain(`${C.practitioner.name} exerce sous autorisation`);
+    expect(text).toContain("Numéro d'autorisation d'exercer : M-123");
+    expect(text).toContain("École et année du diplôme : D.O., 2010");
+    expect(text).toContain("Numéro de TVA / immatriculation : Non assujetti");
+    expect(text).toContain("disponibles sur vercel.com/legal");
+    expect(text).not.toContain("À COMPLÉTER — champ Notion");
+  });
+
+  it("champ vide dans Notion : texte d'attente qui nomme le champ à remplir", async () => {
+    const text = await paragraphs({
+      ...C,
+      contact: { ...C.contact, email: null },
+      legal: { authorizationNumber: null, vatStatus: null },
+      about: { ...C.about, education: null },
+    });
+    expect(text).toContain("E-mail : [À COMPLÉTER : adresse e-mail professionnelle — champ Notion Email_Contact]");
+    expect(text).toContain(
+      "Numéro d'autorisation d'exercer : [À COMPLÉTER — champ Notion Numero_Autorisation_Exercer ; délivré par le ministère de la Santé]",
+    );
+    expect(text).toContain("École et année du diplôme : [À COMPLÉTER — champ Notion Formation, base Section A_Propos]");
+    expect(text).toContain(
+      "Numéro de TVA / immatriculation : [À COMPLÉTER — champ Notion Statut_TVA ; les soins de santé sont en général exonérés de TVA (art. 44 de la loi TVA), à confirmer avec votre comptable]",
+    );
+  });
+});
+
+describe("confidentialité et accueil : métadonnées", () => {
+  it("confidentialité : titre et description avec le praticien et la ville", async () => {
+    expect(await confidentialiteMetadata()).toMatchObject({
+      title: "Confidentialité",
+      description: `Politique de confidentialité du site de ${C.practitioner.name}, ${C.practitioner.title} à ${C.contact.locality}.`,
+    });
+  });
+
+  it("accueil : titre absolu, partage (Open Graph et X) avec la grande image", async () => {
+    const m = await homeMetadata();
+    expect(m.title).toEqual({ absolute: expect.any(String) });
+    expect(m.openGraph).toMatchObject({ url: "/", title: (m.title as { absolute: string }).absolute, description: m.description });
+    expect(m.twitter).toEqual({
+      card: "summary_large_image",
+      title: (m.title as { absolute: string }).absolute,
+      description: m.description,
+      images: ["/opengraph-image"],
+    });
   });
 });

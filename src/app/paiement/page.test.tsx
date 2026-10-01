@@ -134,3 +134,94 @@ describe("/paiement : ce qui n'est pas renseigné n'est pas affiché", () => {
     }
   });
 });
+
+describe("/paiement : tout ce qui est renseigné est affiché, à sa place", () => {
+  const labels = C.payment.page.labels;
+  const clean = (s: string) => s.replace(NBSP, " ").trim();
+  const full = withPayment(
+    {
+      info: "Le règlement se fait après la séance.",
+      wero: { recipient: { value: "+352 691 000 000", kind: "phone" }, recipientName: "P. Tchikaya" },
+      otherMethods: "Espèces",
+    },
+    {
+      eyebrow: "Paiement",
+      title: "Régler votre séance",
+      intro: "Wero en trois étapes.",
+      steps: {
+        title: "Les étapes",
+        cards: [
+          { title: "Ouvrez Wero", text: "  Dans l'application.  \n\n  Ou dans votre banque. " },
+          { title: "Saisissez le numéro", text: "Celui ci-dessus." },
+          { title: "Validez", text: "" },
+        ],
+      },
+      caution: "Un paiement Wero est irrévocable.",
+      reassurance: { title: "C'est sûr", cards: [{ title: "Votre banque", text: "Ligne A\nLigne B" }, { title: "Chiffré", text: "Toujours." }] },
+      firstTime: { title: "Pas encore Wero ?", cards: [{ title: "L'application", text: "Téléchargez-la." }] },
+      help: { title: "Une question ?", text: "Appelez le cabinet." },
+    },
+  );
+
+  it("paragraphes dans l'ordre de lecture : surtitre, introduction, cartes (une ligne = un paragraphe), encart, aide", async () => {
+    getSiteContent.mockResolvedValue({ ...full, consultation: { ...C.consultation, price: "90 €" } });
+    const root = await renderPage(Paiement);
+    expect(root.querySelectorAll("main p").map((p) => clean(p.text))).toEqual([
+      "Paiement",
+      "Le règlement se fait après la séance.",
+      "Wero en trois étapes.",
+      "Dans l'application.",
+      "Ou dans votre banque.",
+      "Celui ci-dessus.",
+      `${labels.caution} : Un paiement Wero est irrévocable.`,
+      "Ligne A",
+      "Ligne B",
+      "Toujours.",
+      "Téléchargez-la.",
+      `${labels.otherMethods} : Espèces`,
+      "Appelez le cabinet.",
+      clean(C.consultation.reimbursement),
+    ]);
+  });
+
+  it("coordonnées Wero, bénéficiaire et tarif ; titres des sections et des cartes ; numéros des étapes", async () => {
+    getSiteContent.mockResolvedValue({ ...full, consultation: { ...C.consultation, price: "90 €" } });
+    const root = await renderPage(Paiement);
+    expect(root.querySelectorAll("dl dt, dl dd").map((n) => clean(n.text))).toEqual([
+      labels.phone, "+352 691 000 000", labels.name, "P. Tchikaya", labels.price, "90 €",
+    ]);
+    expect(root.querySelectorAll("main h2").map((h) => clean(h.text))).toEqual([
+      "Les étapes", "C'est sûr", "Pas encore Wero ?", "Une question ?",
+    ]);
+    expect(root.querySelectorAll("main h3").map((h) => clean(h.text))).toEqual([
+      `${COPY.payment.step(1).trim()} Ouvrez Wero`, `${COPY.payment.step(2).trim()} Saisissez le numéro`, `${COPY.payment.step(3).trim()} Validez`,
+      "Votre banque", "Chiffré", "L'application",
+    ]);
+    expect(root.querySelectorAll("#etapes-title ~ ol > li > span[aria-hidden]").map((s) => s.text)).toEqual(["1", "2", "3"]);
+  });
+
+  it("nom du bénéficiaire : seulement avec des coordonnées Wero, et seulement s'il est renseigné", async () => {
+    const dlTexts = async (wero: SiteContent["payment"]["wero"]) => {
+      getSiteContent.mockResolvedValue({ ...withPayment({ wero }), consultation: { ...C.consultation, price: "90 €" } });
+      return (await renderPage(Paiement)).querySelectorAll("dl dt, dl dd").map((n) => clean(n.text));
+    };
+    expect(await dlTexts({ recipient: null, recipientName: "Nom seul" })).toEqual([labels.price, "90 €"]);
+    expect(await dlTexts({ recipient: { value: "+352 691 000 000", kind: "phone" }, recipientName: null })).toEqual([
+      labels.phone, "+352 691 000 000", labels.price, "90 €",
+    ]);
+  });
+
+  it("rien de facultatif : ni surtitre, ni introduction, ni coordonnées, ni sections, ni texte d'aide", async () => {
+    getSiteContent.mockResolvedValue({
+      ...withPayment(
+        { wero: { recipient: null, recipientName: "Nom seul" }, otherMethods: null },
+        { eyebrow: null, intro: null, steps: null, caution: null, reassurance: null, firstTime: null, help: { title: "Aide", text: null } },
+      ),
+      consultation: { ...C.consultation, price: null },
+    });
+    const root = await renderPage(Paiement);
+    expect(root.querySelector("dl")).toBeNull();
+    expect(root.querySelectorAll("main p").map((p) => clean(p.text))).toEqual([clean(C.payment.info), clean(C.consultation.reimbursement)]);
+    expect(root.querySelectorAll("main h2").map((h) => clean(h.text))).toEqual(["Aide"]);
+  });
+});

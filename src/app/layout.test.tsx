@@ -45,7 +45,7 @@ describe("layout racine : métadonnées", () => {
     expect(meta.formatDetection).toEqual({ telephone: false });
     expect(meta.alternates, "règle 9 : jamais de canonical dans le layout").toBeUndefined();
     expect(revalidate).toBe(3600);
-    expect(viewport).toMatchObject({ themeColor: "#2d5a4c", colorScheme: "light" });
+    expect(viewport).toEqual({ themeColor: "#2d5a4c", colorScheme: "light", viewportFit: "cover" }); // cover : zones sûres de l'iPhone
   });
 
   it("hors production : noindex, nofollow", async () => {

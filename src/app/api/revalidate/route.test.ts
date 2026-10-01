@@ -18,6 +18,7 @@ describe("/api/revalidate", () => {
   it("refuse (401) sans secret", async () => {
     const res = await GET(req("/api/revalidate"));
     expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ revalidated: false, message: "Secret invalide" });
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 

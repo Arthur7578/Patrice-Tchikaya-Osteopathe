@@ -21,7 +21,9 @@ describe("/api/admin/upload", () => {
   afterEach(() => vi.unstubAllEnvs());
 
   it("refuse (401) sans clé ou avec une mauvaise clé, sans rien envoyer à Blob", async () => {
-    expect((await POST(request({ file: image() }))).status).toBe(401);
+    const res = await POST(request({ file: image() }));
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ error: "Secret invalide" });
     expect((await POST(request({ key: "faux", file: image() }))).status).toBe(401);
     expect(put).not.toHaveBeenCalled();
   });
@@ -33,19 +35,23 @@ describe("/api/admin/upload", () => {
   });
 
   it("refuse (400) l'absence de fichier ou un fichier vide", async () => {
-    expect((await POST(request({ key: "cle" }))).status).toBe(400);
+    const res = await POST(request({ key: "cle" }));
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "Aucun fichier reçu" });
     expect((await POST(request({ key: "cle", file: image("image/png", 0) }))).status).toBe(400);
   });
 
   it("refuse (400) un type non autorisé (ex. SVG, HTML)", async () => {
     const res = await POST(request({ key: "cle", file: image("image/svg+xml") }));
     expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "Type de fichier non autorisé : image/svg+xml" });
     expect(put).not.toHaveBeenCalled();
   });
 
   it("refuse (400) un fichier de plus de 8 Mo", async () => {
     const res = await POST(request({ key: "cle", file: image("image/png", 8 * 1024 * 1024 + 1) }));
     expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "Fichier trop volumineux (max 8 Mo)" });
     expect(put).not.toHaveBeenCalled();
   });
 
@@ -60,5 +66,13 @@ describe("/api/admin/upload", () => {
     const location = new URL(res.headers.get("location")!);
     expect(location.pathname).toBe("/admin/photos");
     expect(location.searchParams.get("uploaded")).toBe("https://blob.test/photo-abc.png");
+    expect(location.searchParams.get("key")).toBe("cle"); // la page d'admin reste accessible après l'envoi
+  });
+
+  it("accepte JPEG et PNG, et un fichier de 8 Mo pile", async () => {
+    for (const file of [image("image/jpeg"), image("image/png"), image("image/png", 8 * 1024 * 1024)]) {
+      expect((await POST(request({ key: "cle", file }))).status).toBe(303);
+    }
+    expect(put).toHaveBeenCalledTimes(3);
   });
 });
