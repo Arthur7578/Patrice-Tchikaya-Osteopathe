@@ -20,6 +20,7 @@ describe("cal.ts", () => {
   it("namespaces distincts popup / inline (le 1er init d'un namespace fige son origine)", async () => {
     const { CAL_INLINE_NAMESPACE, CAL_POPUP_NAMESPACE, CAL_CONFIG } = await loadCal();
     expect(CAL_POPUP_NAMESPACE).not.toBe(CAL_INLINE_NAMESPACE);
+    expect(CAL_POPUP_NAMESPACE && CAL_INLINE_NAMESPACE).toBeTruthy(); // vide = espace de noms par défaut de Cal.com
     expect(CAL_CONFIG).toEqual({ layout: "month_view", theme: "light" });
   });
 

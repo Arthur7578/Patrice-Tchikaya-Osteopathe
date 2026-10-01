@@ -228,3 +228,73 @@ describe("PracticalInfo : photo, langues, accès", () => {
     expect(directions.getAttribute("rel")).toBe("noopener");
   });
 });
+
+describe("Faq : accordéon et aide", () => {
+  it("première question ouverte au chargement, les autres fermées ; aide avec le téléphone du cabinet", () => {
+    const root = render(<Faq content={C} />);
+    expect(root.querySelectorAll("#faq details").map((d) => d.hasAttribute("open"))).toEqual(C.faq.map((_, i) => i === 0));
+    expect(root.querySelector(`#faq a[href="tel:${C.contact.phoneE164}"]`)).not.toBeNull();
+  });
+});
+
+describe("Motifs : ligne d'aide", () => {
+  it("phrase d'aide puis le numéro du cabinet, en lien tel:", () => {
+    const root = render(<Motifs content={C} />);
+    expect(visibleText(root)).toContain(`${COPY.motifs.helpLine} ${C.contact.phoneDisplay}`);
+    expect(root.querySelector(`a[href="tel:${C.contact.phoneE164}"]`)?.text).toBe(C.contact.phoneDisplay);
+  });
+});
+
+describe("PracticalInfo : téléphones, tarif, horaires et structure des listes", () => {
+  const mobile = { display: "+352 691 044 147", e164: "+352691044147" };
+  const labelsOf = (root: ReturnType<typeof render>) => root.querySelectorAll("dd > p.font-semibold").map((p) => p.text);
+
+  it("« Cabinet : » puis le numéro ; « Mobile : » puis le mobile, en lien tel:", () => {
+    const root = render(<PracticalInfo content={{ ...C, contact: { ...C.contact, mobilePhone: mobile } }} />);
+    const text = visibleText(root);
+    expect(text).toContain(`Cabinet : ${C.contact.phoneDisplay}`);
+    expect(text).toContain(`Mobile : ${mobile.display}`);
+    expect(root.querySelector(`a[href="tel:${mobile.e164}"]`)?.text).toBe(mobile.display);
+  });
+
+  it("tarif et horaires : ligne avec son libellé si renseignés, aucune ligne sinon", () => {
+    const full = render(<PracticalInfo content={{ ...C, consultation: { ...C.consultation, price: "60 €" }, openingHoursLines: ["Lundi : 8h – 19h"] }} />);
+    expect(labelsOf(full)).toEqual(expect.arrayContaining([COPY.infos.labels.price, COPY.infos.labels.hours]));
+    const empty = render(<PracticalInfo content={{ ...C, consultation: { ...C.consultation, price: null }, openingHoursLines: [] }} />);
+    expect(labelsOf(empty)).not.toContain(COPY.infos.labels.price);
+    expect(labelsOf(empty)).not.toContain(COPY.infos.labels.hours);
+  });
+
+  it("listes valides : chaque <dt> dans un <dl>, aucun <dl> imbriqué ni vide (y compris sans tarif)", () => {
+    const root = render(<PracticalInfo content={{ ...C, consultation: { ...C.consultation, price: null } }} />);
+    expect(root.querySelectorAll("dt").every((dt) => dt.parentNode?.rawTagName === "dl")).toBe(true);
+    expect(root.querySelectorAll("dl dl")).toHaveLength(0);
+    expect(root.querySelectorAll("dl").filter((dl) => dl.querySelectorAll("dt").length === 0)).toHaveLength(0);
+  });
+});
+
+describe("About : paragraphes de la biographie", () => {
+  it("un retour à la ligne simple reste dans le paragraphe ; lignes vides en fin ignorées", () => {
+    const c = { ...C, about: { ...C.about, longBio: "Premier.\nsuite\n\nDeuxième.\n\n" } };
+    const paragraphs = render(<About content={c} />).querySelectorAll("p").map((p) => p.text);
+    expect(paragraphs).toEqual(expect.arrayContaining(["Premier.\nsuite", "Deuxième."]));
+    expect(paragraphs).not.toContain("suite");
+    expect(paragraphs.filter((t) => t.trim() === "")).toEqual([]);
+  });
+});
+
+describe("Reviews : étoiles et date de chaque avis", () => {
+  it("étoiles seulement si l'avis a une note ; « Auteur · mois année » seulement si l'avis est daté", () => {
+    const reviews = [
+      { author: "Anne S.", rating: 5, text: "Très bien.", date: "2026-03-01" },
+      { author: "Paul S.", rating: null, text: "Correct.", date: null },
+    ];
+    const figures = render(<Reviews content={{ ...C, reviews }} />).querySelectorAll("figure");
+    expect(figures[0]!.querySelector(".sr-only")?.text).toBe(COPY.starRating("5,0"));
+    expect(figures[1]!.querySelectorAll("svg")).toHaveLength(0);
+    const caption = (i: number) => visibleText(figures[i]!.querySelector("figcaption")!).trim();
+    expect(caption(0)).toMatch(new RegExp(`^Anne S\\. · \\S+ 2026 · ${COPY.reviews.source}$`));
+    expect(caption(1)).toBe(`Paul S. · ${COPY.reviews.source}`);
+  });
+});
+

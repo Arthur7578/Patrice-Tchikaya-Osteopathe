@@ -88,9 +88,32 @@ describe("SiteFooter : lien « Gérer les cookies »", () => {
   it.each([
     ["absent sans identifiant GTM", "", false],
     ["absent avec un identifiant invalide", "GTM-abc", false],
+    ["absent si l'identifiant est précédé d'autre chose", "xGTM-ABC123", false],
+    ["absent si l'identifiant est suivi d'autre chose", "GTM-ABC123'", false],
     ["présent (rouvre la bannière) avec un identifiant valide", "GTM-ABC123", true],
   ])("%s", (_label, id, expected) => {
     vi.stubEnv("NEXT_PUBLIC_GTM_ID", id);
     expect(Boolean(render(<SiteFooter content={C} />).querySelector('a[href="#cookies"]'))).toBe(expected);
   });
 });
+
+describe("SiteFooter : contenu", () => {
+  it("téléphones précédés de leur libellé ; navigation complète ; fiche Google seulement si elle existe", () => {
+    const mobile = { display: "+352 691 044 147", e164: "+352691044147" };
+    const root = render(<SiteFooter content={{ ...C, contact: { ...C.contact, mobilePhone: mobile }, googleBusinessUrl: "https://g.page/r/ABC" }} />);
+    const text = visibleText(root);
+    expect(text).toContain(`Cabinet : ${C.contact.phoneDisplay}`);
+    expect(text).toContain(`Mobile : ${mobile.display}`);
+    for (const item of NAV) expect(root.querySelector(`footer a[href="${item.href}"]`)?.text, item.href).toBe(item.label);
+    const google = root.querySelector('a[href="https://g.page/r/ABC"]');
+    expect(google?.getAttribute("target")).toBe("_blank");
+    expect(google?.text).toContain("Fiche Google");
+    expect(render(<SiteFooter content={{ ...C, googleBusinessUrl: null }} />).querySelector('a[target="_blank"]')).toBeNull();
+  });
+
+  it("sans horaires : pas de liste vide sous l'adresse", () => {
+    const lists = (lines: string[]) => render(<SiteFooter content={{ ...C, openingHoursLines: lines }} />).querySelectorAll("footer ul").length;
+    expect(lists(["Lundi : 8h – 19h"])).toBe(lists([]) + 1);
+  });
+});
+

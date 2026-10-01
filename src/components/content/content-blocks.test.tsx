@@ -81,4 +81,26 @@ describe("ContentBlocks : corps des pages motifs", () => {
     expect(img.getAttribute("alt")).toBe("Salle de consultation");
     expectSiteRules(root);
   });
+
+  it("texte simple : ni gras ni lien ; lien http (non sécurisé) aussi en nouvel onglet ; lien relatif dans l'onglet", () => {
+    const root = html([
+      { type: "paragraph", text: [t("Simple, "), t("gras", { bold: true })] },
+      { type: "paragraph", text: [t("ancien site", { href: "http://exemple.test" })] },
+      { type: "paragraph", text: [t("page", { href: "/tms?source=https://exemple.test" })] },
+    ]);
+    const [plain, http, relative] = root.querySelectorAll("p");
+    expect(plain!.querySelectorAll("strong").map((s) => s.text)).toEqual(["gras"]);
+    expect(plain!.querySelectorAll("a")).toHaveLength(0);
+    expect(http!.querySelector("a")?.getAttribute("target")).toBe("_blank");
+    expect(relative!.querySelector("a")?.getAttribute("target")).toBeUndefined();
+  });
+
+  it("titres sans lettre ni chiffre : aucune ancre (pas d'identifiant « null »)", () => {
+    const root = html([
+      { type: "heading", level: 2, text: [t("???")] },
+      { type: "heading", level: 2, text: [t("!!!")] },
+    ]);
+    expect(root.querySelectorAll("h2").map((h) => h.getAttribute("id"))).toEqual([undefined, undefined]);
+  });
 });
+

@@ -37,6 +37,7 @@ describe("CookieConsent", () => {
     ["mal formé", "UA-12345"],
     ["tentative d'injection dans le script inline", "GTM-ABC');alert(1);//"],
     ["minuscules", "GTM-abc123"],
+    ["précédé d'autre chose", "xGTM-ABC123"],
   ])("identifiant GTM %s : rien n'est rendu (ni bannière, ni script)", async (_label, id) => {
     const CookieConsent = await loadWithGtmId(id);
     const { container } = render(<CookieConsent />);
@@ -122,5 +123,29 @@ describe("CookieConsent", () => {
     });
     expect(banner()).toBeNull();
     expect(gtmScript()).not.toBeNull();
+  });
+
+  it("rendu serveur : bannière présente tant qu'aucun choix n'est connu", async () => {
+    const CookieConsent = await loadWithGtmId("GTM-ABC123");
+    const { renderToStaticMarkup } = await import("react-dom/server");
+    expect(renderToStaticMarkup(<CookieConsent />)).toContain('role="dialog"');
+  });
+
+  it("un choix ne touche pas à une autre ancre de l'URL (seul « #cookies » est retiré)", async () => {
+    const CookieConsent = await loadWithGtmId("GTM-ABC123");
+    window.history.replaceState(null, "", "/#faq");
+    render(<CookieConsent />);
+    fireEvent.click(screen.getByRole("button", { name: "Accepter" }));
+    expect(window.location.hash).toBe("#faq");
+  });
+
+  it("démonté : ses écouteurs (stockage, ancre) sont retirés", async () => {
+    const CookieConsent = await loadWithGtmId("GTM-ABC123");
+    const remove = vi.spyOn(window, "removeEventListener");
+    const { unmount } = render(<CookieConsent />);
+    unmount();
+    expect(remove).toHaveBeenCalledWith("storage", expect.any(Function));
+    expect(remove).toHaveBeenCalledWith("hashchange", expect.any(Function));
+    remove.mockRestore();
   });
 });

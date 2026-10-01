@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { JsonLd } from "@/components/seo/json-ld";
 import { render } from "@/test/render";
+import { ImagePlaceholder } from "./image-placeholder";
 import { Button, buttonVariants } from "./button";
 import { StarRating } from "./star-rating";
 
@@ -59,5 +61,21 @@ describe("Button", () => {
     const link = root.querySelector("a")!;
     expect(link.getAttribute("href")).toBe("https://cal.eu/cabinet/consultation");
     expect(link.getAttribute("class")).toContain("hover:bg-sage-50");
+  });
+});
+
+describe("JsonLd", () => {
+  it("échappe « < » : un texte de Notion ne peut pas fermer la balise <script> (anti-XSS)", () => {
+    const html = render(<JsonLd data={{ "@context": "https://schema.org", "@type": "Thing", name: "</script><script>alert(1)</script>" }} />).toString();
+    expect(html).not.toContain("</script><script>");
+    expect(html).toContain("\\u003c/script>\\u003cscript>alert(1)\\u003c/script>");
+  });
+});
+
+describe("ImagePlaceholder", () => {
+  it("fond décoratif (masqué aux lecteurs d'écran) avec monogramme", () => {
+    const root = render(<ImagePlaceholder />);
+    expect(root.querySelector('[aria-hidden="true"]')?.text.trim()).toBe("PT");
+    expect(render(<ImagePlaceholder monogram="JT" />).text.trim()).toBe("JT");
   });
 });

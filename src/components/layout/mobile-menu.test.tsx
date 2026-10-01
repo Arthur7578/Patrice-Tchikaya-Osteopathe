@@ -15,18 +15,22 @@ const { MobileMenu } = await import("./mobile-menu");
 
 let mqListener: (() => void) | undefined;
 let mqMatches = false;
+let mqQuery = "";
 
 describe("MobileMenu", () => {
   beforeEach(() => {
     mqMatches = false;
     mqListener = undefined;
-    vi.stubGlobal("matchMedia", () => ({
-      get matches() {
-        return mqMatches;
-      },
-      addEventListener: (_: string, l: () => void) => (mqListener = l),
-      removeEventListener: () => (mqListener = undefined),
-    }));
+    vi.stubGlobal("matchMedia", (query: string) => {
+      mqQuery = query;
+      return {
+        get matches() {
+          return mqMatches;
+        },
+        addEventListener: (type: string, l: () => void) => type === "change" && (mqListener = l),
+        removeEventListener: (type: string, l: () => void) => type === "change" && l === mqListener && (mqListener = undefined),
+      };
+    });
   });
   afterEach(() => {
     cleanup();
@@ -99,5 +103,17 @@ describe("MobileMenu", () => {
     fireEvent.keyDown(document, { key: "Escape" });
     expect(button).not.toHaveFocus(); // plus d'écouteur : le focus n'est pas repris
   });
-});
 
+  it("seuil desktop : (min-width: 1024px) ; à la fermeture, tous les écouteurs sont retirés", () => {
+    const remove = vi.spyOn(document, "removeEventListener");
+    render(<MobileMenu />);
+    fireEvent.click(toggle());
+    expect(mqQuery).toBe("(min-width: 1024px)");
+    expect(mqListener).toBeDefined();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(mqListener).toBeUndefined();
+    expect(remove).toHaveBeenCalledWith("pointerdown", expect.any(Function));
+    expect(remove).toHaveBeenCalledWith("keydown", expect.any(Function));
+    remove.mockRestore();
+  });
+});
