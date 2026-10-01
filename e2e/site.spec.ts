@@ -14,6 +14,10 @@ test.describe("toutes les pages du sitemap", () => {
     baseURL,
   }) => {
     test.setTimeout(120_000);
+    // Mouvement réduit : aucune animation en cours pendant axe. Sinon, axe mesure des états transitoires (réponse de
+    // la FAQ ouverte qui apparaît en fondu) et ignore le contraste des sections animées encore à opacité 0 sous la
+    // ligne de flottaison (30 éléments de texte sur l'accueil). L'état final est le même dans les deux modes.
+    await page.emulateMedia({ reducedMotion: "reduce" });
     const paths = await sitemapPaths(request);
     expect(paths).toEqual(expect.arrayContaining(["/", "/paiement", "/mentions-legales", "/confidentialite"]));
     const external = recordExternalRequests(page, baseURL!);
