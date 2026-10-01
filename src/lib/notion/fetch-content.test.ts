@@ -58,7 +58,7 @@ function fakeNotion(
 
 describe("fetchSiteContent : cartes d'expertise de la section À propos", () => {
   it("lit titre, texte et icône depuis Notion ; icône vide => icône par défaut de la carte", async () => {
-    const { content } = await fetchSiteContent(
+    const { content, warnings } = await fetchSiteContent(
       fakeNotion({
         about: [
           kvRow("Expertise_1_Titre", "Ancien joueur de handball"),
@@ -77,6 +77,7 @@ describe("fetchSiteContent : cartes d'expertise de la section À propos", () => 
       { title: "Ancien cadre en entreprise", text: "Stress et TMS.", icon: "Briefcase" },
       { title: "Ostéopathe D.O.", text: "Approche globale.", icon: "BadgeCheck" },
     ]);
+    expect(warnings.filter((w) => w.includes("Icône"))).toEqual([]); // icône vide ou à compléter : pas une erreur
   });
 
   it("ignore une carte incomplète et signale une icône inconnue", async () => {
@@ -152,6 +153,24 @@ describe("fetchSiteContent : pages motifs (phase 9)", () => {
       wordCount: 320,
       lastEdited: "2026-09-29T21:03:59.543Z",
     });
+  });
+
+  it("seuil de mots atteint exactement : page publiée ; colonne Page_Validée présente : aucun avertissement", async () => {
+    const { content, warnings } = await fetchSiteContent(fakeNotion({ motifs: [motifRow("m1", "bilan", true)] }, { m1: [paragraph(300)] }));
+    expect(content.motifs[0].page?.wordCount).toBe(300);
+    expect(warnings.filter((w) => w.includes("Page_Validée") || w.includes("Motif m1"))).toEqual([]);
+  });
+
+  it("avertissements du corps de la page préfixés par la page ; blocs incomplets de l'API ignorés sans bruit", async () => {
+    const table = { object: "block", id: "t1", type: "table", has_children: false, in_trash: false, table: {} };
+    const partial = { object: "block", id: "partiel" }; // réponse partielle de l'API (sans type)
+    const { content, warnings } = await fetchSiteContent(
+      fakeNotion({ motifs: [motifRow("m1", "bilan", true)] }, { m1: [paragraph(320), table, partial] }),
+    );
+    expect(content.motifs[0].page?.wordCount).toBe(320);
+    expect(warnings.filter((w) => w.startsWith("Page « Motif m1 »"))).toEqual([
+      "Page « Motif m1 » : bloc « table » non pris en charge : ignoré",
+    ]);
   });
 
   it("ne lit jamais le corps d'une page non validée", async () => {

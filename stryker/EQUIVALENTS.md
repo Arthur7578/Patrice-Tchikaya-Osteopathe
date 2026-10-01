@@ -25,3 +25,16 @@ Un survivant absent de cette liste est un trou de test à examiner. Dernière re
 | `parse.ts` | `Number(m[2] ?? "0")` → `Number(m[2] ?? "")` | `Number("")` vaut 0. |
 | `payment-page.ts` | `fold` sans `.trim()`, `keyOf` : `/^_+\|_+$/g` → `/^_\|_+$/g` ou `/^_+\|_$/g` | Les caractères non alphanumériques deviennent un seul « _ », retiré aux extrémités. |
 | `rows.ts` | `/[^a-z0-9]+/g` → `/[^a-z0-9]/g` ; `split(/[,;\n]+/)` sans `+` | Remplacement par une chaîne vide identique ; les morceaux vides sont ignorés. |
+
+## src/lib/notion (groupe `notion`)
+
+| Fichier | Code d'origine → mutant | Pourquoi rien ne change |
+| --- | --- | --- |
+| `blocks.ts` | `siteHost` : `/^www\./` → `/www\./`, ou `""` remplacé | L'hôte du site (`SITE_URL`) ne contient pas « www. ». |
+| `blocks.ts` | `url.hostname.replace(/^www\./, "")` → `/www\./` | Ne diffère que pour un hôte contenant « www. » au milieu, qui ne peut pas égaler celui du site. |
+| `blocks.ts` | `if (href) segment.href = href` → `if (true)` | Ajoute `href: undefined`, que le rendu ignore. |
+| `fetch-content.ts` | `toKeyValue` : `if (key)` → `if (true)` | Une ligne sans nom est rangée sous la clé « », que rien ne lit. |
+| `fetch-content.ts` | `required` : `value.trim()` → `value` | `getText` rogne déjà le texte (`richTextToPlain`). |
+| `fetch-content.ts` | `g.url("Url_Booking") ?? ""` → autre texte | Un texte qui n'est pas une URL donne le même résultat (`null`, valeur de secours). |
+| `fetch-content.ts` | `profiles` sans le dernier `.filter` | `sameAs` filtre de nouveau les valeurs vides. |
+| `properties.ts` | `getUrl` : `.trim()` retiré ; bloc `catch` vidé | L'analyseur d'URL rogne lui-même ; la fonction renvoie `null` juste après. |

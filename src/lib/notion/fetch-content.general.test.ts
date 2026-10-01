@@ -122,6 +122,30 @@ describe("fetchSiteContent : Informations_generales", () => {
     ]);
   });
 
+  it("valeurs lues telles que saisies : rognées, ville et pays de Notion, ligne de bus renseignée", async () => {
+    const { content, warnings } = await fetchSiteContent(
+      fakeNotion({
+        general: general({
+          Nom_Praticien: "  Jeanne Test  ",
+          Code_Postal_Ville: "4001 Esch-sur-Alzette, Grand-Duché de Luxembourg",
+          Acces_Bus: "Ligne 5, arrêt Gare",
+        }),
+      }),
+    );
+    expect(content.practitioner.name).toBe("Jeanne Test");
+    expect(content.contact).toMatchObject({ postalCode: "4001", locality: "Esch-sur-Alzette", countryName: "Grand-Duché de Luxembourg" });
+    expect(content.access.bus).toBe("Ligne 5, arrêt Gare");
+    expect(warnings.filter((w) => !OTHER_DATABASES.test(w))).toEqual([]);
+  });
+
+  it("GPS à compléter : valeur de secours, sans le signaler comme illisible", async () => {
+    const { content, warnings } = await fetchSiteContent(fakeNotion({ general: general({ GPS_Coordonnees: "[À COMPLÉTER]" }) }));
+    expect(content.contact.geo).toEqual(F.contact.geo);
+    expect(warnings.filter((w) => w.startsWith("GPS_Coordonnees"))).toEqual([
+      "GPS_Coordonnees non renseigné dans Notion (valeur de secours utilisée)",
+    ]);
+  });
+
   it("note sans nombre d'avis : nombre inconnu (null), la note reste affichée", async () => {
     const { content } = await fetchSiteContent(fakeNotion({ general: general({ Nombre_Avis_Google: null }) }));
     expect(content.rating).toEqual({ value: 4.8, count: null });
@@ -256,6 +280,27 @@ const reviewRow = (name: string, text: string, note: string, date: string | null
     ...(published === undefined ? {} : { Publié: prop.checkbox(published) }),
   });
 
+describe("fetchSiteContent : Section A_Propos", () => {
+  it("formation, formations continues, titre et biographies lus depuis Notion", async () => {
+    const about = [
+      kv("Formation", "D.O., London School of Osteopathy, 2010"),
+      kv("Formations_Continues", "Ostéopathie pédiatrique ; Sport"),
+      kv("Titre", "Mon parcours"),
+      kv("Bio_Courte", "Ostéopathe à Dudelange."),
+      kv("Bio_Detaillee", "Ancien sportif de haut niveau."),
+    ];
+    const { content, warnings } = await fetchSiteContent(fakeNotion({ about }));
+    expect(content.about).toMatchObject({
+      education: "D.O., London School of Osteopathy, 2010",
+      continuingEducation: ["Ostéopathie pédiatrique", "Sport"],
+      title: "Mon parcours",
+      shortBio: "Ostéopathe à Dudelange.",
+      longBio: "Ancien sportif de haut niveau.",
+    });
+    expect(warnings.filter((w) => w.includes("A_Propos"))).toEqual([]);
+  });
+});
+
 describe("fetchSiteContent : Avis_Patients", () => {
   it("du plus récent au plus ancien, nom réduit (minimisation), avis masqués ou vides ignorés", async () => {
     const { content } = await fetchSiteContent(
@@ -345,7 +390,31 @@ describe("fetchSiteContent : Motifs_Consultation (cartes)", () => {
   });
 });
 
+describe("fetchSiteContent : tri des lignes", () => {
+  it("Ordre égal : départage par date de création ; sans Ordre : date de création, quel que soit l'ordre reçu de l'API", async () => {
+    const at = (day: string) => ({ created: `2026-01-${day}T00:00:00.000Z` });
+    const rows = [
+      faqRow("A ?", "R.", 1, at("01")),
+      faqRow("B ?", "R.", 1, at("02")),
+      faqRow("C ?", "R.", null, at("03")),
+      faqRow("D ?", "R.", null, at("04")),
+      faqRow("E ?", "R.", null, at("05")),
+    ];
+    // Deux ordres d'arrivée : le résultat ne doit dépendre que d'Ordre et de la date de création.
+    for (const received of [rows, [...rows].reverse()]) {
+      const { content } = await fetchSiteContent(fakeNotion({ faq: received }));
+      expect(content.faq.map((f) => f.question)).toEqual(["A ?", "B ?", "C ?", "D ?", "E ?"]);
+    }
+  });
+});
+
 describe("fetchSiteContent : lecture des bases Notion", () => {
+  it("objet partiel renvoyé par l'API (sans propriétés) : ignoré, sans erreur", async () => {
+    const partial = { object: "page", id: "partielle" };
+    const { content } = await fetchSiteContent(fakeNotion({ faq: [partial, faqRow("Gardée ?", "R.", 1)] }));
+    expect(content.faq.map((f) => f.question)).toEqual(["Gardée ?"]);
+  });
+
   it("toutes les pages de résultats sont lues (pagination de l'API)", async () => {
     const faq = Array.from({ length: 5 }, (_, i) => faqRow(`Q${i} ?`, `R${i}.`, i));
     const { content } = await fetchSiteContent(fakeNotion({ faq }, { pageSize: 2 }));
@@ -374,6 +443,23 @@ describe("fetchSiteContent : avertissements remontés par les réglages d'affich
     const { content, warnings } = await fetchSiteContent(fakeNotion({ payment }));
     expect(content.payment.page.title).toBe("Payer");
     expect(warnings).toContain("Page_Paiement : clé « Cle_Inconnue » inconnue, ligne ignorée");
+  });
+
+  it("Infos_Ordre : identifiant inconnu signalé, avec la liste des identifiants attendus", async () => {
+    const { content, warnings } = await fetchSiteContent(fakeNotion({ general: general({ Infos_Ordre: "tarif, carte" }) }));
+    expect(content.rowOrder.infos[0]).toBe("tarif");
+    expect(warnings).toContain(
+      "Infos_Ordre : identifiant inconnu « carte » (attendus : acces, telephone, duree, tarif, reglement, remboursement, horaires, langues)",
+    );
+  });
+
+  it("Page_Paiement : une ligne décochée dans « Publié » est ignorée", async () => {
+    const payment = [
+      row({ Name: prop.title("Titre_Page"), Type: prop.text("Texte"), Texte: prop.text("Payer"), Ordre: prop.number(1) }),
+      row({ Name: prop.title("Titre_Page"), Type: prop.text("Texte"), Texte: prop.text("Brouillon"), Ordre: prop.number(2), Publié: prop.checkbox(false) }),
+    ];
+    const { content } = await fetchSiteContent(fakeNotion({ payment }));
+    expect(content.payment.page.title).toBe("Payer");
   });
 
   it("Acces_Ordre : identifiant inconnu signalé, avec la liste des identifiants attendus", async () => {

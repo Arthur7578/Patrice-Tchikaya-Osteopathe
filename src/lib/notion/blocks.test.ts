@@ -131,6 +131,9 @@ describe("safeHref", () => {
     expect(safeHref("javascript:alert(1)", warn)).toBeUndefined();
     expect(safeHref(null, warn)).toBeUndefined();
     expect(warnings).toHaveLength(3);
+    expect(warnings[1]).toBe(
+      "lien vers une page Notion retiré (/3e84bf3fc72880e581b0ed699e9db9eb) : le site public n'y a pas accès",
+    );
   });
 });
 
@@ -222,6 +225,17 @@ describe("normalizeNotionBlocks : cas limites", () => {
       "titre 4 affiché comme titre 3",
       "bloc « table » non pris en charge : ignoré",
     ]);
+  });
+
+  it("images : légende en plusieurs morceaux (une partie en gras) = un seul texte alternatif", () => {
+    const { blocks } = run([
+      block("image", {
+        type: "external",
+        external: { url: "https://images.unsplash.com/p.jpg" },
+        caption: [rt("Salle de soin "), rt("lumineuse", { bold: true })],
+      }),
+    ]);
+    expect(blocks).toEqual([{ type: "image", src: "https://images.unsplash.com/p.jpg", alt: "Salle de soin lumineuse" }]);
   });
 
   it("images : messages d'avertissement précis ; légende rognée", () => {

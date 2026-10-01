@@ -73,6 +73,8 @@ describe("getNumber / getCheckbox / getDateStart", () => {
     expect(getCheckbox(p, "absente")).toBeNull();
     expect(getDateStart(p, "dn")).toBeNull();
     expect(getDateStart(p, "n")).toBeNull();
+    expect(getDateStart(p, "absente")).toBeNull(); // colonne Date absente de la base
+    expect(getNumber(p, "absente")).toBeNull();
   });
 });
 
