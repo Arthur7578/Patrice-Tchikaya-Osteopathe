@@ -56,7 +56,7 @@ describe("buildLlmsTxt : sortie exacte (contrat du fichier /llms.txt)", () => {
       mobilePhone: { display: "+352 691 1", e164: "+3526911" },
       email: "a@b.lu",
     },
-    about: { ...C.about, shortBio: "Bio  sur\nplusieurs   lignes" },
+    about: { ...C.about, shortBio: "  Bio  sur\nplusieurs   lignes\n" },
     openingHoursLines: ["Lundi : 8h – 12h", "Mardi : fermé"],
     languages: ["Français", "Anglais"],
     consultation: { ...C.consultation, durationLabel: "45 minutes", price: "90\n€", reimbursement: "Mutuelles\n remboursent" },

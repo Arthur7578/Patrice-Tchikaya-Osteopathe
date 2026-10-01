@@ -38,3 +38,16 @@ Un survivant absent de cette liste est un trou de test à examiner. Dernière re
 | `fetch-content.ts` | `g.url("Url_Booking") ?? ""` → autre texte | Un texte qui n'est pas une URL donne le même résultat (`null`, valeur de secours). |
 | `fetch-content.ts` | `profiles` sans le dernier `.filter` | `sameAs` filtre de nouveau les valeurs vides. |
 | `properties.ts` | `getUrl` : `.trim()` retiré ; bloc `catch` vidé | L'analyseur d'URL rogne lui-même ; la fonction renvoie `null` juste après. |
+
+## src/lib/seo (groupe `seo`)
+
+| Fichier | Code d'origine → mutant | Pourquoi rien ne change |
+| --- | --- | --- |
+| `json-ld.ts` | `webpage: (path = "/")` → `path = ""` | Chaque appel passe un chemin : la valeur par défaut ne sert jamais. |
+| `llms-txt.ts` | `/[\xa0\s]*:$/` sans `$` ou sans `*` | Le libellé `COPY.infos.labels.phoneMobile` (« Mobile : ») donne le même résultat. |
+
+## src/lib/google (groupe `google`)
+
+| Fichier | Code d'origine → mutant | Pourquoi rien ne change |
+| --- | --- | --- |
+| `places.ts` | `typeof d.userRatingCount === "number"` → `true` | `Number.isInteger` renvoie déjà `false` pour tout ce qui n'est pas un nombre. |

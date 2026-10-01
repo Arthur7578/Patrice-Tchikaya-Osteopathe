@@ -32,6 +32,19 @@ describe("motifMeta", () => {
     expect(meta.description).toBe(`Courte description. Ostéopathe à ${C.contact.locality}, sans ordonnance.`);
   });
 
+  it("description rognée avant d'ajouter le rappel local", () => {
+    expect(motifMeta(C, motif("  Courte description.  ")).description).toBe(
+      `Courte description. Ostéopathe à ${C.contact.locality}, sans ordonnance.`,
+    );
+  });
+
+  it("rappel local gardé à 160 caractères pile, retiré au-delà", () => {
+    const suffix = ` Ostéopathe à ${C.contact.locality}, sans ordonnance.`;
+    const exact = "x".repeat(160 - suffix.length);
+    expect(motifMeta(C, motif(exact)).description).toBe(`${exact}${suffix}`);
+    expect(motifMeta(C, motif(`${exact}y`)).description).toBe(`${exact}y`);
+  });
+
   it("garde la description seule si le rappel local dépasserait 160 caractères", () => {
     const long = "x".repeat(150);
     expect(motifMeta(C, motif(long)).description).toBe(long);
