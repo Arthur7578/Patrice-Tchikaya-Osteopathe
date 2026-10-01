@@ -118,8 +118,8 @@ export type PaymentPage = {
   help: { title: string; text: string | null }; // Titre_Aide, Texte_Aide
   /** Libellés du bloc de coordonnées, de l'encart et de l'aide (lignes Libelle_* de Page_Paiement). */
   labels: {
-    phone: string; // Libelle_Numero : « Numéro Wero du cabinet »
-    email: string; // Libelle_Email : « Adresse e-mail Wero du cabinet »
+    phone: string; // Libelle_Numero : « Numéro Wero »
+    email: string; // Libelle_Email : « Adresse e-mail Wero »
     name: string; // Libelle_Nom : « Nom affiché par Wero »
     price: string; // Libelle_Tarif : « Tarif de la consultation »
     caution: string; // Libelle_Encart : « Bon à savoir »
