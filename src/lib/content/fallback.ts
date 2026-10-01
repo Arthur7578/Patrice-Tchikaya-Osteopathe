@@ -1,4 +1,4 @@
-import { ACCESS_ROW_IDS, INFO_ROW_IDS } from "./rows";
+import { ACCESS_ROW_IDS, DEFAULT_HERO_POINTS, INFO_ROW_IDS } from "./rows";
 import { motifPageFromMarkdown } from "./blocks";
 import type { SiteContent } from "./types";
 
@@ -283,7 +283,7 @@ export const FALLBACK_CONTENT: SiteContent = {
   openingHours: null,
   openingHoursLines: [],
   access: { train: null, bus: null, parking: null, accessibility: null },
-  rowOrder: { infos: [...INFO_ROW_IDS], access: [...ACCESS_ROW_IDS] },
+  rowOrder: { infos: [...INFO_ROW_IDS], access: [...ACCESS_ROW_IDS], hero: [...DEFAULT_HERO_POINTS] },
   languages: [],
   about: {
     education: null,

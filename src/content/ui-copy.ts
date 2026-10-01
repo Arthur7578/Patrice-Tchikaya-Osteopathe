@@ -14,7 +14,13 @@ export const COPY = {
   ratingOn: "sur", // « 5,0/5 sur Google Maps » (hero), « 12 avis sur Google Maps » (avis)
   cta: { book: "Prendre rendez-vous en ligne", bookShort: "Prendre RDV", bookMobile: "Prendre rendez-vous" },
   hero: {
-    reassurance: ["Sans ordonnance", "Facture pour votre mutuelle"], // + « Séance de {durée} » calculé
+    // Points sous les boutons (choix et ordre : clé Notion Hero_Points) ; `duree` et `tarif` viennent de Notion.
+    points: {
+      ordonnance: "Sans ordonnance",
+      duree: (duration: string) => `Séance de ${duration}`,
+      mutuelle: "Facture pour votre mutuelle",
+      confirmation: "Confirmation par e-mail",
+    },
     cardSubtitle: "Sur rendez-vous · sans ordonnance",
   },
   about: { eyebrow: "À propos", training: "Formation" }, // diplôme (Formation) + formations continues, une seule liste
