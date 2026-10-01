@@ -24,7 +24,8 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
   (`scripts/mutation-check.ts` ; ajouter une entrée quand on ajoute une règle ; fichiers commités requis ; ~3 min)
 - `npm run test:mutation [-- <groupe>]` : Stryker (runner `command` + `vitest related`), groupes dans
   `stryker/groups.json` ; long (voir `docs/DECISIONS.md`), lancé chaque nuit par `.github/workflows/mutation.yml`.
-  Ne pas ajouter Stryker à `package.json` (version épinglée dans `scripts/stryker.ts`).
+  Ne pas ajouter Stryker à `package.json` (version épinglée dans `scripts/stryker.ts`). Pour revérifier des survivants,
+  plages `fichier:début-fin` couvrant tout le mutant : une plage d'une ligne ignore les mutants sur plusieurs lignes.
 - Tests de pages/sections : `src/test/render.tsx` (rendu statique + `expectSiteRules`) ; toute nouvelle page a son test.
   `src/test/architecture.test.ts` : règles 1 et 2, aucun gestionnaire `on…={}` dans un Server Component.
 - CI : `.github/workflows/ci.yml` (lint, typecheck, couverture, build, `seo:smoke`, e2e Chromium + WebKit, `test:mutants`) ;

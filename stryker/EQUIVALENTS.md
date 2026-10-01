@@ -5,8 +5,10 @@ tuer. S'y ajoutent, pour les pages (groupe `app`), des mutants qui ne changent q
 générées, colonnes d'une grille) ou une configuration que seuls le build et l'e2e voient (`next/font`). Cette liste évite de refaire l'analyse à chaque rapport (`mutation.yml`, résumé du job). Elle est repérée
 par le code d'origine plutôt que par numéro de ligne, qui change au fil des modifications.
 
-Un survivant absent de cette liste est un trou de test à examiner. Dernière revue complète : 01/10/2026 (chaque
-ligne ci-dessous correspond à un mutant qui survit encore, vérifié par une relance ciblée).
+Un survivant absent de cette liste est un trou de test à examiner. Dernière revue complète : 01/10/2026, après un
+passage complet sans cache puis une relance de chaque survivant sur toute son étendue (plages `fichier:début-fin` :
+une plage d'une seule ligne ignore les mutants écrits sur plusieurs lignes). Chaque ligne ci-dessous correspond à un
+mutant qui a survécu aux deux passages.
 
 ## src/lib/content (groupe `content`)
 
@@ -20,12 +22,12 @@ ligne ci-dessous correspond à un mutant qui survit encore, vérifié par une re
 | `parse.ts` | `new URL(value.trim())` → `new URL(value)` | L'analyseur d'URL retire lui-même les espaces autour. |
 | `parse.ts` | `parseRating` : `n >= 0` → `true` | `n` vient de `\d+` : jamais négatif. |
 | `parse.ts` | `split(/[\n;]+/)`, `split(/[;\n]+/)`, `split(/\s+/)` sans `+` ; `.trim()` retirés avant `split`/`filter(Boolean)` | Les morceaux vides sont filtrés juste après. |
-| `parse.ts` | `normalizeSlug` : `/^-+\|-+$/g` → `/^-\|-+$/g` ou `/^-+\|-$/g` | Espaces et ponctuation deviennent un seul « - », retiré aux extrémités. |
+| `parse.ts` | `normalizeSlug` : `/^-+\|-+$/g` → `/^-\|-+$/g` ou `/^-+\|-$/g`, `.trim()` retiré | Espaces et ponctuation deviennent un seul « - », retiré aux extrémités. |
 | `parse.ts` | `normalize` : apostrophes typographiques supprimées au lieu d'être converties | L'apostrophe est facultative dans les connecteurs (« jusqu'?au »). |
 | `parse.ts` | `RANGE_CONNECTOR` sans `^` ou sans `$` | Ne diffère que pour un texte entre deux jours qui commence ou finit par un connecteur sans en être un (« lundi au soir et jeudi ») : comportement non spécifié, aucun cas réel. |
 | `parse.ts` | `isClosedDayLine` : `text.replace(CLOSED, "")` avec un autre texte | Le mot « fermé » ne contient aucun jour : le retirer ne change pas `parseDays`. |
 | `parse.ts` | `Number(m[2] ?? "0")` → `Number(m[2] ?? "")` | `Number("")` vaut 0. |
-| `payment-page.ts` | `keyOf` : `/^_+\|_+$/g` → `/^_\|_+$/g` ou `/^_+\|_$/g` | Les caractères non alphanumériques deviennent un seul « _ », retiré aux extrémités. |
+| `payment-page.ts` | `keyOf` : `/^_+\|_+$/g` → `/^_\|_+$/g` ou `/^_+\|_$/g` ; `fold` : `.trim()` retiré | Les caractères non alphanumériques (espaces compris) deviennent un seul « _ », retiré aux extrémités ; `fold` ne sert qu'à `keyOf`. |
 | `rows.ts` | `/[^a-z0-9]+/g` → `/[^a-z0-9]/g` ; `split(/[,;\n]+/)` sans `+` | Remplacement par une chaîne vide identique ; les morceaux vides sont ignorés. |
 
 ## src/lib/notion (groupe `notion`)
@@ -38,7 +40,9 @@ ligne ci-dessous correspond à un mutant qui survit encore, vérifié par une re
 | `fetch-content.ts` | `toKeyValue` : `if (key)` → `if (true)` | Une ligne sans nom est rangée sous la clé « », que rien ne lit. |
 | `fetch-content.ts` | `required` : `value.trim()` → `value` | `getText` rogne déjà le texte (`richTextToPlain`). |
 | `fetch-content.ts` | `g.url("Url_Booking") ?? ""` → autre texte | Un texte qui n'est pas une URL donne le même résultat (`null`, valeur de secours). |
+| `fetch-content.ts` | `profiles` : dernier `.filter(Boolean)` retiré | Les URL nulles sont retirées ensuite, en construisant `sameAs`. |
 | `properties.ts` | `getUrl` : `.trim()` retiré | L'analyseur d'URL rogne lui-même les espaces. |
+| `properties.ts` | `getUrl` : `catch { return null; }` → `catch {}` | La fonction se termine de toute façon par `return null`. |
 
 ## src/lib/seo (groupe `seo`)
 
@@ -58,7 +62,7 @@ ligne ci-dessous correspond à un mutant qui survit encore, vérifié par une re
 | Fichier | Code d'origine → mutant | Pourquoi aucun test ne le tue |
 | --- | --- | --- |
 | `apple-icon.tsx`, `opengraph-image.tsx` | Styles de l'image (couleurs, tailles, `display`, polices) | Rendu graphique seulement (satori) ; le texte, la taille et le type de l'image sont testés. |
-| `paiement/page.tsx` | `stepColumns` : nombre de colonnes de la grille des étapes | Mise en page seulement ; le nombre d'étapes affichées est testé de 1 à 5. |
+| `paiement/page.tsx` | `stepColumns` (la fonction entière ou le nombre de colonnes de la grille des étapes) | Mise en page seulement ; le nombre d'étapes affichées est testé de 1 à 5. |
 | `paiement/page.tsx` | Clés React `` `${i}-${card.title}` `` | Une clé ne change pas le HTML rendu. |
 | `paiement/page.tsx` | `paragraphs` : `split(/\n+/)` sans `+`, `line.trim()` retiré | Lignes vides filtrées ensuite ; les espaces en début et fin de paragraphe ne s'affichent pas en HTML. |
 | `confidentialite/page.tsx` | `process.env.NEXT_PUBLIC_GTM_ID ?? ""` → autre texte | Sans identifiant, un texte quelconque est refusé comme la chaîne vide. |
