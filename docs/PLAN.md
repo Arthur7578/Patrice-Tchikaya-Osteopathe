@@ -2573,7 +2573,7 @@ varie de ±2 points d'un run à l'autre. **Objectif : médiane ≥ 98 sur 5 runs
    ligne de flottaison.
 6. Cal.com : zéro octet au chargement (§9.3). Pas de Google Maps, pas d'analytics avec cookies.
 7. CLS : dimensions fixes (`aspect-*`) sur tous les conteneurs d'images, `min-h-[720px]` sur l'agenda.
-8. Budgets : JS transféré ≤ 190 Ko, CSS ≤ 15 Ko, HTML de la page ≤ 80 Ko.
+8. Budgets : JS transféré ≤ 195 Ko (190 Ko au départ ; relevé le 02/10/2026, voir `docs/DECISIONS.md`), CSS ≤ 15 Ko, HTML de la page ≤ 80 Ko.
 
 ---
 

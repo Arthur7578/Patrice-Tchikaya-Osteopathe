@@ -1,0 +1,45 @@
+name: Contrôle du site en production
+
+# Chaque matin, ou à la demande : seo:smoke sur https://osteopathe-tchikaya.lu, donc sur le contenu Notion réel
+# (le reste de la CI utilise le contenu de secours). Détecte par exemple un <h1> en double, une canonical fausse,
+# des boutons de RDV qui ne pointent plus vers Url_Booking ou une page motif disparue après une modification dans Notion.
+# Vérifie aussi que le lien de RDV répond chez le prestataire (SMOKE_CHECK_BOOKING) : un 404 ou 410 fait échouer le contrôle,
+# un blocage anti-robots ou une panne donne un avertissement. Signale enfin, en avertissement, les textes d'attente
+# (« [À COMPLÉTER …] ») encore visibles sur une page du sitemap.
+# Secret recommandé : NOTION_TOKEN (intégration en lecture seule, Settings > Secrets and variables > Actions).
+# Avec lui, seo:smoke compare le site au contenu Notion et notion:check signale les problèmes de contenu ;
+# sans lui, la comparaison se fait avec fallback.ts et peut signaler des écarts qui n'en sont pas.
+on:
+  schedule:
+    - cron: "43 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Secret NOTION_TOKEN absent
+        if: env.NOTION_TOKEN == ''
+        run: |
+          echo "::warning::Secret NOTION_TOKEN absent : comparaison avec le contenu de secours (fallback.ts), notion:check non lancé."
+      - name: Diagnostic du contenu Notion (notion:check)
+        if: env.NOTION_TOKEN != ''
+        run: |
+          printf 'NOTION_TOKEN=%s\n' "$NOTION_TOKEN" > .env.local
+          npm run notion:check
+      - name: Contrôles SEO et lien de rendez-vous (seo:smoke)
+        run: npm run seo:smoke -- https://osteopathe-tchikaya.lu
+        env:
+          SMOKE_CHECK_BOOKING: "1"

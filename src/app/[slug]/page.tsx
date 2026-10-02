@@ -107,7 +107,7 @@ export default async function MotifPage({ params }: PageProps<"/[slug]">) {
             </BookingLink>
             <a href={`tel:${contact.phoneE164}`} className={buttonVariants({ variant: "secondary", size: "lg" })}>
               <Phone aria-hidden="true" />
-              {COPY.motifPage.call(contact.phoneDisplay)}
+              {COPY.cta.call(contact.phoneDisplay)}
             </a>
           </div>
         </header>
@@ -136,7 +136,7 @@ export default async function MotifPage({ params }: PageProps<"/[slug]">) {
               className="inline-flex items-center gap-2 font-semibold text-white underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               <Phone aria-hidden="true" className="size-4" />
-              {COPY.motifPage.call(contact.phoneDisplay)}
+              {COPY.cta.call(contact.phoneDisplay)}
             </a>
           </div>
         </section>

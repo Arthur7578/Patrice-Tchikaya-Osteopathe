@@ -18,7 +18,7 @@ export function SiteFooter({ content }: Props) {
             <p className="mt-4 text-sm leading-relaxed text-sage-100/80">{about.shortBio}</p>
           </div>
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-white">Cabinet</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-white">{COPY.footer.cabinet}</h3>
             <address className="mt-4 not-italic text-sm leading-relaxed text-sage-100/80">
               {contact.street}
               <br />
@@ -47,7 +47,7 @@ export function SiteFooter({ content }: Props) {
             )}
           </div>
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-white">Liens</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-white">{COPY.footer.links}</h3>
             <ul className="mt-4 space-y-2 text-sm">
               {NAV.map((item) => (
                 <li key={item.href}>
@@ -64,7 +64,7 @@ export function SiteFooter({ content }: Props) {
                     rel="noopener"
                     className="text-sage-100/80 hover:text-white hover:underline"
                   >
-                    Fiche Google <span className="sr-only">(nouvel onglet)</span>
+                    {COPY.footer.googleProfile} <span className="sr-only">{COPY.newTab}</span>
                   </a>
                 </li>
               )}
@@ -75,18 +75,18 @@ export function SiteFooter({ content }: Props) {
               </li>
               <li>
                 <Link href="/mentions-legales" className="text-sage-100/80 hover:text-white hover:underline">
-                  Mentions légales
+                  {COPY.footer.legal}
                 </Link>
               </li>
               <li>
                 <Link href="/confidentialite" className="text-sage-100/80 hover:text-white hover:underline">
-                  Confidentialité
+                  {COPY.footer.privacy}
                 </Link>
               </li>
               {gtmEnabled && (
                 <li>
                   <a href="#cookies" className="text-sage-100/80 hover:text-white hover:underline">
-                    Gérer les cookies
+                    {COPY.footer.cookies}
                   </a>
                 </li>
               )}

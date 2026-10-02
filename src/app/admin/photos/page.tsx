@@ -34,11 +34,13 @@ export default async function AdminPhotosPage({ searchParams }: PageProps<"/admi
         {typeof uploaded === "string" && (
           <div className="mt-6 rounded-2xl border border-sage-300 bg-sage-50 p-4">
             <p className="font-semibold text-ink">Envoyé ✓ — copiez cette URL dans Notion :</p>
+            {/* Server Component : pas de gestionnaire d'événement (onFocus faisait planter la page, erreur 500).
+                `select-all` sélectionne toute l'URL au premier clic, sans JavaScript. */}
             <input
               readOnly
               value={uploaded}
-              onFocus={(e) => e.currentTarget.select()}
-              className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+              aria-label="URL publique de la photo"
+              className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 select-all"
             />
           </div>
         )}

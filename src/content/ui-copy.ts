@@ -9,11 +9,24 @@ export const NAV = [
   { href: "/#acces", label: "Accès" },
 ] as const;
 
+/** Libellé du lien de pied de page qui rouvre la bannière cookies, cité aussi dans la bannière. */
+const MANAGE_COOKIES = "Gérer les cookies";
+
 export const COPY = {
   skipLink: "Aller au contenu",
+  navLabel: "Navigation principale",
   ratingOn: "sur", // « 5,0/5 sur Google Maps » (hero), « 12 avis sur Google Maps » (avis)
-  cta: { book: "Prendre rendez-vous en ligne", bookShort: "Prendre RDV", bookMobile: "Prendre rendez-vous" },
+  googleMaps: "Google Maps", // nom de marque, jamais traduit (translate="no")
+  starRating: (value: string) => `Note : ${value} sur 5`, // lu par les lecteurs d'écran (étoiles décoratives)
+  cta: {
+    book: "Prendre rendez-vous en ligne",
+    bookShort: "Prendre RDV",
+    bookMobile: "Prendre rendez-vous",
+    call: (phone: string) => `Appeler le ${phone}`,
+    callCabinet: (phone: string) => `Appeler le cabinet au ${phone}`, // bouton icône de la barre mobile
+  },
   hero: {
+    location: (city: string) => `Cabinet à ${city}`,
     // Points sous les boutons (choix et ordre : clé Notion Hero_Points) ; `duree` et `tarif` viennent de Notion.
     points: {
       ordonnance: "Sans ordonnance",
@@ -21,6 +34,7 @@ export const COPY = {
       mutuelle: "Facture pour votre mutuelle",
       confirmation: "Confirmation par e-mail",
     },
+    cardTitle: (minutes: number) => `Consultation ${minutes} min`,
     cardSubtitle: "Sur rendez-vous · sans ordonnance",
   },
   about: { eyebrow: "À propos", training: "Formation" }, // diplôme (Formation) + formations continues, une seule liste
@@ -37,7 +51,6 @@ export const COPY = {
     breadcrumb: "Fil d'Ariane",
     home: "Accueil",
     h1: (title: string, city: string) => `${title} à ${city}`,
-    call: (phone: string) => `Appeler le ${phone}`,
     ctaTitle: (city: string) => `Consulter au cabinet de ${city}`,
     ctaText: (duration: string) =>
       `Séance de ${duration}, sans ordonnance. Réservez en ligne, ou appelez le cabinet si vous avez une question avant de venir.`,
@@ -48,6 +61,8 @@ export const COPY = {
     title: "Ce qu'en disent les patients",
     source: "Avis Google",
     ratingLabel: "Note", // « Note sur Google Maps », ou « 12 avis sur Google Maps » si le nombre est connu
+    ratingCount: (count: number) => `${count} avis`,
+    listLabel: "Avis patients", // liste défilante des avis (zone focalisable)
     seeAll: "Voir tous les avis sur Google",
     leaveReview: "Laisser un avis",
   },
@@ -73,6 +88,12 @@ export const COPY = {
     bookingText: "Choisissez un créneau : la confirmation vous est envoyée par e-mail.",
     bookingFallback: "Ouvrir l'agenda dans un nouvel onglet",
   },
+  // Agenda intégré (BookingInline) : pendant le chargement, puis si Cal.com ne répond pas.
+  bookingInline: {
+    loading: "Chargement de l'agenda…",
+    failed: "L'agenda n'a pas pu se charger ici.",
+    open: "Ouvrir l'agenda de réservation",
+  },
   /**
    * Page /paiement : seuls les métadonnées par défaut et le libellé lu par les lecteurs d'écran sont ici. Tous les
    * textes visibles de la page (titres, étapes, libellés, aide…) viennent de la base Notion Page_Paiement
@@ -84,7 +105,28 @@ export const COPY = {
       `Régler votre séance d'ostéopathie à ${city} avec Wero : les étapes, pourquoi c'est sûr et que faire si vous n'avez pas encore Wero.`,
     step: (n: number) => `Étape ${n} : `, // annoncé par les lecteurs d'écran (le numéro affiché est décoratif)
   },
-  footer: { legal: "Mentions légales", privacy: "Confidentialité", payment: "Régler votre séance" },
+  footer: {
+    cabinet: "Cabinet",
+    links: "Liens",
+    googleProfile: "Fiche Google",
+    legal: "Mentions légales",
+    privacy: "Confidentialité",
+    payment: "Régler votre séance",
+    cookies: MANAGE_COOKIES,
+  },
+  // Bannière de consentement (GTM, docs/DECISIONS.md du 27/09).
+  cookies: {
+    label: "Consentement aux cookies",
+    text: `Ce site utilise des cookies de mesure d'audience (Google Tag Manager) uniquement avec votre accord. Vous pouvez changer d'avis à tout moment depuis le lien « ${MANAGE_COOKIES} » en bas de page.`,
+    refuse: "Refuser",
+    accept: "Accepter",
+  },
+  notFound: {
+    title: "Page introuvable",
+    text: "La page que vous cherchez n'existe pas ou plus. Vous pouvez revenir à l'accueil ou prendre rendez-vous directement.",
+  },
+  // Image de partage (/opengraph-image) : le nom, le titre et la ville viennent de getSiteContent().
+  ogImage: { tagline: (city: string) => `Ostéopathe à ${city} – prise de rendez-vous en ligne` },
   backToHome: "Retour à l'accueil",
   menu: { open: "Ouvrir le menu", close: "Fermer le menu", label: "Menu principal" },
   // /llms.txt : intitulés structurels ; tout le contenu vient de getSiteContent().

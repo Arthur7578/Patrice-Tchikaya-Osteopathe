@@ -1,0 +1,37 @@
+{
+  "testRunner": "command",
+  "coverageAnalysis": "off",
+  "reporters": [
+    "clear-text",
+    "html",
+    "json"
+  ],
+  "clearTextReporter": {
+    "allowColor": false,
+    "logTests": false
+  },
+  "concurrency": 4,
+  "timeoutMS": 60000,
+  "incremental": true,
+  "ignorePatterns": [
+    "e2e",
+    "coverage",
+    ".next",
+    "reports",
+    "playwright-report",
+    "test-results",
+    "stryker",
+    ".stryker-bin"
+  ],
+  "thresholds": {
+    "high": 80,
+    "low": 60,
+    "break": null
+  },
+  "appendPlugins": [
+    "./stryker/ignore-class-names.mjs"
+  ],
+  "ignorers": [
+    "className"
+  ]
+}

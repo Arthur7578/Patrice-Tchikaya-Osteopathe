@@ -1,0 +1,9 @@
+[
+  { "name": "content", "include": ["src/lib/content/*.ts"], "exclude": ["src/lib/content/*.test.ts", "src/lib/content/fallback.ts", "src/lib/content/types.ts"] },
+  { "name": "notion", "include": ["src/lib/notion/*.ts"], "exclude": ["src/lib/notion/*.test.ts"] },
+  { "name": "seo", "include": ["src/lib/seo/*.ts"], "exclude": ["src/lib/seo/*.test.ts"] },
+  { "name": "google", "include": ["src/lib/google/*.ts"], "exclude": ["src/lib/google/*.test.ts"] },
+  { "name": "lib-config", "include": ["src/lib/*.ts", "src/config/*.ts"], "exclude": ["src/lib/*.test.ts", "src/config/*.test.ts"] },
+  { "name": "app", "include": ["src/app/**/*.ts", "src/app/**/*.tsx"], "exclude": ["src/app/**/*.test.ts", "src/app/**/*.test.tsx"] },
+  { "name": "components", "include": ["src/components/**/*.ts", "src/components/**/*.tsx"], "exclude": ["src/components/**/*.test.ts", "src/components/**/*.test.tsx"] }
+]

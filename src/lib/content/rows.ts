@@ -13,8 +13,8 @@ export const ACCESS_ROW_IDS = ["adresse", "train", "bus", "parking", "pmr"] as c
  * viennent de `Duree_Consultation` / `Tarif_Consultation` ; `tarif` est masqué tant que le tarif n'est pas renseigné.
  */
 export const HERO_POINT_IDS = ["ordonnance", "duree", "mutuelle", "tarif", "confirmation"] as const;
-/** Sans clé `Hero_Points` (ou sans identifiant reconnu) : les trois points historiques. */
-export const DEFAULT_HERO_POINTS = ["ordonnance", "duree", "mutuelle"] as const;
+/** Sans clé `Hero_Points` (ou sans identifiant reconnu) : la sélection saisie dans Notion au 02/10/2026. */
+export const DEFAULT_HERO_POINTS = ["duree", "tarif", "ordonnance", "confirmation"] as const;
 
 export type InfoRowId = (typeof INFO_ROW_IDS)[number];
 export type AccessRowId = (typeof ACCESS_ROW_IDS)[number];
