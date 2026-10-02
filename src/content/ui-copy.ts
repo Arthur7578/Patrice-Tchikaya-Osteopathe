@@ -27,8 +27,14 @@ export const COPY = {
   },
   hero: {
     location: (city: string) => `Cabinet à ${city}`,
-    reassurance: ["Sans ordonnance", "Facture pour votre mutuelle"], // + `duration`, entre les deux
-    duration: (label: string) => `Séance de ${label}`,
+    // Points sous les boutons (choix et ordre : clé Notion Hero_Points) ; `duree` et `tarif` viennent de Notion.
+    points: {
+      ordonnance: "Sans ordonnance",
+      duree: (duration: string) => `Séance de ${duration}`,
+      mutuelle: "Facture pour votre mutuelle",
+      tarif: (price: string) => `Tarif : ${price}`,
+      confirmation: "Confirmation par e-mail",
+    },
     cardTitle: (minutes: number) => `Consultation ${minutes} min`,
     cardSubtitle: "Sur rendez-vous · sans ordonnance",
   },

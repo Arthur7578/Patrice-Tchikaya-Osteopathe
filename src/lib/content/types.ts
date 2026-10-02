@@ -1,4 +1,4 @@
-import type { AccessRowId, InfoRowId } from "./rows";
+import type { AccessRowId, HeroPointId, InfoRowId } from "./rows";
 
 export type ImageSlot = "hero" | "portrait" | "cabinet";
 
@@ -169,8 +169,11 @@ export type SiteContent = {
   /** Horaires à afficher : mise en forme normalisée si lisibles, sinon texte Notion tel quel. */
   openingHoursLines: string[];
   access: AccessInfo;
-  /** Ordre d'affichage des lignes, réglable dans Notion (Infos_Ordre / Acces_Ordre). Toujours complet. */
-  rowOrder: { infos: InfoRowId[]; access: AccessRowId[] };
+  /**
+   * Ordre d'affichage des lignes, réglable dans Notion (Infos_Ordre / Acces_Ordre), toujours complet ;
+   * `hero` : points choisis sous les boutons du hero (Hero_Points), seuls ceux listés sont affichés.
+   */
+  rowOrder: { infos: InfoRowId[]; access: AccessRowId[]; hero: HeroPointId[] };
   languages: string[]; // Langues_Parlees "Français, Anglais"
   about: {
     title: string;

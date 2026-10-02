@@ -6,11 +6,12 @@ import { SiteImage } from "@/components/ui/site-image";
 import { buttonVariants } from "@/components/ui/button";
 import { COPY } from "@/content/ui-copy";
 import { formatRating } from "@/lib/content/format";
+import type { HeroPointId } from "@/lib/content/rows";
 import type { SiteContent } from "@/lib/content/types";
 import { cn } from "@/lib/utils";
 
 export function Hero({ content }: { content: SiteContent }) {
-  const { seo, contact, consultation, booking, rating, images } = content;
+  const { seo, contact, consultation, booking, rating, images, rowOrder } = content;
   const heroImage = images.hero.src ? images.hero : images.portrait;
 
   return (
@@ -51,18 +52,16 @@ export function Hero({ content }: { content: SiteContent }) {
           </div>
 
           <ul className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600">
-            <li className="flex items-center gap-1.5">
-              <CircleCheck aria-hidden="true" className="size-4 text-sage-700" />
-              {COPY.hero.reassurance[0]}
-            </li>
-            <li className="flex items-center gap-1.5">
-              <CircleCheck aria-hidden="true" className="size-4 text-sage-700" />
-              {COPY.hero.duration(consultation.durationLabel)}
-            </li>
-            <li className="flex items-center gap-1.5">
-              <CircleCheck aria-hidden="true" className="size-4 text-sage-700" />
-              {COPY.hero.reassurance[1]}
-            </li>
+            {rowOrder.hero.map((id) => {
+              const text = heroPoint(id, consultation);
+              if (!text) return null;
+              return (
+                <li key={id} className="flex items-center gap-1.5">
+                  <CircleCheck aria-hidden="true" className="size-4 text-sage-700" />
+                  {text}
+                </li>
+              );
+            })}
           </ul>
         </div>
 
@@ -94,4 +93,17 @@ export function Hero({ content }: { content: SiteContent }) {
       </div>
     </section>
   );
+}
+
+/** Texte d'un point du hero ; null = masqué (tarif non renseigné dans Notion). */
+function heroPoint(id: HeroPointId, consultation: SiteContent["consultation"]): string | null {
+  const { points } = COPY.hero;
+  switch (id) {
+    case "duree":
+      return points.duree(consultation.durationLabel);
+    case "tarif":
+      return consultation.price && points.tarif(consultation.price);
+    default:
+      return points[id];
+  }
 }

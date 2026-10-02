@@ -288,6 +288,14 @@ describe("fetchSiteContent : ordre des blocs Infos pratiques / lignes Accès", (
     expect(warnings.some((w) => w.includes("Infos_Ordre") && w.includes("oups"))).toBe(true);
   });
 
+  it("applique Hero_Points : seuls les points listés, dans l'ordre", async () => {
+    const { content, warnings } = await fetchSiteContent(
+      fakeNotion({ general: [kvRow("Hero_Points", "duree, tarif, ordonnance, confirmation, oups")] }),
+    );
+    expect(content.rowOrder.hero).toEqual(["duree", "tarif", "ordonnance", "confirmation"]);
+    expect(warnings.some((w) => w.includes("Hero_Points") && w.includes("oups"))).toBe(true);
+  });
+
   it("sans clé : ordre par défaut", async () => {
     const { content } = await fetchSiteContent(fakeNotion({ general: [kvRow("Nom_Praticien", "Patrice")] }));
     expect(content.rowOrder).toEqual(FALLBACK_CONTENT.rowOrder);
