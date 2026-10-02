@@ -40,7 +40,7 @@ const MUTANTS: Mutant[] = [
   // --- Métadonnées / indexation ---
   { name: "metadata : rappel local ajouté même au-delà de 160 car.", file: "src/lib/seo/metadata.ts", find: "withLocal.length <= 160 ? withLocal : base", replace: "withLocal", tests: ["src/lib/seo/metadata.test.ts"] },
   { name: "robots : indexation inversée", file: "src/app/robots.ts", find: "if (!ALLOW_INDEXING)", replace: "if (ALLOW_INDEXING)", tests: ["src/app/robots.test.ts"] },
-  { name: "sitemap : motifs non publiés listés", file: "src/app/sitemap.ts", find: "m.page ? [", replace: "true ? [", tests: ["src/app/sitemap.test.ts"] },
+  { name: "sitemap : motifs non publiés listés", file: "src/lib/content/published.ts", find: ".filter((entry) => entry.page)", replace: "", tests: ["src/app/sitemap.test.ts"] },
   { name: "layout : canonical défini dans le layout racine (règle 9)", file: "src/app/layout.tsx", find: "    metadataBase: new URL(SITE_URL),", replace: '    metadataBase: new URL(SITE_URL),\n    alternates: { canonical: "/" },', tests: [PAGES] },
   // --- Routes à secret ---
   { name: "revalidate : garde « secret non configuré » retirée", file: "src/app/api/revalidate/route.ts", find: "!process.env.REVALIDATE_SECRET || ", replace: "", tests: [REVALIDATE] },
