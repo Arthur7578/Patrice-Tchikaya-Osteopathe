@@ -306,8 +306,7 @@ export const FALLBACK_CONTENT: SiteContent = {
     accessibility: "1er étage avec ascenseur.",
   },
   rowOrder: { infos: [...INFO_ROW_IDS], access: [...ACCESS_ROW_IDS] },
-  // Tel quel dans Notion, faute comprise (« Portuguais ») : à corriger dans Notion, puis ici.
-  languages: ["Français", "Anglais", "Italien", "Espagnol", "notions de Portuguais"],
+  languages: ["Français", "Anglais", "Italien", "Espagnol", "notions de Portugais"],
   about: {
     education: "London School of Osteopathy - 2010",
     continuingEducation: [],

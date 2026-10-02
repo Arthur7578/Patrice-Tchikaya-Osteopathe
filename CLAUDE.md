@@ -13,7 +13,8 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
 
 - `npm run dev` : serveur de dev (http://localhost:3000)
 - `npm run lint` · `npm run typecheck` · `npm test` · `npm run build` : **tous verts avant chaque commit**
-- `npm run notion:check` : diagnostic Notion (nécessite `NOTION_TOKEN` dans `.env.local`)
+- `npm run notion:check` : diagnostic Notion (nécessite `NOTION_TOKEN` dans `.env.local`) ; signale aussi, en avertissement,
+  les écarts entre Notion et `fallback.ts` (à recopier à la main : le contenu de secours ne se met pas à jour tout seul)
 - `npm run seo:smoke` : contrôles SEO sur un serveur lancé (`npm run build && npm start`) ; signale aussi les textes
   d'attente « [À COMPLÉTER …] » visibles (avertissement). Avec `SMOKE_CHECK_BOOKING=1` (production seulement),
   vérifie que le lien de RDV répond chez le prestataire (404 ou 410 : échec ; autre réponse hors 2xx : avertissement)
