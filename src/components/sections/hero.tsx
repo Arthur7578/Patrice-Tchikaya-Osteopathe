@@ -102,7 +102,7 @@ function heroPoint(id: HeroPointId, consultation: SiteContent["consultation"]): 
     case "duree":
       return points.duree(consultation.durationLabel);
     case "tarif":
-      return consultation.price;
+      return consultation.price && points.tarif(consultation.price);
     default:
       return points[id];
   }

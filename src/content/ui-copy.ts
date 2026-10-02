@@ -32,6 +32,7 @@ export const COPY = {
       ordonnance: "Sans ordonnance",
       duree: (duration: string) => `Séance de ${duration}`,
       mutuelle: "Facture pour votre mutuelle",
+      tarif: (price: string) => `Tarif : ${price}`,
       confirmation: "Confirmation par e-mail",
     },
     cardTitle: (minutes: number) => `Consultation ${minutes} min`,

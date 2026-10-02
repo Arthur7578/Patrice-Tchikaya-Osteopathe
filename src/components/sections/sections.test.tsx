@@ -125,6 +125,21 @@ describe("Hero : image, note et durée", () => {
     expect(visibleText(render(<Hero content={unknown} />))).not.toContain("Consultation ");
   });
 
+  it("points Hero_Points : seuls ceux listés, dans l'ordre ; tarif précédé de « Tarif : », masqué s'il manque", () => {
+    const points = (c: typeof C) =>
+      [...render(<Hero content={c} />).querySelectorAll("ul li")].map((li) => li.textContent?.trim());
+    const withPrice = {
+      ...C,
+      consultation: { ...C.consultation, price: "90 €", durationLabel: "45 minutes" },
+      rowOrder: { ...C.rowOrder, hero: ["tarif", "duree", "confirmation"] as typeof C.rowOrder.hero },
+    };
+    expect(points(withPrice)).toEqual(["Tarif : 90 €", "Séance de 45 minutes", "Confirmation par e-mail"]);
+    expect(points({ ...withPrice, consultation: { ...withPrice.consultation, price: null } })).toEqual([
+      "Séance de 45 minutes",
+      "Confirmation par e-mail",
+    ]);
+  });
+
   it("téléphone du cabinet en lien tel:", () => {
     expect(render(<Hero content={C} />).querySelector(`#hero-cta a[href="tel:${C.contact.phoneE164}"]`)).not.toBeNull();
   });
