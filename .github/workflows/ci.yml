@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      # Tests unitaires et de composants + couverture ; échoue si les seuils de vitest.config.mts ne sont plus tenus.
+      - run: npm run test:coverage
+      # Sans NOTION_TOKEN, le build utilise fallback.ts (voir CLAUDE.md) : suffisant pour l'e2e.
+      - run: npm run build
+      - name: Contrôles SEO (seo:smoke) sur le build
+        run: |
+          npx next start -p 3200 > /tmp/next-smoke.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:3200/ && break; sleep 1; done
+          npm run seo:smoke -- http://localhost:3200
+      - name: Navigateurs Playwright (Chromium, et WebKit pour Safari / iPhone)
+        run: npx playwright install --with-deps chromium webkit
+      - run: npm run test:e2e
+        env:
+          CI: "true"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: rapports-tests
+          path: |
+            coverage/
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # Casse volontairement les règles critiques (sécurité, SEO, RDV, 404) : au moins un test doit échouer à chaque fois.
+  mutants:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:mutants

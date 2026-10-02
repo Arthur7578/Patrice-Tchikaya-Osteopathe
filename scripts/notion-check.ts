@@ -2,6 +2,8 @@
  * Vérifie l'accès Notion + la qualité du contenu, sans lancer Next.
  * Usage : npm run notion:check   (lit NOTION_TOKEN depuis .env.local)
  */
+import { contentDrift } from "@/lib/content/drift";
+import { FALLBACK_CONTENT } from "@/lib/content/fallback";
 import { createNotionClient } from "@/lib/notion/client";
 import { fetchSiteContent } from "@/lib/notion/fetch-content";
 
@@ -23,6 +25,17 @@ async function main() {
     }
     if (warnings.length === 0) console.log("✓ Aucun avertissement");
     for (const w of warnings) console.warn(`⚠ ${w}`);
+    // Le contenu de secours (fallback.ts) sert au dev et à la CI : s'il est en retard sur Notion, ils testent un
+    // contenu périmé. Avertissement seulement, jamais un échec : le site en ligne lit Notion, pas ce fichier.
+    const drift = contentDrift(FALLBACK_CONTENT, content);
+    if (drift.length === 0) console.log("✓ Contenu de secours (fallback.ts) à jour avec Notion");
+    else {
+      const summary = `Contenu de secours en retard sur Notion (${drift.length} écart${drift.length > 1 ? "s" : ""}) : à recopier dans src/lib/content/fallback.ts`;
+      console.warn(`⚠ ${summary}`);
+      for (const line of drift.slice(0, 25)) console.warn(`  - ${line}`);
+      if (drift.length > 25) console.warn(`  … et ${drift.length - 25} autre(s)`);
+      if (process.env.GITHUB_ACTIONS) console.log(`::warning title=Contenu de secours en retard::${summary}`);
+    }
   } catch (error) {
     console.error("✗ Échec de lecture Notion :", error instanceof Error ? error.message : error);
     console.error("  → L'intégration est-elle connectée à la page « Site web Ostéopathie Dudelange » ?");

@@ -9,6 +9,8 @@ import { buildPaymentPage, type PaymentRow } from "@/lib/content/payment-page";
 import {
   cleanOptional,
   formatReviewAuthor,
+  isClosedDayLine,
+  isE164,
   isPlaceholder,
   normalizeSlug,
   parseBookingUrl,
@@ -149,6 +151,11 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
   if (!isPlaceholder(openingRaw) && !openingHours)
     warnings.push(`Horaires non structurés (affichés tels quels, absents du JSON-LD) : « ${openingRaw} »`);
   const phoneDisplay = required(g.text("Telephone_Display"), F.contact.phoneDisplay, "Telephone_Display");
+  // Lien tel: de chaque bouton « Appeler » et téléphone du JSON-LD : Telephone_RAW, sinon le numéro affiché.
+  const phoneSource = cleanOptional(g.text("Telephone_RAW")) ?? phoneDisplay;
+  const phoneE164 = toE164(phoneSource);
+  if (!isE164(phoneE164))
+    warnings.push(`Numéro d'appel illisible : « ${phoneSource} » (Telephone_RAW, sinon Telephone_Display ; attendu : « +352 51 92 92 ») — numéro de secours utilisé`);
   // Numéro secondaire optionnel (mobile du praticien) : une seule clé, le lien tel: en est dérivé.
   const mobileRaw = g.text("Telephone_Mobile");
   const mobilePhone = parsePhone(mobileRaw);
@@ -283,7 +290,7 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
       countryName: postal?.countryName ?? F.contact.countryName,
       countryCode: "LU",
       phoneDisplay,
-      phoneE164: toE164(g.text("Telephone_RAW") || phoneDisplay),
+      phoneE164: isE164(phoneE164) ? phoneE164 : F.contact.phoneE164,
       mobilePhone,
       geo: geo ?? F.contact.geo,
       email: cleanOptional(g.text("Email_Contact")),
@@ -307,7 +314,10 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
     },
     rating: ratingValue === null ? null : { value: ratingValue, count: parseInteger(g.text("Nombre_Avis_Google")) },
     openingHours,
-    openingHoursLines: openingHours ? formatOpeningHours(openingHours) : splitOpeningLines(openingRaw),
+    // Mise en forme normalisée si le texte est lisible ; tel quel s'il ne l'est pas, ou s'il cite un jour fermé
+    // (formatOpeningHours ne connaît que les plages ouvertes : « Dimanche : fermé » disparaîtrait de l'affichage).
+    openingHoursLines:
+      openingHours && !splitOpeningLines(openingRaw).some(isClosedDayLine) ? formatOpeningHours(openingHours) : splitOpeningLines(openingRaw),
     access: {
       train: cleanOptional(g.text("Acces_Train")),
       bus: cleanOptional(g.text("Acces_Bus")),

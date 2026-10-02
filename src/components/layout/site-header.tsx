@@ -3,7 +3,7 @@ import Link from "next/link";
 import { BookingLink } from "@/components/booking/booking-link";
 import { buttonVariants } from "@/components/ui/button";
 import { MobileMenu } from "@/components/layout/mobile-menu";
-import { HOME_LINK, NAV } from "@/content/ui-copy";
+import { COPY, HOME_LINK, NAV } from "@/content/ui-copy";
 import type { SiteContent } from "@/lib/content/types";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +21,7 @@ export function SiteHeader({ content }: Props) {
           <span className="font-bold text-ink">{practitioner.name}</span>
           <span className="text-sm text-slate-500">• {practitioner.title}</span>
         </Link>
-        <nav aria-label="Navigation principale" className="hidden lg:block">
+        <nav aria-label={COPY.navLabel} className="hidden lg:block">
           <ul className="flex items-center gap-8">
             {[HOME_LINK, ...NAV].map((item) => (
               <li key={item.href}>
@@ -41,7 +41,7 @@ export function SiteHeader({ content }: Props) {
             {contact.locality}
           </Link>
           <BookingLink booking={booking} className={cn(buttonVariants({ size: "sm" }))}>
-            Prendre RDV
+            {COPY.cta.bookShort}
           </BookingLink>
           <MobileMenu />
         </div>

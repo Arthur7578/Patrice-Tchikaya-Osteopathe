@@ -28,7 +28,7 @@ export function Hero({ content }: { content: SiteContent }) {
                 <span aria-hidden="true">•</span>
               </>
             )}
-            Cabinet à {contact.locality}
+            {COPY.hero.location(contact.locality)}
           </a>
 
           <h1
@@ -46,7 +46,7 @@ export function Hero({ content }: { content: SiteContent }) {
             </BookingLink>
             <a href={`tel:${contact.phoneE164}`} className={buttonVariants({ variant: "secondary", size: "lg" })}>
               <Phone aria-hidden="true" />
-              Appeler le {contact.phoneDisplay}
+              {COPY.cta.call(contact.phoneDisplay)}
             </a>
           </div>
 
@@ -57,7 +57,7 @@ export function Hero({ content }: { content: SiteContent }) {
             </li>
             <li className="flex items-center gap-1.5">
               <CircleCheck aria-hidden="true" className="size-4 text-sage-700" />
-              Séance de {consultation.durationLabel}
+              {COPY.hero.duration(consultation.durationLabel)}
             </li>
             <li className="flex items-center gap-1.5">
               <CircleCheck aria-hidden="true" className="size-4 text-sage-700" />
@@ -85,7 +85,7 @@ export function Hero({ content }: { content: SiteContent }) {
                 <Clock aria-hidden="true" className="size-5" />
               </span>
               <div>
-                <p className="text-sm font-semibold text-ink">Consultation {consultation.durationMinutes} min</p>
+                <p className="text-sm font-semibold text-ink">{COPY.hero.cardTitle(consultation.durationMinutes)}</p>
                 <p className="text-xs text-slate-500">{COPY.hero.cardSubtitle}</p>
               </div>
             </div>

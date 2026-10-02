@@ -4,7 +4,8 @@ import { LazyMotion, MotionConfig } from "motion/react";
 import * as m from "motion/react-m";
 import type { ReactNode } from "react";
 
-const loadFeatures = () => import("./motion-features").then((mod) => mod.default);
+/** Fonctionnalités d'animation de Motion, chargées à la demande (exporté pour le test). */
+export const loadFeatures = () => import("./motion-features").then((mod) => mod.default);
 
 /**
  * Apparition au scroll — UNIQUEMENT sous la ligne de flottaison (jamais hero/LCP).

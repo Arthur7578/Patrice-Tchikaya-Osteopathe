@@ -4,6 +4,7 @@ import { CalendarDays, Phone } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BookingLink } from "@/components/booking/booking-link";
 import { buttonVariants } from "@/components/ui/button";
+import { COPY } from "@/content/ui-copy";
 import type { Booking } from "@/lib/content/types";
 import { cn } from "@/lib/utils";
 
@@ -38,11 +39,11 @@ export function MobileActionBar({ booking, phoneE164, phoneDisplay }: Props) {
     >
       <div className="flex gap-3">
         <BookingLink booking={booking} className={cn(buttonVariants({ size: "lg" }), "flex-1")}>
-          <CalendarDays aria-hidden="true" /> Prendre rendez-vous
+          <CalendarDays aria-hidden="true" /> {COPY.cta.bookMobile}
         </BookingLink>
         <a
           href={`tel:${phoneE164}`}
-          aria-label={`Appeler le cabinet au ${phoneDisplay}`}
+          aria-label={COPY.cta.callCabinet(phoneDisplay)}
           className={cn(buttonVariants({ variant: "secondary", size: "lg" }), "w-13 px-0")}
         >
           <Phone aria-hidden="true" />
