@@ -224,3 +224,17 @@ export function parseOpeningHours(value: string | null | undefined): OpeningHour
   }
   return ranges.length > 0 ? ranges : null;
 }
+
+export type PageKind = "motif" | "guide";
+
+/**
+ * Colonne « Type » de Motifs_Consultation : « Motif » (ou vide, comme avant l'ajout de la colonne) =
+ * motif de consultation ; « Page d'information » = page sans carte sur l'accueil. Sans accents ni
+ * casse. Valeur inconnue : motif (`known: false`, pour avertir) plutôt que de masquer une ligne.
+ */
+export function parsePageKind(value: string | null | undefined): { kind: PageKind; known: boolean } {
+  const v = (value ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+  if (v === "" || v === "motif") return { kind: "motif", known: true };
+  if (/^(page d.?information|guide|information)$/.test(v)) return { kind: "guide", known: true };
+  return { kind: "motif", known: false };
+}

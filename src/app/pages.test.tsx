@@ -128,6 +128,54 @@ describe("pages motifs ([slug])", () => {
   });
 });
 
+describe("pages d'information ([slug], guides)", () => {
+  const params = (slug: string) => ({ params: Promise.resolve({ slug }) }) as never;
+  const sample = C.motifs.find((m) => m.page)!;
+  const guide = { ...sample, title: "Ostéopathe ou kiné : quelle différence ?", slug: "osteopathe-kinesitherapeute-difference" };
+  const withGuide: SiteContent = { ...C, guides: [guide] };
+
+  beforeEach(() => getSiteContent.mockResolvedValue(withGuide));
+
+  it("un seul <h1> = titre Notion tel quel, JSON-LD WebPage + fil d'Ariane, RDV, règles du site", async () => {
+    const root = await renderPage(() => Motif(params(guide.slug)));
+    const h1 = root.querySelectorAll("h1");
+    expect(h1).toHaveLength(1);
+    expect(h1[0]!.text).toBe(guide.title); // pas de « à Dudelange » ajouté
+    expect(jsonLdNodes(root).map((n) => n["@type"])).toEqual(["WebPage", "BreadcrumbList"]);
+    expect(bookingAnchors(root, C.booking.url).length).toBeGreaterThanOrEqual(2);
+    expectSiteRules(root);
+  });
+
+  it("liens « à lire aussi » : guides puis motifs ; les motifs listent les guides à leur tour", async () => {
+    const guidePage = await renderPage(() => Motif(params(guide.slug)));
+    const motifLinks = C.motifs.filter((m) => m.page).map((m) => `/${m.slug}`);
+    for (const href of motifLinks) expect(guidePage.querySelectorAll(`a[href="${href}"]`).length).toBeGreaterThan(0);
+    const motifPage = await renderPage(() => Motif(params(sample.slug)));
+    expect(motifPage.querySelectorAll(`a[href="/${guide.slug}"]`).length).toBeGreaterThan(0);
+  });
+
+  it("métadonnées : titre « {Titre} | praticien », description Notion, canonical", async () => {
+    const m = await motifMetadata(params(guide.slug));
+    expect(m.title).toEqual({ absolute: `${guide.title} | ${C.practitioner.name}` });
+    expect(m.description).toBe(guide.description.trim());
+    expect(m.alternates?.canonical).toBe(`/${guide.slug}`);
+  });
+
+  it("guide sans page publiée : 404 ; generateStaticParams inclut les guides", async () => {
+    getSiteContent.mockResolvedValue({ ...C, guides: [{ ...guide, page: null }] });
+    await expect(Motif(params(guide.slug))).rejects.toEqual(expect.objectContaining({ digest: expect.stringMatching(/404/) }));
+    expect((await generateStaticParams()).map((p) => p.slug)).toContain(guide.slug);
+  });
+
+  it("accueil : liste « Bon à savoir » avec les seuls guides publiés", async () => {
+    const root = await renderPage(() => Home());
+    expect(root.querySelectorAll(`a[href="/${guide.slug}"]`).length).toBeGreaterThan(0);
+    getSiteContent.mockResolvedValue({ ...C, guides: [{ ...guide, page: null }] });
+    const without = await renderPage(() => Home());
+    expect(without.querySelectorAll(`a[href="/${guide.slug}"]`)).toHaveLength(0);
+  });
+});
+
 describe("confidentialité : section Google Tag Manager", () => {
   afterEach(() => vi.unstubAllEnvs());
 

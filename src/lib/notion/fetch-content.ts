@@ -1,6 +1,6 @@
 import { collectPaginatedAPI, isFullBlock, isFullDatabase, isFullPage } from "@notionhq/client";
 import type { PageObjectResponse } from "@notionhq/client";
-import { MOTIF_PAGES, NOTION_DATABASES, RESERVED_SLUGS, type NotionDatabaseKey } from "@/config/site";
+import { MOTIF_PAGES, NOTION_DATABASES, PAGE_TYPE_PROPERTY, RESERVED_SLUGS, type NotionDatabaseKey } from "@/config/site";
 import { isAllowedImageUrl } from "@/config/images";
 import { countWords } from "@/lib/content/blocks";
 import { FALLBACK_CONTENT } from "@/lib/content/fallback";
@@ -18,6 +18,7 @@ import {
   parseInteger,
   parseList,
   parseOpeningHours,
+  parsePageKind,
   parsePhone,
   parsePostalLine,
   parseRating,
@@ -121,16 +122,9 @@ export type ContentResult = { content: SiteContent; warnings: string[] };
 export async function fetchSiteContent(notion: NotionClient): Promise<ContentResult> {
   const warnings: string[] = [];
   const entries = await Promise.all(
-    (Object.keys(NOTION_DATABASES) as NotionDatabaseKey[]).map(async (key) => {
-      try {
-        return [key, await queryDatabase(notion, NOTION_DATABASES[key])] as const;
-      } catch (error) {
-        // Pages d'information : facultatives, leur base inaccessible ne doit pas faire retomber tout le site.
-        if (key !== "guides") throw error;
-        warnings.push(`Pages_Guides illisible, aucune page d'information publiée : ${String(error)}`);
-        return [key, [] as Rows] as const;
-      }
-    }),
+    (Object.keys(NOTION_DATABASES) as NotionDatabaseKey[]).map(
+      async (key) => [key, await queryDatabase(notion, NOTION_DATABASES[key])] as const,
+    ),
   );
   const db = Object.fromEntries(entries) as Record<NotionDatabaseKey, Rows>;
   const F = FALLBACK_CONTENT;
@@ -232,39 +226,43 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
   if (db.motifs.length > 0 && getCheckbox(db.motifs[0].properties, MOTIF_PAGES.validatedProperty) === null) {
     warnings.push(`Motifs_Consultation : colonne « ${MOTIF_PAGES.validatedProperty} » absente, aucune page motif publiée`);
   }
-  /** Lignes Notion -> entrées à page détaillée (motifs et guides : mêmes colonnes, titre nommé `titleProp`). */
-  const loadEntries = async (rows: Rows, titleProp: string): Promise<Motif[]> =>
-    (
-      await Promise.all(
-        sortRows(rows.filter(isPublished)).map(async (row): Promise<Motif | null> => {
-          const title = getText(row.properties, titleProp);
-          const slug = normalizeSlug(getText(row.properties, "slug URL") || title);
-          if (!title || !slug) return null;
-          return {
-            title,
-            slug,
-            description: getText(row.properties, "Description_Courte"),
-            icon: resolveIconName(getText(row.properties, "Icone_Lucide"), (bad) =>
-              warnings.push(`Icône Lucide inconnue « ${bad} » pour « ${title} » (icône par défaut)`),
-            ),
-            notionPageId: row.id,
-            page: await loadMotifPage(notion, row, { title, slug }, warnings),
-          };
-        }),
-      )
-    ).filter((entry): entry is Motif => entry !== null);
-
-  const motifs = await loadEntries(db.motifs, "Motif");
-  // Un guide ne peut pas reprendre l'adresse d'un motif (ni d'un autre guide) : le premier publié l'emporte.
-  const takenSlugs = new Set(motifs.map((m) => m.slug));
-  const guides = (await loadEntries(db.guides, "Titre")).filter((g) => {
-    if (!takenSlugs.has(g.slug)) {
-      takenSlugs.add(g.slug);
-      return true;
+  // Une même base pour les motifs (carte sur l'accueil) et les pages d'information : seule la colonne
+  // « Type » les distingue. Le titre est lu dans « Titre », ou « Motif » (nom historique de la colonne).
+  const motifs: Motif[] = [];
+  const guides: Motif[] = [];
+  const takenSlugs = new Set<string>();
+  const pageRows = await Promise.all(
+    sortRows(db.motifs.filter(isPublished)).map(async (row) => {
+      const title = getText(row.properties, "Titre") || getText(row.properties, "Motif");
+      const slug = normalizeSlug(getText(row.properties, "slug URL") || title);
+      if (!title || !slug) return null;
+      const type = parsePageKind(getText(row.properties, PAGE_TYPE_PROPERTY));
+      if (!type.known) warnings.push(`« ${title} » : type « ${getText(row.properties, PAGE_TYPE_PROPERTY)} » inconnu, traité comme un motif`);
+      return {
+        kind: type.kind,
+        entry: {
+          title,
+          slug,
+          description: getText(row.properties, "Description_Courte"),
+          icon: resolveIconName(getText(row.properties, "Icone_Lucide"), (bad) =>
+            warnings.push(`Icône Lucide inconnue « ${bad} » pour « ${title} » (icône par défaut)`),
+          ),
+          notionPageId: row.id,
+          page: await loadMotifPage(notion, row, { title, slug }, warnings),
+        } satisfies Motif,
+      };
+    }),
+  );
+  for (const item of pageRows) {
+    if (!item) continue;
+    // Deux lignes pour la même adresse : la première publiée l'emporte, l'autre perd sa page (jamais deux pages au même slug).
+    if (item.entry.page && takenSlugs.has(item.entry.slug)) {
+      warnings.push(`Page « ${item.entry.title} » : slug « ${item.entry.slug} » déjà pris par une autre page, non publiée`);
+      item.entry.page = null;
     }
-    if (g.page) warnings.push(`Page « ${g.title} » : slug « ${g.slug} » déjà pris par un motif ou un autre guide, page non publiée`);
-    return false;
-  });
+    if (item.entry.page) takenSlugs.add(item.entry.slug);
+    (item.kind === "motif" ? motifs : guides).push(item.entry);
+  }
 
   // --- Avis_Patients (du plus récent au plus ancien)
   const reviews = db.reviews

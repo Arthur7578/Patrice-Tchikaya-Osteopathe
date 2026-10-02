@@ -57,6 +57,17 @@ const MUTANTS: Mutant[] = [
   { name: "[slug] : motif sans page publiée rendu au lieu d'un 404", file: "src/app/[slug]/page.tsx", find: "if (!found) notFound();", replace: "", tests: [PAGES] },
   { name: "[slug] : slugs réservés générés", file: "src/app/[slug]/page.tsx", find: "!RESERVED_SLUGS.has(m.slug)", replace: "true", tests: [PAGES] },
   { name: "[slug] : lien tel: de l'en-tête cassé", file: "src/app/[slug]/page.tsx", find: "{COPY.cta.book}\n            </BookingLink>\n            <a href={`tel:", replace: "{COPY.cta.book}\n            </BookingLink>\n            <a href={`tel-:", tests: [PAGES] },
+  // --- Pages d'information (colonne Type de Motifs_Consultation) ---
+  { name: "[slug] : pages d'information absentes de generateStaticParams", file: "src/app/[slug]/page.tsx", find: "[...motifs, ...guides].filter", replace: "[...motifs].filter", tests: [PAGES] },
+  { name: "[slug] : guide rendu comme un motif (h1 + JSON-LD)", file: "src/app/[slug]/page.tsx", find: 'kind: motif ? ("motif" as const)', replace: 'kind: true ? ("motif" as const)', tests: [PAGES] },
+  { name: "sitemap : pages d'information non listées", file: "src/app/sitemap.ts", find: "[...motifs, ...guides].flatMap", replace: "[...motifs].flatMap", tests: ["src/app/sitemap.test.ts"] },
+  { name: "accueil : pages d'information non publiées listées", file: "src/components/sections/motifs.tsx", find: "guides.filter((g) => g.page)", replace: "guides", tests: [PAGES] },
+  { name: "Notion : page d'information rangée parmi les motifs", file: "src/lib/notion/fetch-content.ts", find: '(item.kind === "motif" ? motifs : guides).push', replace: "motifs.push", tests: ["src/lib/notion/fetch-content.test.ts"] },
+  { name: "Notion : deux pages publiées pour le même slug", file: "src/lib/notion/fetch-content.ts", find: "item.entry.page && takenSlugs.has(item.entry.slug)", replace: "false", tests: ["src/lib/notion/fetch-content.test.ts"] },
+  { name: "parsePageKind : valeur vide traitée comme page d'information", file: "src/lib/content/parse.ts", find: 'if (v === "" || v === "motif")', replace: 'if (v === "motif")', tests: ["src/lib/content/parse.test.ts", "src/lib/notion/fetch-content.test.ts"] },
+  // --- Cache du contenu Notion ---
+  { name: "getSiteContent : cache sans étiquette (revalidate ne purge plus)", file: "src/lib/content/get-site-content.ts", find: "{ revalidate: 60, tags: [SITE_CONTENT_TAG] }", replace: "{ revalidate: 60 }", tests: ["src/lib/content/get-site-content.test.ts"] },
+  { name: "/api/revalidate : cache du contenu non purgé", file: "src/app/api/revalidate/route.ts", find: "revalidateTag(SITE_CONTENT_TAG, { expire: 0 });", replace: "", tests: [REVALIDATE] },
   // --- Page /paiement ---
   { name: "paiement : encart affiché même vide", file: "src/app/paiement/page.tsx", find: "{page.caution && (", replace: "{true && (", tests: [PAIEMENT] },
   { name: "paiement : étapes affichées même sans ligne Notion", file: "src/app/paiement/page.tsx", find: "{page.steps && (", replace: "{true && (", tests: [PAIEMENT] },

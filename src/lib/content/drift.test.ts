@@ -38,6 +38,12 @@ describe("contentDrift", () => {
     expect(contentDrift(FALLBACK_CONTENT, live)).toEqual([]);
   });
 
+  it("ignore les pages d'information (guides), absentes du secours par choix", () => {
+    const live = clone();
+    live.guides = [{ title: "Guide", slug: "guide", description: "Description.", icon: "Sparkles", notionPageId: "abc", page: null }];
+    expect(contentDrift(FALLBACK_CONTENT, live)).toEqual([]);
+  });
+
   it("l'alt d'une photo, lui, est comparé", () => {
     const live = clone();
     live.images.hero.alt = "Autre description";
