@@ -210,6 +210,7 @@ Michelle You (05/07/2026 — texte terminé par « (translated) »).
 | Informations_generales | `Meta_Title` / `Meta_Description` | — | surcharge du `<title>` / de la meta description |
 | Informations_generales | `Acces_Info` | « Parking gratuit à 50 m, bus ligne … » | ligne « Accès » |
 | Informations_generales | `Infos_Ordre` / `Acces_Ordre` | `tarif, horaires, duree` | ordre des blocs d'« Infos pratiques » (dont `acces`) / des lignes du bloc Accès (voir DECISIONS 2026-09-29) |
+| Informations_generales | `Hero_Points` | `duree, tarif, ordonnance, confirmation` | points affichés sous les boutons du hero, dans cet ordre ; seuls ceux listés apparaissent (voir DECISIONS 2026-10-01) |
 | Informations_generales | `Langues_Parlees` | `Français, Anglais` | ligne « Langues » + JSON-LD `knowsLanguage` |
 | Informations_generales | `Url_Profil_LinkedIn` (et tout `Url_Profil_*`) | URL | JSON-LD `sameAs` |
 | Section A_Propos | `Formation` | « Diplômé de … (année) » | ligne E-E-A-T sous la bio |
