@@ -27,7 +27,7 @@ import type { AccessRowId, InfoRowId } from "@/lib/content/rows";
 import type { SiteContent } from "@/lib/content/types";
 import { googleMapsDirectionsUrl, googleMapsSearchUrl } from "@/lib/maps";
 
-const DL = "grid grid-cols-[auto_1fr] gap-x-4 gap-y-5";
+const DL = "grid grid-cols-[auto_1fr] gap-x-3 gap-y-3";
 
 /** Infos pratiques : blocs réordonnables depuis Notion (Infos_Ordre) ; le bloc « Accès » groupe ses lignes (Acces_Ordre). */
 export function PracticalInfo({ content }: { content: SiteContent }) {
@@ -38,7 +38,7 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
   const blocks: Record<InfoRowId, ReactNode> = {
     acces: (
       <div id="acces">
-        <h3 className="mb-3 text-sm font-semibold tracking-wide text-sage-700 uppercase">{COPY.infos.accessTitle}</h3>
+        <h3 className="mb-2 text-sm font-semibold tracking-wide text-sage-700 uppercase">{COPY.infos.accessTitle}</h3>
         <dl className={DL}>
           {rowOrder.access.map((id) => (
             <Fragment key={id}>{accessRow(id, content)}</Fragment>
@@ -110,11 +110,11 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
   };
 
   return (
-    <Section id="infos" labelledBy="infos-title">
-      <div className="grid gap-8 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-6 md:p-8">
+    <Section id="infos" labelledBy="infos-title" className="py-12 md:py-16">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 md:p-6">
           {images.cabinet.src && (
-            <div className="mb-6 aspect-[3/2] overflow-hidden rounded-2xl bg-sage-100">
+            <div className="mb-4 aspect-[2/1] overflow-hidden rounded-2xl bg-sage-100">
               <SiteImage
                 image={images.cabinet}
                 sizes="(min-width: 1024px) 45vw, 100vw"
@@ -123,10 +123,10 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
             </div>
           )}
           <Eyebrow>{COPY.infos.eyebrow}</Eyebrow>
-          <h2 id="infos-title" className="mt-3 text-3xl font-bold tracking-tight text-balance text-ink md:text-4xl">
+          <h2 id="infos-title" className="mt-2 text-2xl font-bold tracking-tight text-balance text-ink md:text-3xl">
             {COPY.infos.title}
           </h2>
-          <div className="mt-8 grid gap-y-5">
+          <div className="mt-5 grid gap-y-3">
             {rowOrder.infos.map((id) => {
               const block = blocks[id];
               if (!block) return null;
