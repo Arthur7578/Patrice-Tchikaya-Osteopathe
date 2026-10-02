@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { isAllowedImageUrl } from "@/config/images";
 import {
   cleanOptional, formatReviewAuthor, isClosedDayLine, isPlaceholder, normalizeSlug, parseBookingUrl, parseGeo, parseOpeningHours, splitOpeningLines,
-  isE164, parseInteger, parseList, parsePhone, parsePostalLine, parseRating, parseWeroRecipient, toE164,
+  isE164, parseInteger, parseList, parsePageKind, parsePhone, parsePostalLine, parseRating, parseWeroRecipient, toE164,
 } from "./parse";
 
 describe("parse", () => {
@@ -361,5 +361,19 @@ describe("parse : formats de saisie Notion (tolérance et limites)", () => {
 
   it("lignes d'horaires : texte d'attente => aucune ligne", () => {
     expect(splitOpeningLines("[À COMPLÉTER : horaires]")).toEqual([]);
+  });
+});
+
+describe("parsePageKind : colonne Type de Motifs_Consultation", () => {
+  it.each([
+    [undefined, "motif"], [null, "motif"], ["", "motif"], ["  ", "motif"], ["Motif", "motif"], ["MOTIF", "motif"],
+    ["Page d'information", "guide"], ["page d’information", "guide"], ["Page d information", "guide"], ["PAGE D'INFORMATION", "guide"],
+    ["Guide", "guide"], ["information", "guide"],
+  ] as const)("%j → %s (valeur connue)", (value, kind) => {
+    expect(parsePageKind(value)).toEqual({ kind, known: true });
+  });
+
+  it.each(["Autre", "page", "motifs", "Information pratique"])("%j : inconnu, traité comme un motif", (value) => {
+    expect(parsePageKind(value)).toEqual({ kind: "motif", known: false });
   });
 });

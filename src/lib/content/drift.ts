@@ -3,8 +3,12 @@
  * est en retard. Sert à `notion:check` (contrôle quotidien de la production) : un avertissement, jamais un échec.
  */
 
-/** Chemins non comparés : l'identifiant de page Notion et les URL des photos (volontairement absentes du secours). */
-const IGNORED = [/^motifs\.\d+\.notionPageId$/, /^images\.\w+\.src$/];
+/**
+ * Chemins non comparés : l'identifiant de page Notion et les URL des photos (volontairement absentes du secours),
+ * et les pages d'information (`guides`), non recopiées dans le secours : texte de santé relu par Patrice dans
+ * Notion seulement.
+ */
+const IGNORED = [/^motifs\.\d+\.notionPageId$/, /^images\.\w+\.src$/, /^guides(\.|$)/];
 
 const show = (value: unknown) => {
   const text = JSON.stringify(value) ?? "absent";

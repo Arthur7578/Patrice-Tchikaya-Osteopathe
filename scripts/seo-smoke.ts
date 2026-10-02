@@ -97,10 +97,15 @@ async function main() {
 
   // Pages motifs (phase 9) : une page par motif publié (Page_Validée + seuil de mots), liée depuis
   // l'accueil et le sitemap, avec ses propres métadonnées et son JSON-LD (MedicalWebPage + fil d'Ariane).
-  const published = content.motifs.filter((m) => m.page);
-  console.log(`ℹ pages motifs publiées : ${published.length}`);
+  // Les guides (Type = Page d'information : kiné, ordonnance, région frontalière…) suivent les mêmes contrôles, avec
+  // une WebPage au lieu d'une MedicalWebPage et sans « à {ville} » imposé dans le <h1>.
+  const published = [
+    ...content.motifs.filter((m) => m.page).map((entry) => ({ entry, kind: "motif" as const })),
+    ...content.guides.filter((g) => g.page).map((entry) => ({ entry, kind: "guide" as const })),
+  ];
+  console.log(`ℹ pages motifs et guides publiées : ${published.length}`);
   const sitemap = await (await fetch(`${base}/sitemap.xml`)).text();
-  for (const m of published) {
+  for (const { entry: m, kind } of published) {
     const path = `/${m.slug}`;
     check(root.querySelectorAll(`a[href="${path}"]`).length >= 1, `accueil : lien vers ${path}`);
     check(sitemap.includes(`${path}</loc>`), `sitemap : ${path}`);
@@ -108,7 +113,10 @@ async function main() {
     check(r.status === 200, `GET ${path} → ${r.status}`);
     const page = parse(await r.text());
     const pageH1 = page.querySelectorAll("h1");
-    check(pageH1.length === 1 && pageH1[0].text.includes(content.contact.locality), `${path} : un seul <h1>, avec « ${content.contact.locality} »`);
+    check(
+      pageH1.length === 1 && (kind === "guide" || pageH1[0].text.includes(content.contact.locality)),
+      `${path} : un seul <h1>${kind === "motif" ? `, avec « ${content.contact.locality} »` : ""}`,
+    );
     const pageTitle = page.querySelector("title")?.text ?? "";
     check(pageTitle.length >= 30 && pageTitle.length <= 65, `${path} : <title> 30–65 car. (${pageTitle.length}) : ${pageTitle}`);
     const pageDesc = page.querySelector('meta[name="description"]')?.getAttribute("content") ?? "";
@@ -120,7 +128,8 @@ async function main() {
       .querySelectorAll('script[type="application/ld+json"]')
       .flatMap((s) => (JSON.parse(s.textContent) as { "@graph"?: Array<Record<string, unknown>> })["@graph"] ?? [])
       .flatMap((n) => [n["@type"]].flat() as string[]);
-    check(pageTypes.includes("MedicalWebPage") && pageTypes.includes("BreadcrumbList"), `${path} : JSON-LD MedicalWebPage + BreadcrumbList`);
+    const pageType = kind === "motif" ? "MedicalWebPage" : "WebPage";
+    check(pageTypes.includes(pageType) && pageTypes.includes("BreadcrumbList"), `${path} : JSON-LD ${pageType} + BreadcrumbList`);
     check(!pageTypes.includes("Physician"), `${path} : pas de Physician`);
     const pageBooking = page.querySelectorAll("a").filter((a) => a.getAttribute("href") === content.booking.url);
     check(pageBooking.length >= 2, `${path} : liens RDV (${pageBooking.length})`);
@@ -136,6 +145,19 @@ async function main() {
     }
   }
 
+  // /articles : liste de toutes les pages publiées, liée depuis le pied de page (donc depuis l'accueil).
+  if (published.length > 0) {
+    check(root.querySelectorAll('a[href="/articles"]').length >= 1, "lien vers /articles présent sur l'accueil (pied de page)");
+    check(sitemap.includes("/articles</loc>"), "sitemap : /articles");
+    const listRes = await fetch(`${base}/articles`);
+    check(listRes.status === 200, `GET /articles → ${listRes.status}`);
+    const list = parse(await listRes.text());
+    check(list.querySelectorAll("h1").length === 1, "un seul <h1> sur /articles");
+    check((list.querySelector('link[rel="canonical"]')?.getAttribute("href") ?? "").endsWith("/articles"), "canonical de /articles");
+    for (const { entry } of published) {
+      check(list.querySelectorAll(`main a[href="/${entry.slug}"]`).length === 1, `/articles : lien vers /${entry.slug}`);
+    }
+  }
   const unknown = await fetch(`${base}/page-qui-n-existe-pas`);
   check(unknown.status === 404, `slug inconnu → ${unknown.status} (404 attendu)`);
 

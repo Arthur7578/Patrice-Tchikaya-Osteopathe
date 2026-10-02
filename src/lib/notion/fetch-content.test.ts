@@ -108,8 +108,11 @@ describe("fetchSiteContent : cartes d'expertise de la section À propos", () => 
   });
 });
 
-/** Ligne de Motifs_Consultation ; `validated` absent = colonne Page_Validée inexistante. */
-function motifRow(id: string, slug: string, validated?: boolean) {
+/**
+ * Ligne de Motifs_Consultation ; `validated` absent = colonne Page_Validée inexistante ;
+ * `type` absent = colonne Type inexistante (ou vide).
+ */
+function motifRow(id: string, slug: string, validated?: boolean, type?: string) {
   return {
     object: "page",
     id,
@@ -123,6 +126,7 @@ function motifRow(id: string, slug: string, validated?: boolean) {
       Description_Courte: { type: "rich_text", rich_text: [{ plain_text: "Description courte." }] },
       Icone_Lucide: { type: "rich_text", rich_text: [{ plain_text: "Activity" }] },
       ...(validated === undefined ? {} : { Page_Validée: { type: "checkbox", checkbox: validated } }),
+      ...(type === undefined ? {} : { Type: { type: "select", select: type === "" ? null : { name: type } } }),
     },
   };
 }
@@ -213,6 +217,64 @@ describe("fetchSiteContent : pages motifs (phase 9)", () => {
     const { content } = await fetchSiteContent(fakeNotion({}));
     expect(content.motifs.map((m) => m.slug)).toEqual(FALLBACK_CONTENT.motifs.map((m) => m.slug));
     expect(content.motifs.every((m) => m.page === null)).toBe(true);
+  });
+});
+
+const INFO = "Page d'information";
+
+describe("fetchSiteContent : pages d'information (colonne Type de Motifs_Consultation)", () => {
+  it("une ligne « Page d'information » validée devient un guide, sans carte parmi les motifs", async () => {
+    const { content } = await fetchSiteContent(
+      fakeNotion(
+        { motifs: [motifRow("m1", "bilan", true, "Motif"), motifRow("g1", "osteopathe-kinesitherapeute-difference", true, INFO)] },
+        { m1: [paragraph(320)], g1: [paragraph(320)] },
+      ),
+    );
+    expect(content.motifs.map((m) => m.slug)).toEqual(["bilan"]);
+    expect(content.guides).toHaveLength(1);
+    expect(content.guides[0]).toMatchObject({ title: "Motif g1", slug: "osteopathe-kinesitherapeute-difference" });
+    expect(content.guides[0].page?.wordCount).toBe(320);
+  });
+
+  it("sans valeur dans Type (ou sans la colonne) : motif, comme avant l'ajout de la colonne", async () => {
+    const { content, warnings } = await fetchSiteContent(
+      fakeNotion({ motifs: [motifRow("m1", "a", false), motifRow("m2", "b", false, ""), motifRow("m3", "c", false, "Motif")] }),
+    );
+    expect(content.motifs.map((m) => m.slug)).toEqual(["a", "b", "c"]);
+    expect(content.guides).toEqual([]);
+    expect(warnings.filter((w) => w.includes("inconnu"))).toEqual([]);
+  });
+
+  it("type inconnu : traité comme un motif, avec avertissement", async () => {
+    const { content, warnings } = await fetchSiteContent(fakeNotion({ motifs: [motifRow("m1", "a", false, "Autre")] }));
+    expect(content.motifs.map((m) => m.slug)).toEqual(["a"]);
+    expect(warnings).toContain("« Motif m1 » : type « Autre » inconnu, traité comme un motif");
+  });
+
+  it("titre lu dans « Titre » (nouveau nom de la colonne) avant « Motif »", async () => {
+    const row = motifRow("g1", "guide", false, INFO);
+    const renamed = { ...row, properties: { ...row.properties, Titre: { type: "title", title: [{ plain_text: "Mon guide" }] } } };
+    const { content } = await fetchSiteContent(fakeNotion({ motifs: [renamed] }));
+    expect(content.guides[0].title).toBe("Mon guide");
+  });
+
+  it("ne lit pas le corps d'un guide non validé", async () => {
+    const reads: string[] = [];
+    const { content } = await fetchSiteContent(fakeNotion({ motifs: [motifRow("g1", "a", false, INFO)] }, { g1: [paragraph(500)] }, reads));
+    expect(reads).toEqual([]);
+    expect(content.guides[0].page).toBeNull();
+  });
+
+  it("deux pages pour la même adresse : la première publiée l'emporte, l'autre perd sa page", async () => {
+    const { content, warnings } = await fetchSiteContent(
+      fakeNotion(
+        { motifs: [motifRow("m1", "bilan", true, "Motif"), motifRow("g1", "bilan", true, INFO)] },
+        { m1: [paragraph(400)], g1: [paragraph(400)] },
+      ),
+    );
+    expect(content.motifs[0].page).not.toBeNull();
+    expect(content.guides[0].page).toBeNull();
+    expect(warnings).toContain("Page « Motif g1 » : slug « bilan » déjà pris par une autre page, non publiée");
   });
 });
 

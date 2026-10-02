@@ -9,6 +9,15 @@ export function homeMeta(c: SiteContent) {
   return { title, description };
 }
 
+/** Page d'information (Type = Page d'information) : « {titre} | {praticien} » ; le titre Notion est déjà une phrase complète. */
+export function guideMeta(c: SiteContent, guide: Motif) {
+  return {
+    path: `/${guide.slug}`,
+    title: `${guide.title} | ${c.practitioner.name}`,
+    description: guide.description.trim(),
+  };
+}
+
 /** Page motif : « {Motif} à {ville} | {praticien} » ; description = Description_Courte (+ rappel local si ≤ 160 car.). */
 export function motifMeta(c: SiteContent, motif: Motif) {
   const path = `/${motif.slug}`;
