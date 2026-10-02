@@ -25,7 +25,14 @@ import {
   splitOpeningLines,
   toE164,
 } from "@/lib/content/parse";
-import { ACCESS_ROW_IDS, INFO_ROW_IDS, resolveRowOrder } from "@/lib/content/rows";
+import {
+  ACCESS_ROW_IDS,
+  DEFAULT_HERO_POINTS,
+  HERO_POINT_IDS,
+  INFO_ROW_IDS,
+  resolveRowOrder,
+  resolveRowSelection,
+} from "@/lib/content/rows";
 import type { ImageSlot, Motif, MotifPage, SiteContent, SiteImage } from "@/lib/content/types";
 import { fillVariables } from "@/lib/content/variables";
 import { DEFAULT_EXPERTISE_ICONS, resolveIconName } from "@/lib/icons";
@@ -338,6 +345,9 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
       ),
       access: resolveRowOrder(g.text("Acces_Ordre"), ACCESS_ROW_IDS, (bad) =>
         warnings.push(`Acces_Ordre : identifiant inconnu « ${bad} » (attendus : ${ACCESS_ROW_IDS.join(", ")})`),
+      ),
+      hero: resolveRowSelection(g.text("Hero_Points"), HERO_POINT_IDS, DEFAULT_HERO_POINTS, (bad) =>
+        warnings.push(`Hero_Points : identifiant inconnu « ${bad} » (attendus : ${HERO_POINT_IDS.join(", ")})`),
       ),
     },
     languages,

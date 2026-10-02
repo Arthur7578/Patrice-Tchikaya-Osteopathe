@@ -1,4 +1,4 @@
-import { ACCESS_ROW_IDS, INFO_ROW_IDS } from "./rows";
+import { ACCESS_ROW_IDS, DEFAULT_HERO_POINTS, INFO_ROW_IDS } from "./rows";
 import { motifPageFromMarkdown } from "./blocks";
 import type { SiteContent } from "./types";
 
@@ -305,7 +305,7 @@ export const FALLBACK_CONTENT: SiteContent = {
     parking: "Parking à 150 mètres.",
     accessibility: "1er étage avec ascenseur.",
   },
-  rowOrder: { infos: [...INFO_ROW_IDS], access: [...ACCESS_ROW_IDS] },
+  rowOrder: { infos: [...INFO_ROW_IDS], access: [...ACCESS_ROW_IDS], hero: [...DEFAULT_HERO_POINTS] },
   languages: ["Français", "Anglais", "Italien", "Espagnol", "notions de Portugais"],
   about: {
     education: "London School of Osteopathy - 2010",
