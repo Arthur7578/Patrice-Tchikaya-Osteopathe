@@ -247,7 +247,12 @@ describe("PracticalInfo : photo, langues, accès", () => {
 describe("Faq : accordéon et aide", () => {
   it("première question ouverte au chargement, les autres fermées ; aide avec le téléphone du cabinet", () => {
     const root = render(<Faq content={C} />);
-    expect(root.querySelectorAll("#faq details").map((d) => d.hasAttribute("open"))).toEqual(C.faq.map((_, i) => i === 0));
+    const rows = root.querySelectorAll("#faq details.faq-item");
+    expect(rows.map((d) => d.hasAttribute("open"))).toEqual(C.faq.map((_, i) => i === 0));
+    // au-delà de 5 questions, le reste est replié derrière un <details> natif (réponses toujours dans le HTML)
+    const more = root.querySelector("#faq details.faq-more");
+    expect(more?.hasAttribute("open")).toBe(false);
+    expect(more?.querySelectorAll("details.faq-item").length).toBe(Math.max(C.faq.length - 5, 0));
     expect(root.querySelector(`#faq a[href="tel:${C.contact.phoneE164}"]`)).not.toBeNull();
   });
 });

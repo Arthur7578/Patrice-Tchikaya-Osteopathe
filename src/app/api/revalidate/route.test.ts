@@ -2,7 +2,8 @@ import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const revalidatePath = vi.fn();
-vi.mock("next/cache", () => ({ revalidatePath }));
+const revalidateTag = vi.fn();
+vi.mock("next/cache", () => ({ revalidatePath, revalidateTag }));
 
 const { GET, POST } = await import("./route");
 
@@ -11,6 +12,7 @@ const req = (url: string, init?: ConstructorParameters<typeof NextRequest>[1]) =
 describe("/api/revalidate", () => {
   beforeEach(() => {
     revalidatePath.mockClear();
+    revalidateTag.mockClear();
     vi.stubEnv("REVALIDATE_SECRET", "s3cret");
   });
   afterEach(() => vi.unstubAllEnvs());
@@ -47,6 +49,8 @@ describe("/api/revalidate", () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({ revalidated: true });
     expect(revalidatePath).toHaveBeenCalledWith("/", "layout");
+    // Le cache du contenu Notion est purgé aussi, immédiatement (sinon les pages relisent l'ancienne version).
+    expect(revalidateTag).toHaveBeenCalledWith("site-content", { expire: 0 });
   });
 
   it("accepte le secret via l'en-tête x-revalidate-secret (POST)", async () => {

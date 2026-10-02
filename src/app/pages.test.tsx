@@ -128,6 +128,70 @@ describe("pages motifs ([slug])", () => {
   });
 });
 
+describe("pages d'information ([slug], guides)", () => {
+  const params = (slug: string) => ({ params: Promise.resolve({ slug }) }) as never;
+  const sample = C.motifs.find((m) => m.page)!;
+  const guide = { ...sample, title: "Ostéopathe ou kiné : quelle différence ?", slug: "osteopathe-kinesitherapeute-difference" };
+  const withGuide: SiteContent = { ...C, guides: [guide] };
+
+  beforeEach(() => getSiteContent.mockResolvedValue(withGuide));
+
+  it("un seul <h1> = titre Notion tel quel, JSON-LD WebPage + fil d'Ariane, RDV, règles du site", async () => {
+    const root = await renderPage(() => Motif(params(guide.slug)));
+    const h1 = root.querySelectorAll("h1");
+    expect(h1).toHaveLength(1);
+    expect(h1[0]!.text).toBe(guide.title); // pas de « à Dudelange » ajouté
+    expect(jsonLdNodes(root).map((n) => n["@type"])).toEqual(["WebPage", "BreadcrumbList"]);
+    expect(bookingAnchors(root, C.booking.url).length).toBeGreaterThanOrEqual(2);
+    expectSiteRules(root);
+  });
+
+  it("une seule liste « À lire aussi » : toutes les autres pages publiées (motifs puis pages), jamais la page courante ni une page non publiée", async () => {
+    const draft = { ...guide, slug: "brouillon", page: null };
+    getSiteContent.mockResolvedValue({ ...withGuide, guides: [guide, draft] });
+    const publishedMotifs = C.motifs.filter((m) => m.page).map((m) => `/${m.slug}`);
+    const linksOf = (root: Awaited<ReturnType<typeof renderPage>>) =>
+      root.querySelectorAll('section[aria-labelledby="a-lire-aussi-title"] li a').map((a) => a.getAttribute("href"));
+
+    const guidePage = await renderPage(() => Motif(params(guide.slug)));
+    expect(guidePage.querySelectorAll("h2").filter((h) => h.text === "À lire aussi")).toHaveLength(1);
+    expect(linksOf(guidePage)).toEqual(publishedMotifs);
+    // Plus de listes séparées « autres motifs » / « bon à savoir » (reliquat de pages distinctes).
+    expect(visibleText(guidePage)).not.toMatch(/autres motifs de consultation|bon à savoir/i);
+
+    const motifPage = await renderPage(() => Motif(params(sample.slug)));
+    expect(linksOf(motifPage)).toEqual([...publishedMotifs.filter((href) => href !== `/${sample.slug}`), `/${guide.slug}`]);
+    expect(linksOf(motifPage)).not.toContain("/brouillon");
+  });
+
+  it("une seule page publiée : pas de liste « À lire aussi » vide", async () => {
+    getSiteContent.mockResolvedValue({ ...C, motifs: C.motifs.map((m) => ({ ...m, page: null })), guides: [guide] });
+    const root = await renderPage(() => Motif(params(guide.slug)));
+    expect(root.querySelector("#a-lire-aussi-title")).toBeNull();
+  });
+
+  it("métadonnées : titre « {Titre} | praticien », description Notion, canonical", async () => {
+    const m = await motifMetadata(params(guide.slug));
+    expect(m.title).toEqual({ absolute: `${guide.title} | ${C.practitioner.name}` });
+    expect(m.description).toBe(guide.description.trim());
+    expect(m.alternates?.canonical).toBe(`/${guide.slug}`);
+  });
+
+  it("guide sans page publiée : 404 ; generateStaticParams inclut les guides", async () => {
+    getSiteContent.mockResolvedValue({ ...C, guides: [{ ...guide, page: null }] });
+    await expect(Motif(params(guide.slug))).rejects.toEqual(expect.objectContaining({ digest: expect.stringMatching(/404/) }));
+    expect((await generateStaticParams()).map((p) => p.slug)).toContain(guide.slug);
+  });
+
+  it("accueil : pas de section « Bon à savoir » de liens vers les pages d'information", async () => {
+    const root = await renderPage(() => Home());
+    // Aucun lien vers une page d'information sur l'accueil (elles sont listées sur /articles).
+    expect(root.querySelectorAll(`a[href="/${guide.slug}"]`)).toHaveLength(0);
+    // Limité aux motifs : « Bon à savoir » est aussi le titre d'un bloc replié des infos pratiques (sans rapport).
+    expect(visibleText(root.querySelector("#motifs")!)).not.toMatch(/bon à savoir/i);
+  });
+});
+
 describe("confidentialité : section Google Tag Manager", () => {
   afterEach(() => vi.unstubAllEnvs());
 

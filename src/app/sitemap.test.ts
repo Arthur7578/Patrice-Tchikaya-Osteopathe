@@ -25,7 +25,34 @@ describe("sitemap.xml", () => {
     expect(urls.some((u) => u.endsWith("/confidentialite"))).toBe(true);
     expect(entries.find((e) => e.url.endsWith(`/${published!.slug}`))!.lastModified).toEqual(new Date(page.lastEdited));
     expect(urls).toEqual([
-      `${SITE_URL}/`, `${SITE_URL}/${published!.slug}`, `${SITE_URL}/paiement`, `${SITE_URL}/mentions-legales`, `${SITE_URL}/confidentialite`,
+      `${SITE_URL}/`, `${SITE_URL}/${published!.slug}`, `${SITE_URL}/articles`, `${SITE_URL}/paiement`, `${SITE_URL}/mentions-legales`, `${SITE_URL}/confidentialite`,
     ]);
+  });
+
+  it("liste aussi les pages d'information publiées (avec la date d'édition Notion), jamais les autres", async () => {
+    const sample = C.motifs[0]!;
+    const page = { lastEdited: "2026-10-01T07:26:00.000Z" } as MotifPage;
+    const guide = (slug: string, published: boolean) => ({ ...sample, slug, page: published ? page : null });
+    getSiteContent.mockResolvedValue({
+      ...C,
+      motifs: C.motifs.map((m) => ({ ...m, page: null })),
+      guides: [guide("osteopathe-sans-ordonnance-dudelange", true), guide("brouillon", false)],
+    });
+    const entries = await sitemap();
+    const urls = entries.map((e) => e.url);
+    expect(urls).toContain(`${SITE_URL}/osteopathe-sans-ordonnance-dudelange`);
+    expect(urls).not.toContain(`${SITE_URL}/brouillon`);
+    expect(entries.find((e) => e.url.endsWith("/osteopathe-sans-ordonnance-dudelange"))!.lastModified).toEqual(new Date(page.lastEdited));
+  });
+
+  it("/articles : daté de la page la plus récemment modifiée ; absent s'il n'y a aucune page publiée", async () => {
+    const [a, b] = C.motifs;
+    const old = { lastEdited: "2026-09-01T10:00:00.000Z" } as MotifPage;
+    const recent = { lastEdited: "2026-10-01T07:26:00.000Z" } as MotifPage;
+    getSiteContent.mockResolvedValue({ ...C, motifs: [{ ...a!, page: recent }, { ...b!, page: old }], guides: [] });
+    const entries = await sitemap();
+    expect(entries.find((e) => e.url === `${SITE_URL}/articles`)!.lastModified).toEqual(new Date(recent.lastEdited));
+    getSiteContent.mockResolvedValue({ ...C, motifs: C.motifs.map((m) => ({ ...m, page: null })), guides: [] });
+    expect((await sitemap()).map((e) => e.url)).not.toContain(`${SITE_URL}/articles`);
   });
 });

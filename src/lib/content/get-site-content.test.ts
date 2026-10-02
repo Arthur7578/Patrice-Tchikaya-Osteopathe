@@ -5,11 +5,20 @@ vi.mock("server-only", () => ({}));
 // `cache` de React n'existe qu'en runtime Next : on le rend transparent pour tester chaque appel.
 vi.mock("react", async (orig) => ({ ...(await orig<typeof import("react")>()), cache: <T>(fn: T) => fn }));
 
+// `unstable_cache` n'existe qu'en runtime Next : on le rend transparent, en gardant ses arguments pour les vérifier.
+const unstableCache = vi.fn(<T>(fn: T, ...args: unknown[]) => {
+  void args;
+  return fn;
+});
+vi.mock("next/cache", () => ({ unstable_cache: unstableCache }));
+
 const fetchSiteContent = vi.fn();
 vi.mock("@/lib/notion/fetch-content", () => ({ fetchSiteContent }));
 vi.mock("@/lib/notion/client", () => ({ createNotionClient: vi.fn(() => ({})) }));
 
 const { getSiteContent } = await import("./get-site-content");
+// Appel fait à l'import du module : relevé avant que les mocks soient réinitialisés entre les tests.
+const cacheArgs = unstableCache.mock.calls[0]!.slice(1);
 
 describe("getSiteContent", () => {
   beforeEach(() => {
@@ -39,6 +48,10 @@ describe("getSiteContent", () => {
     fetchSiteContent.mockResolvedValue({ content: { ...FALLBACK_CONTENT, faq: [] }, warnings: ["colonne absente"] });
     expect((await getSiteContent()).faq).toEqual([]);
     expect(console.warn).toHaveBeenCalledWith("[notion] colonne absente");
+  });
+
+  it("la lecture Notion est mise en cache (étiquette purgée par /api/revalidate, 60 s) sans jeton dans la clé", () => {
+    expect(cacheArgs).toEqual([["site-content"], { revalidate: 60, tags: ["site-content"] }]);
   });
 
   it("erreur API Notion : propage l'erreur (jamais de repli silencieux)", async () => {

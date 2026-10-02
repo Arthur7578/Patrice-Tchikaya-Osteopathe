@@ -184,6 +184,7 @@ export type SiteContent = {
     expertises: Expertise[];
   };
   motifs: Motif[];
+  guides: Motif[]; // lignes Type = Page d'information : même forme qu'un motif, sans carte sur l'accueil
   reviews: Review[];
   faq: FaqItem[];
   images: Record<ImageSlot, SiteImage>;

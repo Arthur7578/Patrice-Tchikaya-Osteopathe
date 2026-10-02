@@ -74,6 +74,25 @@ describe("SkipLink et BackToHome", () => {
   });
 });
 
+describe("SiteFooter : pages d'information", () => {
+  const page = { blocks: [], wordCount: 300, lastEdited: "2026-10-01T00:00:00.000Z" };
+  const guide = (slug: string, published: boolean) => ({
+    title: `Guide ${slug}`, slug, description: "Description.", icon: "Sparkles", notionPageId: null, page: published ? page : null,
+  });
+
+  it("un seul lien « Tous les articles » (jamais un lien par page) quand des pages sont publiées", () => {
+    const root = render(<SiteFooter content={{ ...C, guides: [guide("publie", true), guide("brouillon", false)] }} />);
+    expect(root.querySelector('a[href="/articles"]')?.text).toBe("Tous les articles");
+    expect(root.querySelector('a[href="/publie"]')).toBeNull();
+    expect(root.querySelector('a[href="/brouillon"]')).toBeNull();
+  });
+
+  it("aucune page publiée : pas de lien vers /articles (la page n'existerait pas)", () => {
+    const unpublished = { ...C, motifs: C.motifs.map((m) => ({ ...m, page: null })), guides: [guide("brouillon", false)] };
+    expect(render(<SiteFooter content={unpublished} />).querySelector('a[href="/articles"]')).toBeNull();
+  });
+});
+
 describe("SiteFooter : horaires", () => {
   it("liste les horaires seulement s'ils existent", () => {
     const withHours = { ...C, openingHoursLines: ["Lundi : 8h – 19h"] };

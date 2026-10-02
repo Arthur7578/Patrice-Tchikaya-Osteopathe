@@ -12,21 +12,44 @@ import { cn } from "@/lib/utils";
  * Accordéon natif <details name> : réponses présentes dans le HTML (indexables),
  * 0 Ko de JS, accessible clavier. (Radix Accordion retire du DOM le contenu fermé.)
  */
+const VISIBLE_COUNT = 5;
+
+function FaqRow({ item, open }: { item: FaqItem; open?: boolean }) {
+  return (
+    <details name="faq" className="faq-item group" open={open}>
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-6 px-5 py-4 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sage-700 [&::-webkit-details-marker]:hidden">
+        <h3 className="text-base font-semibold text-ink">{item.question}</h3>
+        <ChevronDown
+          aria-hidden="true"
+          className="size-5 shrink-0 text-sage-700 transition-transform duration-300 group-open:rotate-180 motion-reduce:transition-none"
+        />
+      </summary>
+      <div className="faq-answer px-5 pb-5 text-[15px] leading-relaxed text-slate-600">{item.answer}</div>
+    </details>
+  );
+}
+
 export function FaqList({ items }: { items: FaqItem[] }) {
+  const shown = items.slice(0, VISIBLE_COUNT);
+  const more = items.slice(VISIBLE_COUNT);
   return (
     <div className="divide-y divide-slate-200/80 overflow-hidden rounded-2xl border border-slate-200/80 bg-white">
-      {items.map((item, i) => (
-        <details key={item.question} name="faq" className="faq-item group" open={i === 0}>
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-6 px-6 py-5 text-left focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sage-700 [&::-webkit-details-marker]:hidden">
-            <h3 className="text-base font-semibold text-ink">{item.question}</h3>
-            <ChevronDown
-              aria-hidden="true"
-              className="size-5 shrink-0 text-sage-700 transition-transform duration-300 group-open:rotate-180 motion-reduce:transition-none"
-            />
-          </summary>
-          <div className="faq-answer px-6 pb-6 leading-relaxed text-slate-600">{item.answer}</div>
-        </details>
+      {shown.map((item, i) => (
+        <FaqRow key={item.question} item={item} open={i === 0} />
       ))}
+      {more.length > 0 && (
+        <details className="faq-more group/more">
+          <summary className="flex cursor-pointer list-none items-center justify-center gap-2 px-5 py-4 text-sm font-semibold text-sage-700 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sage-700 group-open/more:hidden [&::-webkit-details-marker]:hidden">
+            {COPY.faq.more(more.length)}
+            <ChevronDown aria-hidden="true" className="size-4" />
+          </summary>
+          <div className="divide-y divide-slate-200/80">
+            {more.map((item) => (
+              <FaqRow key={item.question} item={item} />
+            ))}
+          </div>
+        </details>
+      )}
     </div>
   );
 }
