@@ -60,7 +60,7 @@ const MUTANTS: Mutant[] = [
   // --- Pages d'information (colonne Type de Motifs_Consultation) ---
   { name: "[slug] : pages d'information absentes de generateStaticParams", file: "src/app/[slug]/page.tsx", find: "[...motifs, ...guides].filter", replace: "[...motifs].filter", tests: [PAGES] },
   { name: "[slug] : guide rendu comme un motif (h1 + JSON-LD)", file: "src/app/[slug]/page.tsx", find: 'kind: motif ? ("motif" as const)', replace: 'kind: true ? ("motif" as const)', tests: [PAGES] },
-  { name: "sitemap : pages d'information non listées", file: "src/app/sitemap.ts", find: "[...motifs, ...guides].flatMap", replace: "[...motifs].flatMap", tests: ["src/app/sitemap.test.ts"] },
+  { name: "sitemap : pages d'information non listées", file: "src/lib/content/published.ts", find: "[...content.motifs, ...content.guides]", replace: "[...content.motifs]", tests: ["src/app/sitemap.test.ts"] },
   { name: "[slug] : pages d'information absentes des liens « À lire aussi »", file: "src/app/[slug]/page.tsx", find: "[...content.motifs, ...content.guides].filter", replace: "[...content.motifs].filter", tests: [PAGES] },
   { name: "[slug] : page courante listée dans « À lire aussi »", file: "src/app/[slug]/page.tsx", find: "entry.page && entry.slug !== motif.slug", replace: "entry.page", tests: [PAGES] },
   { name: "Notion : page d'information rangée parmi les motifs", file: "src/lib/notion/fetch-content.ts", find: '(item.kind === "motif" ? motifs : guides).push', replace: "motifs.push", tests: ["src/lib/notion/fetch-content.test.ts"] },
