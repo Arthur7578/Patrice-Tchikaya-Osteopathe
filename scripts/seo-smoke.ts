@@ -97,7 +97,7 @@ async function main() {
 
   // Pages motifs (phase 9) : une page par motif publié (Page_Validée + seuil de mots), liée depuis
   // l'accueil et le sitemap, avec ses propres métadonnées et son JSON-LD (MedicalWebPage + fil d'Ariane).
-  // Les guides (Pages_Guides : kiné, ordonnance, région frontalière…) suivent les mêmes contrôles, avec
+  // Les guides (Type = Page d'information : kiné, ordonnance, région frontalière…) suivent les mêmes contrôles, avec
   // une WebPage au lieu d'une MedicalWebPage et sans « à {ville} » imposé dans le <h1>.
   const published = [
     ...content.motifs.filter((m) => m.page).map((entry) => ({ entry, kind: "motif" as const })),

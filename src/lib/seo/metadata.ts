@@ -9,7 +9,7 @@ export function homeMeta(c: SiteContent) {
   return { title, description };
 }
 
-/** Page d'information (Pages_Guides) : « {titre} | {praticien} » ; le titre Notion est déjà une phrase complète. */
+/** Page d'information (Type = Page d'information) : « {titre} | {praticien} » ; le titre Notion est déjà une phrase complète. */
 export function guideMeta(c: SiteContent, guide: Motif) {
   return {
     path: `/${guide.slug}`,

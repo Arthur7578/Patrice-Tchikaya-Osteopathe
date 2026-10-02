@@ -40,7 +40,7 @@ export const COPY = {
       `Au cabinet de ${city}, chaque séance commence par un bilan complet pour traiter la cause de la douleur, pas seulement le symptôme.`,
     helpLine: "Un doute sur votre situation ? Appelez le cabinet :",
     discover: (title: string) => `Découvrir : ${title}`, // lien descriptif vers la page détaillée (phase 9)
-    guidesTitle: "Bon à savoir", // liens vers les pages d'information (Pages_Guides), sous les cartes
+    guidesTitle: "Bon à savoir", // liens vers les pages d'information (Type = Page d'information), sous les cartes
   },
   // Pages motifs (phase 9) : seul l'habillage est ici, le texte vient du corps de la page Notion.
   motifPage: {

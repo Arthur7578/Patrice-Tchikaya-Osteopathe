@@ -1,8 +1,9 @@
-# Pages d'information (Pages_Guides) : brouillons à valider
+# Pages d'information : brouillons à valider
 
-Trois pages rédigées par l'agent le 30/09/2026, publiées dans la base Notion **Pages_Guides** avec `Page_Validée` **décochée** :
-elles ne sont donc **pas visibles** sur le site. Patrice les relit dans Notion (le corps de chaque ligne est le texte de la
-page), corrige ce qu'il veut, puis coche `Page_Validée`. La page apparaît à la revalidation suivante (≤ 1 h), liée depuis
+Trois pages rédigées par l'agent le 30/09/2026. Elles vivent dans la base Notion **Motifs_Consultation**, comme les motifs,
+avec la colonne `Type` = **Page d'information** (un motif de consultation = `Type` vide ou `Motif`). Elles ne sont publiées
+que si `Page_Validée` est **cochée** : Patrice relit dans Notion (le corps de chaque ligne est le texte de la page), corrige,
+puis coche. La page apparaît à la revalidation suivante (≤ 1 h, ou tout de suite via `/api/revalidate`), liée depuis
 l'accueil (« Bon à savoir »), le pied de page, le sitemap et `llms.txt`. Seuil : 300 mots minimum.
 
 Les fichiers `.md` de ce dossier sont la copie des brouillons au 30/09/2026 ; **Notion fait foi** ensuite.
@@ -13,8 +14,8 @@ Les fichiers `.md` de ce dossier sont la copie des brouillons au 30/09/2026 ; **
 | `osteopathe-sans-ordonnance-dudelange.md` | `/osteopathe-sans-ordonnance-dudelange` | Ostéopathe sans ordonnance à Dudelange |
 | `osteopathe-pres-de-dudelange.md` | `/osteopathe-pres-de-dudelange` | Ostéopathe près de Dudelange |
 
-Colonnes Notion : `Titre` (= h1 et début du `<title>`), `slug URL`, `Description_Courte` (= meta description, 70–160 caractères),
-`Icone_Lucide` (liste de `src/lib/icons.ts`), `Page_Validée`, `Ordre`. Une ligne ajoutée et validée devient une page, sans code.
+Colonnes Notion : titre de la ligne (= h1 et début du `<title>`), `slug URL`, `Description_Courte` (= meta description, 70–160 caractères),
+`Icone_Lucide` (liste de `src/lib/icons.ts`), `Type`, `Page_Validée`. Une ligne ajoutée et validée devient une page, sans code.
 
 ## Points à faire valider par Patrice
 
