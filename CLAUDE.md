@@ -13,22 +13,42 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
 
 - `npm run dev` : serveur de dev (http://localhost:3000)
 - `npm run lint` · `npm run typecheck` · `npm test` · `npm run build` : **tous verts avant chaque commit**
-- `npm run notion:check` : diagnostic Notion (nécessite `NOTION_TOKEN` dans `.env.local`)
-- `npm run seo:smoke` : contrôles SEO sur un serveur lancé (`npm run build && npm start`)
+- `npm run notion:check` : diagnostic Notion (nécessite `NOTION_TOKEN` dans `.env.local`) ; signale aussi, en avertissement,
+  les écarts entre Notion et `fallback.ts` (à recopier à la main : le contenu de secours ne se met pas à jour tout seul)
+- `npm run seo:smoke` : contrôles SEO sur un serveur lancé (`npm run build && npm start`) ; signale aussi les textes
+  d'attente « [À COMPLÉTER …] » visibles (avertissement). Avec `SMOKE_CHECK_BOOKING=1` (production seulement),
+  vérifie que le lien de RDV répond chez le prestataire (404 ou 410 : échec ; autre réponse hors 2xx : avertissement)
+- `npm run test:coverage` : couverture v8 (rapport HTML dans `coverage/`, seuils dans `vitest.config.mts`)
+- `npm run test:e2e` : Playwright + axe sur le build (`npm run build` d'abord ; en cloud,
+  `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux*/chrome`). Parcourt chaque URL du sitemap.
+- `npm run test:mutants` : casse volontairement ~50 règles critiques, au moins un test doit échouer à chaque fois
+  (`scripts/mutation-check.ts` ; ajouter une entrée quand on ajoute une règle ; fichiers commités requis ; ~3 min)
+- `npm run test:mutation [-- <groupe>]` : Stryker (runner `command` + `vitest related`), groupes dans
+  `stryker/groups.json` ; long (voir `docs/DECISIONS.md`), lancé chaque nuit par `.github/workflows/mutation.yml`.
+  Ne pas ajouter Stryker à `package.json` (version épinglée dans `scripts/stryker.ts`). Pour revérifier des survivants,
+  plages `fichier:début-fin` couvrant tout le mutant : une plage d'une ligne ignore les mutants sur plusieurs lignes.
+- Tests de pages/sections : `src/test/render.tsx` (rendu statique + `expectSiteRules`) ; toute nouvelle page a son test.
+  `src/test/architecture.test.ts` : règles 1 et 2, aucun gestionnaire `on…={}` dans un Server Component.
+- CI : `.github/workflows/ci.yml` (lint, typecheck, couverture, build, `seo:smoke`, e2e Chromium + WebKit, `test:mutants`) ;
+  `smoke-production.yml` lance `seo:smoke` chaque matin sur la production (secret `NOTION_TOKEN` recommandé).
 
 ## Environnement cloud
 
 - Bloqués par la politique réseau : `api.notion.com`, `cal.eu`, `app.cal.eu`, `app.cal.com`, `ui.shadcn.com`.
   Sans `NOTION_TOKEN`, le build utilise `src/lib/content/fallback.ts` : c'est normal. Tester Notion et Cal.com
   sur la preview Vercel.
+- `*.vercel.app` et `osteopathe-tchikaya.lu` sont aussi bloqués (proxy, 403). Le connecteur Vercel
+  (`web_fetch_vercel_url`) lit la production, mais pas les previews protégées par l'authentification Vercel.
 - Pas de CLI shadcn : écrire les composants à la main (PLAN §6.14 et §7.6).
 - Chromium : `/opt/pw-browsers` ; Lighthouse via la variable `CHROME_PATH` (PLAN §15.2).
 
 ## Règles non négociables (détail : PLAN §2.3)
 
 1. Server Components par défaut ; `"use client"` seulement pour `BookingLink`, `BookingInline`,
-   `MobileActionBar`, `MobileMenu`, `Reveal`.
+   `MobileActionBar`, `MobileMenu`, `Reveal`, et `CookieConsent` (écart GTM du 27/09, `docs/DECISIONS.md`).
+   Liste vérifiée par `src/test/architecture.test.ts`.
 2. Aucun contenu éditorial en dur hors `fallback.ts` et `src/content/ui-copy.ts` ; tout passe par `getSiteContent()`.
+   Vérifié sur le JSX par `src/test/architecture.test.ts` (exceptions listées : pages juridiques, outil d'upload, icône).
 3. Images Notion : colonne `URL` uniquement, jamais les fichiers Notion ; toujours l'`alt` Notion ; placeholder
    si pas d'URL (composant `SiteImage`).
 4. Aucune animation sur le hero / l'élément LCP ; respecter `prefers-reduced-motion`.

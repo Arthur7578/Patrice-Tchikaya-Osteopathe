@@ -40,3 +40,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# tests
+/playwright-report/
+/test-results/
+/reports/
+/.stryker-tmp/
+/.stryker-bin/

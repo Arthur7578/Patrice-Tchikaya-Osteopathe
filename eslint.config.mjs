@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Sorties de tests :
+    "coverage/**",
+    "playwright-report/**",
+    "test-results/**",
+    "reports/**",
+    ".stryker-tmp/**",
+    ".stryker-bin/**",
   ]),
 ]);
 

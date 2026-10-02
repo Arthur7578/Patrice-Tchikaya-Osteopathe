@@ -153,7 +153,8 @@ Vos examens ou comptes rendus récents s'il y en a, la liste de vos traitements 
 );
 
 /**
- * Snapshot du contenu Notion au 27/09/2026 (+ valeurs du brief).
+ * Snapshot du contenu Notion au 01/10/2026 (lignes relues avec le connecteur Notion et converties par
+ * fetchSiteContent), sauf les URL des photos : voir `images`.
  * Utilisé : (1) sans NOTION_TOKEN (dev, CI, sandbox) ; (2) champ par champ si un champ
  * OBLIGATOIRE est vide dans Notion. Ne jamais l'utiliser pour masquer une panne Notion en prod.
  */
@@ -179,7 +180,7 @@ export const FALLBACK_CONTENT: SiteContent = {
     mobilePhone: { display: "+352 691 044 147", e164: "+352691044147" },
     // Vérifiées le 27/09/2026 (clic droit sur le bâtiment, Google Maps) : 49°28'52.3"N 6°05'03.7"E.
     geo: { latitude: 49.481194, longitude: 6.084361 },
-    email: null,
+    email: "patrice.tchikaya.pro@gmail.com",
   },
   booking: {
     url: "https://cal.eu/patrice-tchikaya-pro/consultation",
@@ -191,18 +192,18 @@ export const FALLBACK_CONTENT: SiteContent = {
   consultation: {
     durationLabel: "45 minutes",
     durationMinutes: 45,
-    price: null,
+    price: "90 €",
     reimbursement:
       "Consultations prises en charge par les mutuelles et assurances complémentaires de santé.",
   },
   // Transmis par Patrice (via Arthur, 28/09/2026) : règlement après la séance, Wero parmi les options.
-  // Coordonnées Wero et autres moyens de paiement inconnus à cette date : rien d'inventé (null = masqué).
+  // Coordonnées Wero et autres moyens de paiement : saisis ensuite dans Notion.
   // Encart « Bon à savoir » : non souhaité pour l'instant (29/09/2026) -> null, activable depuis Notion.
-  // `page` = instantané de la base Notion Page_Paiement (créée le 29/09/2026, même texte que ses lignes).
+  // `page` = instantané de la base Notion Page_Paiement (créée le 29/09/2026, relue le 01/10/2026).
   payment: {
     info: "Le règlement se fait après la séance. Wero fait partie des moyens de paiement acceptés.",
-    wero: { recipient: null, recipientName: null },
-    otherMethods: null,
+    wero: { recipient: { value: "+352 691 044 147", kind: "phone" }, recipientName: "Patrice Tchikaya" },
+    otherMethods: "Revolut",
     page: {
       eyebrow: "Paiement",
       title: "Régler votre séance",
@@ -217,8 +218,8 @@ export const FALLBACK_CONTENT: SiteContent = {
             text: "Dans l'application Wero, ou dans l'application de votre banque si Wero y est intégré.",
           },
           {
-            title: "Envoyez au cabinet",
-            text: "Choisissez l'envoi d'argent, puis saisissez le numéro de mobile ou l'adresse e-mail Wero du cabinet (à demander au cabinet s'ils ne sont pas indiqués sur cette page).",
+            title: "Choisissez le destinataire",
+            text: "Choisissez l'envoi d'argent, puis saisissez le numéro de mobile ou l'adresse e-mail Wero de Patrice Tchikaya.",
           },
           {
             title: "Indiquez le montant",
@@ -270,8 +271,8 @@ export const FALLBACK_CONTENT: SiteContent = {
         text: "Votre banque ne propose pas encore Wero, ou vous avez une question sur le règlement ? Appelez le cabinet :",
       },
       labels: {
-        phone: "Numéro Wero du cabinet",
-        email: "Adresse e-mail Wero du cabinet",
+        phone: "Numéro Wero",
+        email: "Adresse e-mail Wero",
         name: "Nom affiché par Wero",
         price: "Tarif de la consultation",
         caution: "Bon à savoir",
@@ -279,28 +280,49 @@ export const FALLBACK_CONTENT: SiteContent = {
       },
     },
   },
-  rating: { value: 5, count: null },
-  openingHours: null,
-  openingHoursLines: [],
-  access: { train: null, bus: null, parking: null, accessibility: null },
+  rating: { value: 5, count: 16 },
+  openingHours: [
+    { days: ["Mo"], opens: "08:30", closes: "19:00" },
+    { days: ["Tu"], opens: "07:00", closes: "16:45" },
+    { days: ["We"], opens: "08:30", closes: "19:00" },
+    { days: ["Th"], opens: "08:30", closes: "19:00" },
+    { days: ["Fr"], opens: "08:30", closes: "17:45" },
+    { days: ["Sa"], opens: "08:30", closes: "12:30" },
+  ],
+  // Avec un jour fermé, les lignes affichées sont celles de Notion, telles quelles.
+  openingHoursLines: [
+    "Lundi : 08:30–19:00",
+    "Mardi : 07:00–16:45",
+    "Mercredi : 08:30–19:00",
+    "Jeudi : 08:30–19:00",
+    "Vendredi : 08:30–17:45",
+    "Samedi : 08:30–12:30",
+    "Dimanche : fermé",
+  ],
+  access: {
+    train: "Gare CFL de Dudelange-Ville à 280 m, sur la même avenue (4 min à pied). Ligne CFL 60, via Bettembourg.",
+    bus: "Arrêt « Gare Dudelange-Ville » à 280 m : bus de la ville 8, 9 et 10, lignes régionales RGTR 631, 633 et 651.",
+    parking: "Parking à 150 mètres.",
+    accessibility: "1er étage avec ascenseur.",
+  },
   rowOrder: { infos: [...INFO_ROW_IDS], access: [...ACCESS_ROW_IDS] },
-  languages: [],
+  languages: ["Français", "Anglais", "Italien", "Espagnol", "notions de Portugais"],
   about: {
-    education: null,
+    education: "London School of Osteopathy - 2010",
     continuingEducation: [],
     title: "Un parcours unique au service de votre santé",
     shortBio:
       "Ostéopathe installé au sein du cabinet de Dudelange, Patrice Tchikaya propose une prise en charge globale et personnalisée de la douleur.",
     longBio:
-      "Ancien sportif de haut niveau en handball et ancien cadre supérieur d'entreprise, Patrice Tchikaya dispose d'une compréhension fine des contraintes physiques et psychiques du corps humain. Son double parcours lui permet de traiter avec une précision particulière les traumatismes liés au sport, ainsi que les troubles musculo-squelettiques (TMS), le stress et les mauvaises postures générés par le monde professionnel.",
+      "Ancien sportif en Première Division Française de Handball et ancien cadre en entreprise, Patrice Tchikaya dispose d'une compréhension fine des contraintes physiques et psychiques du corps humain. Son double parcours lui permet de traiter avec une précision particulière les traumatismes liés au sport, ainsi que les troubles musculo-squelettiques (TMS), le stress et les mauvaises postures générés par le monde professionnel.",
     expertises: [
       {
-        title: "Ancien sportif de haut niveau en handball",
+        title: "Ancien sportif en handball",
         text: "Maîtrise des pathologies mécaniques, des traumatismes sportifs, de la récupération et de la prévention.",
         icon: "Trophy",
       },
       {
-        title: "Ancien cadre supérieur d'entreprise",
+        title: "Ancien cadre en entreprise",
         text: "Compréhension directe du stress, des troubles musculo-squelettiques (TMS) et des mauvaises postures liées au travail sur écran.",
         icon: "Briefcase",
       },
@@ -323,13 +345,12 @@ export const FALLBACK_CONTENT: SiteContent = {
       page: SPORT_PAGE,
     },
     {
-      title: "Posture & Vie Pro (TMS)",
-      slug: "tms-ergonomie-bureau",
-      description:
-        "Mal de dos, cervicalgies, tensions sur écran, canal carpien et gestion du stress corporel.",
-      icon: "Briefcase",
+      title: "Bilan Préventif",
+      slug: "bilan-osteopathique-annuel",
+      description: "Bilan postural global, ajustements préventifs et rééquilibrage du corps.",
+      icon: "ShieldCheck",
       notionPageId: null,
-      page: TMS_PAGE,
+      page: BILAN_PAGE,
     },
     {
       title: "Traumatologie & Douleurs",
@@ -340,12 +361,13 @@ export const FALLBACK_CONTENT: SiteContent = {
       page: TRAUMA_PAGE,
     },
     {
-      title: "Bilan Préventif",
-      slug: "bilan-osteopathique-annuel",
-      description: "Bilan postural global, ajustements préventifs et rééquilibrage du corps.",
-      icon: "ShieldCheck",
+      title: "Posture & Vie Pro (TMS)",
+      slug: "tms-ergonomie-bureau",
+      description:
+        "Mal de dos, cervicalgies, tensions sur écran, canal carpien et gestion du stress corporel.",
+      icon: "Briefcase",
       notionPageId: null,
-      page: BILAN_PAGE,
+      page: TMS_PAGE,
     },
   ],
   reviews: [
@@ -358,7 +380,7 @@ export const FALLBACK_CONTENT: SiteContent = {
     {
       author: "Jeff D.",
       rating: 5,
-      text: "Excellent ostéopathe ! Il travaille avec beaucoup de professionnalisme et prend vraiment le temps nécessaire avec ses patients. On se sent écouté et très bien pris en charge. En plus d'être très compétent, il a beaucoup d'humour, ce qui rend les séances vraiment agréables. Je le recommande vivement",
+      text: "Excellent ostéopathe ! Il travaille avec beaucoup de professionnalisme et prend vraiment le temps nécessaire avec ses patients. On se sent écouté et très bien pris en charge. En plus d’être très compétent, il a beaucoup d’humour, ce qui rend les séances vraiment agréables. Je le recommande vivement",
       date: "2026-09-13",
     },
     {
@@ -370,9 +392,9 @@ export const FALLBACK_CONTENT: SiteContent = {
   ],
   faq: [
     {
-      question: "Comment se déroule une séance d'ostéopathie ?",
+      question: "Faut-il une ordonnance médicale pour consulter ?",
       answer:
-        "La séance dure 45 minutes. Elle débute par une anamnèse précise (questionnaire médical), suivie d'un examen clinique, du traitement manuel adapté et de conseils personnalisés.",
+        "Non, l'ostéopathe est un praticien de première intention. Vous pouvez prendre rendez-vous directement sans ordonnance préalable.",
     },
     {
       question: "Les consultations sont-elles remboursées au Luxembourg ?",
@@ -380,11 +402,18 @@ export const FALLBACK_CONTENT: SiteContent = {
         "L'ostéopathie est prise en charge par la majorité des mutuelles et assurances complémentaires de santé. Une facture vous est remise à l'issue de la séance.",
     },
     {
-      question: "Faut-il une ordonnance médicale pour consulter ?",
+      question: "Comment se déroule une séance d'ostéopathie ?",
       answer:
-        "Non, l'ostéopathe est un praticien de première intention. Vous pouvez prendre rendez-vous directement sans ordonnance préalable.",
+        "La séance dure 45 minutes. Elle débute par une anamnèse précise (questionnaire médical), suivie d'un examen clinique, du traitement manuel adapté et de conseils personnalisés.",
+    },
+    {
+      question: "Comment et quand puis-je régler ma séance ?",
+      answer:
+        "Le règlement se fait après la séance. Wero fait partie des moyens de paiement acceptés : vous envoyez le montant de la consultation depuis votre téléphone, en quelques secondes. Pour toute question sur le règlement, appelez le cabinet.",
     },
   ],
+  // Photos : URL Vercel Blob dans Notion, volontairement absentes ici. Sans NOTION_TOKEN (dev, CI), le site
+  // affiche donc le placeholder (règle 3) et ne dépend d'aucun hôte d'images externe.
   images: {
     hero: { src: null, alt: "Cabinet d'ostéopathie Patrice Tchikaya à Dudelange", width: 960, height: 1200 },
     portrait: { src: null, alt: "Patrice Tchikaya, ostéopathe D.O. à Dudelange", width: 800, height: 1000 },
@@ -396,5 +425,5 @@ export const FALLBACK_CONTENT: SiteContent = {
     },
   },
   sameAs: ["https://g.page/r/CY0QxWkj7WfJEBM"],
-  legal: { authorizationNumber: null, vatStatus: null },
+  legal: { authorizationNumber: "2026.04-00259-RTAUTO", vatStatus: null },
 };

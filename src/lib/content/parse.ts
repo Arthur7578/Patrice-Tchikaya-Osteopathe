@@ -17,11 +17,18 @@ export function parsePostalLine(value: string) {
   return { postalCode: m[1], locality: m[2].trim(), countryName: (m[3] ?? "Luxembourg").trim() };
 }
 
-/** Garde uniquement "+" et les chiffres : "+352 51 92 92" -> "+352519292" */
+/**
+ * Numéro des liens tel: et du JSON-LD : "+352 51 92 92" -> "+352519292". Le préfixe « 00 » devient « + » et le « (0) »
+ * de la notation « +33 (0)1 … » disparaît ; sans « + » ni « 00 », « + » est ajouté ("352 51 92 92" -> "+352519292").
+ * Le résultat n'est pas garanti valide : voir `isE164`.
+ */
 export function toE164(value: string): string {
-  const digits = value.replace(/[^\d+]/g, "");
+  const digits = value.replace(/\(0\)/g, "").replace(/[^\d+]/g, "").replace(/^00/, "+");
   return digits.startsWith("+") ? digits : `+${digits}`;
 }
+
+/** Forme E.164 : « + », indicatif sans 0 initial, 7 à 15 chiffres en tout. */
+export const isE164 = (value: string) => /^\+[1-9]\d{6,14}$/.test(value);
 
 /**
  * Numéro optionnel, indicatif international obligatoire : "+352 691 044 147" -> { display, e164: "+352691044147" }.
@@ -31,7 +38,7 @@ export function parsePhone(value: string | null | undefined): Phone | null {
   if (isPlaceholder(value)) return null;
   const display = value!.trim();
   const e164 = toE164(display);
-  return display.startsWith("+") && /^\+[1-9]\d{6,14}$/.test(e164) ? { display, e164 } : null;
+  return display.startsWith("+") && isE164(e164) ? { display, e164 } : null;
 }
 
 /** Hôtes Cal.com connus (UE et global) : seuls ceux-ci activent l'intégration embarquée. */
@@ -104,7 +111,10 @@ export function parseInteger(value: string | null | undefined): number | null {
 
 /**
  * Liste saisie dans une cellule Notion : un élément par ligne (Maj+Entrée) ou séparé par « ; ».
- * Puces tapées à la main (« - », « • », « * ») retirées ; lignes vides ou placeholders ignorées.
+ * Puces tapées à la main (« - », « • », « * ») retirées ; éléments vides ignorés.
+ * Une cellule qui contient encore un texte d'attente (« à compléter »…) donne une liste vide, en entier :
+ * ce texte contient lui-même des « ; » et ne doit jamais être publié par morceaux (consigne Notion :
+ * « remplacer tout ce texte »).
  */
 export function parseList(value: string | null | undefined): string[] {
   if (isPlaceholder(value)) return [];
@@ -147,6 +157,18 @@ const TIME_TOKEN = /\b(\d{1,2})\s*(?::|h)\s*(\d{2})?\b/g;
 const normalize = (value: string) =>
   value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[’‘`]/g, "'");
 
+/** Mention d'un jour fermé, après `normalize` (sans accents) : « fermé », « fermée(s) », « closed ». */
+const CLOSED = /\b(?:fermee?s?|closed)\b/;
+
+/**
+ * Ligne d'un jour fermé, sans horaire : « Dimanche : fermé », « samedi et dimanche fermés ». Aucune plage n'en
+ * sort : en JSON-LD, un jour absent est un jour fermé (schema.org).
+ */
+export function isClosedDayLine(line: string): boolean {
+  const text = normalize(line);
+  return CLOSED.test(text) && !/\d/.test(text) && parseDays(text.replace(CLOSED, "")) !== null;
+}
+
 /** Lignes brutes d'un champ horaires (séparées par « ; » ou un retour à la ligne). */
 export function splitOpeningLines(value: string | null | undefined): string[] {
   if (isPlaceholder(value)) return [];
@@ -176,12 +198,13 @@ function parseDays(text: string): Day[] | null {
 /**
  * Lecture tolérante des horaires saisis dans Notion (clé Horaires). Accepte notamment :
  * « Mo-Fr 08:30-19:00; Sa 08:30-12:30 », « Lundi au Vendredi, de 08:30-19:00 ; Samedi de 8h30 à 12h30 »,
- * plusieurs plages par ligne (pause déjeuner). Retourne null si une ligne est incompréhensible :
- * l'affichage utilise alors le texte brut (`splitOpeningLines`) et seul le JSON-LD est omis.
+ * plusieurs plages par ligne (pause déjeuner), jours fermés (« Dimanche : fermé », ignorés). Retourne null si une
+ * ligne est incompréhensible : l'affichage utilise alors le texte brut (`splitOpeningLines`) et seul le JSON-LD est omis.
  */
 export function parseOpeningHours(value: string | null | undefined): OpeningHoursRange[] | null {
   const ranges: OpeningHoursRange[] = [];
   for (const line of splitOpeningLines(value)) {
+    if (isClosedDayLine(line)) continue;
     const text = normalize(line);
     const times = [...text.matchAll(TIME_TOKEN)];
     if (times.length < 2 || times.length % 2 !== 0) return null;
