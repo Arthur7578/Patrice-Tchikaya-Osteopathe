@@ -105,6 +105,7 @@ const MUTANTS: Mutant[] = [
   { name: "téléphone : numéro illisible publié dans les liens tel:", file: "src/lib/notion/fetch-content.ts", find: "phoneE164: isE164(phoneE164) ? phoneE164 : F.contact.phoneE164,", replace: "phoneE164,", tests: ["src/lib/notion/fetch-content.general.test.ts"] },
   { name: "téléphone : préfixe 00 non converti (+00352…)", file: "src/lib/content/parse.ts", find: '.replace(/^00/, "+")', replace: "", tests: ["src/lib/content/parse.test.ts"] },
   { name: "horaires : un jour fermé rend tous les horaires illisibles (JSON-LD sans horaires)", file: "src/lib/content/parse.ts", find: "    if (isClosedDayLine(line)) continue;\n", replace: "", tests: ["src/lib/notion/fetch-content.general.test.ts"] },
+  { name: "FAQ : question publiée avec une variable inconnue ou sans valeur (« {tarif} » affiché)", file: "src/lib/content/variables.ts", find: "return complete ? filled : null;", replace: "return filled;", tests: ["src/lib/content/variables.test.ts", "src/lib/notion/fetch-content.general.test.ts"] },
   { name: "safeHref : domaine Notion nu accepté comme lien", file: "src/lib/notion/blocks.ts", find: "/(^|\\.)notion\\.(so|site|com)$/", replace: "/\\.notion\\.(so|site|com)$/", tests: ["src/lib/notion/blocks.test.ts"] },
   // --- Règle 2 (textes en dur) ---
   { name: "règle 2 : libellé écrit en dur dans un composant", file: "src/components/layout/site-footer.tsx", find: "{COPY.footer.links}", replace: "Liens", tests: ["src/test/architecture.test.ts"] },

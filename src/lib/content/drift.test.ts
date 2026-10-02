@@ -27,7 +27,7 @@ describe("contentDrift", () => {
     live.faq.push({ question: "Nouvelle ?", answer: "Oui." });
     live.consultation.price = null;
     const drift = contentDrift(FALLBACK_CONTENT, live);
-    expect(drift).toContain(`faq.4 : secours absent ≠ Notion {"question":"Nouvelle ?","answer":"Oui."}`);
+    expect(drift).toContain(`faq.${FALLBACK_CONTENT.faq.length} : secours absent ≠ Notion {"question":"Nouvelle ?","answer":"Oui."}`);
     expect(drift).toContain(`consultation.price : secours "90 €" ≠ Notion null`);
   });
 
