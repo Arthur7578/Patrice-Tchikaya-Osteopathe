@@ -353,6 +353,33 @@ describe("fetchSiteContent : FAQ_SEO", () => {
     expect(content.faq.map((f) => f.question)).toEqual(["Première ?", "Deuxième ?", "Sans ordre, ancienne ?", "Sans ordre, récente ?"]);
     expect(content.faq[0]).toEqual({ question: "Première ?", answer: "R1." });
   });
+
+  it("« {tarif} » et « {duree} » remplacés par Tarif_Consultation et Duree_Consultation", async () => {
+    const { content, warnings } = await fetchSiteContent(
+      fakeNotion({
+        general: general({ Tarif_Consultation: "95 €", Duree_Consultation: "50 minutes" }),
+        faq: [faqRow("Combien coûte {Tarif} ?", "La séance de {duree} coûte {tarif}.", 1)],
+      }),
+    );
+    expect(content.faq).toEqual([{ question: "Combien coûte 95 € ?", answer: "La séance de 50 minutes coûte 95 €." }]);
+    expect(warnings.filter((w) => w.startsWith("FAQ"))).toEqual([]);
+  });
+
+  it("variable sans valeur ou inconnue : question masquée et signalée, les autres restent", async () => {
+    const { content, warnings } = await fetchSiteContent(
+      fakeNotion({
+        general: general({ Tarif_Consultation: "[Mettre le tarif]" }),
+        faq: [
+          faqRow("Combien coûte une séance ?", "{tarif}, réglée après la séance.", 1),
+          faqRow("Durée ?", "{durée_séance}.", 2),
+          faqRow("Gardée ?", "Séance de {duree}.", 3),
+        ],
+      }),
+    );
+    expect(content.faq).toEqual([{ question: "Gardée ?", answer: "Séance de 45 minutes." }]);
+    expect(warnings).toContain("FAQ « Combien coûte une séance ? » : « {tarif} » sans valeur (Tarif_Consultation non renseigné) — question masquée");
+    expect(warnings).toContain("FAQ « Durée ? » : variable inconnue « {durée_séance} » (disponibles : {tarif}, {duree}) — question masquée");
+  });
 });
 
 /** Ligne de Motifs_Consultation (sans colonne Page_Validée : pas de page détaillée). */

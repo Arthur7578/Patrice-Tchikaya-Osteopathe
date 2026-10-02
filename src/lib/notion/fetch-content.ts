@@ -34,6 +34,7 @@ import {
   resolveRowSelection,
 } from "@/lib/content/rows";
 import type { ImageSlot, Motif, MotifPage, SiteContent, SiteImage } from "@/lib/content/types";
+import { fillVariables } from "@/lib/content/variables";
 import { DEFAULT_EXPERTISE_ICONS, resolveIconName } from "@/lib/icons";
 import { normalizeNotionBlocks } from "./blocks";
 import type { NotionClient } from "./client";
@@ -264,10 +265,17 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
     .filter((r) => r.text.length > 0)
     .sort((x, y) => (y.date ?? "").localeCompare(x.date ?? ""));
 
-  // --- FAQ_SEO
+  // --- FAQ_SEO (« {tarif} », « {duree} » : valeurs d'Informations_generales ; question masquée si l'une manque)
+  const textValues = { tarif: price, duree: durationLabel };
   const faq = sortRows(db.faq.filter(isPublished))
     .map((row) => ({ question: getText(row.properties, "Name"), answer: getText(row.properties, "Reponse") }))
-    .filter((f) => f.question && f.answer);
+    .filter((f) => f.question && f.answer)
+    .flatMap((f) => {
+      const warn = (message: string) => warnings.push(`FAQ « ${f.question} » : ${message} — question masquée`);
+      const question = fillVariables(f.question, textValues, warn);
+      const answer = fillVariables(f.answer, textValues, warn);
+      return question !== null && answer !== null ? [{ question, answer }] : [];
+    });
 
   const gbp = g.url("Url_Google_My_Business");
   const profiles = g

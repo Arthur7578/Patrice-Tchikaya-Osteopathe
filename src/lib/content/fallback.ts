@@ -389,21 +389,47 @@ export const FALLBACK_CONTENT: SiteContent = {
       date: "2026-07-05",
     },
   ],
+  // FAQ telle que le site l'affiche : variables « {tarif} », « {duree} » de Notion déjà remplacées (variables.ts).
   faq: [
     {
-      question: "Faut-il une ordonnance médicale pour consulter ?",
+      question: "Combien coûte une séance, et est-elle remboursée ?",
       answer:
-        "Non, l'ostéopathe est un praticien de première intention. Vous pouvez prendre rendez-vous directement sans ordonnance préalable.",
+        "Une séance de 45 minutes coûte 90 €, réglée après la séance. La CNS ne rembourse pas l'ostéopathie, mais certaines assurances complémentaires, comme la CMCM, en remboursent une partie selon votre contrat. Frontaliers : renseignez-vous auprès de votre mutuelle. Une facture vous est remise après chaque séance.",
     },
     {
-      question: "Les consultations sont-elles remboursées au Luxembourg ?",
+      question: "Faut-il une ordonnance pour consulter ?",
       answer:
-        "L'ostéopathie est prise en charge par la majorité des mutuelles et assurances complémentaires de santé. Une facture vous est remise à l'issue de la séance.",
+        "Non. Vous pouvez prendre rendez-vous directement, en ligne ou par téléphone, sans ordonnance.",
     },
     {
-      question: "Comment se déroule une séance d'ostéopathie ?",
+      question: "Comment se passe la première séance ?",
       answer:
-        "La séance dure 45 minutes. Elle débute par une anamnèse précise (questionnaire médical), suivie d'un examen clinique, du traitement manuel adapté et de conseils personnalisés.",
+        "Elle dure 45 minutes. Patrice vous interroge d'abord sur votre douleur, vos antécédents et votre quotidien (travail, sport). Il observe ensuite votre posture et la mobilité de vos articulations, puis traite avec les mains. Vous repartez avec des conseils, et si besoin des exercices, pour éviter que la douleur revienne.",
+    },
+    {
+      question: "Est-ce que ça fait mal ? Est-ce que ça « craque » ?",
+      answer:
+        "En général, non : le traitement est doux et adapté à votre douleur. Les manipulations qui font « craquer » ne sont pas systématiques, et Patrice vous explique chaque geste avant de le faire. Une légère fatigue ou des courbatures peuvent apparaître le lendemain.",
+    },
+    {
+      question: "Combien de séances faut-il prévoir ?",
+      answer:
+        "Cela dépend de votre douleur et de son ancienneté. À la fin de la première séance, Patrice vous dit s'il est utile de revenir, et dans quel délai.",
+    },
+    {
+      question: "Puis-je être reçu rapidement en cas de lumbago ou de torticolis ?",
+      answer:
+        "Les créneaux disponibles s'affichent dans l'agenda en ligne. Si aucun ne convient et que la douleur est forte, appelez le cabinet. Après une chute ou un choc, ou en cas de fièvre, de fourmillements ou de perte de force dans un bras ou une jambe, faites d'abord un bilan médical.",
+    },
+    {
+      question: "Recevez-vous les femmes enceintes, les enfants et les bébés ?",
+      answer:
+        "Pour une grossesse, un enfant ou un bébé, appelez le cabinet avant de réserver : Patrice vous dira si une séance est adaptée à votre situation.",
+    },
+    {
+      question: "Que dois-je apporter, et comment m'habiller ?",
+      answer:
+        "Si vous en avez, apportez vos examens récents liés à la douleur (radios, IRM, comptes rendus). Prévoyez une tenue souple et confortable.",
     },
     {
       question: "Comment et quand puis-je régler ma séance ?",
