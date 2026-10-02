@@ -70,6 +70,7 @@ export const COPY = {
   faq: {
     eyebrow: "FAQ",
     title: "Questions fréquentes sur l'ostéopathie",
+    more: (n: number) => (n === 1 ? "Voir la question suivante" : `Voir les ${n} autres questions`),
     helpTitle: "Vous ne trouvez pas votre réponse ?",
     helpText: "Appelez le cabinet, nous vous répondrons avec plaisir.",
   },
