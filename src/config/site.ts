@@ -42,5 +42,5 @@ export const PAGE_TYPE_PROPERTY = "Type";
  * peuvent pas entrer en collision : un slug normalisé ne contient jamais de point.
  */
 export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
-  "admin", "api", "apple-icon", "confidentialite", "mentions-legales", "opengraph-image", "paiement",
+  "admin", "api", "apple-icon", "articles", "confidentialite", "mentions-legales", "opengraph-image", "paiement",
 ]);

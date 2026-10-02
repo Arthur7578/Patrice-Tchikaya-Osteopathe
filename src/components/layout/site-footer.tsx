@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { COPY, NAV } from "@/content/ui-copy";
+import { publishedPages } from "@/lib/content/published";
 import type { SiteContent } from "@/lib/content/types";
 
 type Props = { content: SiteContent };
 
 export function SiteFooter({ content }: Props) {
-  const { practitioner, contact, about, openingHoursLines, googleBusinessUrl, guides } = content;
-  const publishedGuides = guides.filter((g) => g.page);
+  const { practitioner, contact, about, openingHoursLines, googleBusinessUrl } = content;
+  const hasArticles = publishedPages(content).length > 0;
   const year = new Date().getFullYear();
   const gtmEnabled = /^GTM-[A-Z0-9]+$/.test(process.env.NEXT_PUBLIC_GTM_ID ?? "");
   return (
@@ -57,13 +58,13 @@ export function SiteFooter({ content }: Props) {
                   </a>
                 </li>
               ))}
-              {publishedGuides.map((guide) => (
-                <li key={guide.slug}>
-                  <Link href={`/${guide.slug}`} className="text-sage-100/80 hover:text-white hover:underline">
-                    {guide.title}
+              {hasArticles && (
+                <li>
+                  <Link href="/articles" className="text-sage-100/80 hover:text-white hover:underline">
+                    {COPY.footer.articles}
                   </Link>
                 </li>
-              ))}
+              )}
               {googleBusinessUrl && (
                 <li>
                   <a

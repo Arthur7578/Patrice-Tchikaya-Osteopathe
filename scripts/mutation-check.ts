@@ -67,6 +67,10 @@ const MUTANTS: Mutant[] = [
   { name: "Notion : page d'information rangée parmi les motifs", file: "src/lib/notion/fetch-content.ts", find: '(item.kind === "motif" ? motifs : guides).push', replace: "motifs.push", tests: ["src/lib/notion/fetch-content.test.ts"] },
   { name: "Notion : deux pages publiées pour le même slug", file: "src/lib/notion/fetch-content.ts", find: "item.entry.page && takenSlugs.has(item.entry.slug)", replace: "false", tests: ["src/lib/notion/fetch-content.test.ts"] },
   { name: "parsePageKind : valeur vide traitée comme page d'information", file: "src/lib/content/parse.ts", find: 'if (v === "" || v === "motif")', replace: 'if (v === "motif")', tests: ["src/lib/content/parse.test.ts", "src/lib/notion/fetch-content.test.ts"] },
+  { name: "/articles : pages non publiées listées", file: "src/lib/content/published.ts", find: ".filter((entry) => entry.page)", replace: "", tests: ["src/app/articles/page.test.tsx", PAGES] },
+  { name: "/articles : rendue même sans page publiée", file: "src/app/articles/page.tsx", find: "if (pages.length === 0) notFound();", replace: "", tests: ["src/app/articles/page.test.tsx"] },
+  { name: "sitemap : /articles daté de la plus ancienne page", file: "src/app/sitemap.ts", find: "Math.max(...edited", replace: "Math.min(...edited", tests: ["src/app/sitemap.test.ts"] },
+  { name: "pied de page : lien /articles affiché sans page publiée", file: "src/components/layout/site-footer.tsx", find: "publishedPages(content).length > 0", replace: "true", tests: [LAYOUT] },
   // --- Cache du contenu Notion ---
   { name: "getSiteContent : cache sans étiquette (revalidate ne purge plus)", file: "src/lib/content/get-site-content.ts", find: "{ revalidate: 60, tags: [SITE_CONTENT_TAG] }", replace: "{ revalidate: 60 }", tests: ["src/lib/content/get-site-content.test.ts"] },
   { name: "/api/revalidate : cache du contenu non purgé", file: "src/app/api/revalidate/route.ts", find: "revalidateTag(SITE_CONTENT_TAG, { expire: 0 });", replace: "", tests: [REVALIDATE] },

@@ -1,5 +1,6 @@
 import { SITE_URL } from "@/config/site";
 import { COPY } from "@/content/ui-copy";
+import { publishedPages } from "@/lib/content/published";
 import type { SiteContent } from "@/lib/content/types";
 
 const oneLine = (s: string) => s.replace(/\s+/g, " ").trim();
@@ -63,6 +64,7 @@ export function buildLlmsTxt(c: SiteContent, siteUrl: string = SITE_URL): string
   lines.push(`## ${L.pages}`, "");
   lines.push(`- [${L.home}](${siteUrl}/)`);
   lines.push(`- [${L.booking}](${c.booking.url})`);
+  if (publishedPages(c).length > 0) lines.push(`- [${COPY.footer.articles}](${siteUrl}/articles)`);
   lines.push(`- [${COPY.footer.payment}](${siteUrl}/paiement)`);
   lines.push(`- [${COPY.footer.legal}](${siteUrl}/mentions-legales)`);
   lines.push(`- [${COPY.footer.privacy}](${siteUrl}/confidentialite)`);

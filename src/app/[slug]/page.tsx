@@ -5,11 +5,13 @@ import { notFound } from "next/navigation";
 import { BackToHome } from "@/components/layout/back-to-home";
 import { BookingLink } from "@/components/booking/booking-link";
 import { ContentBlocks } from "@/components/content/content-blocks";
+import { PageCards } from "@/components/content/page-cards";
 import { JsonLd } from "@/components/seo/json-ld";
 import { buttonVariants } from "@/components/ui/button";
 import { RESERVED_SLUGS } from "@/config/site";
 import { COPY } from "@/content/ui-copy";
 import { getSiteContent } from "@/lib/content/get-site-content";
+import { publishedPages } from "@/lib/content/published";
 import { MOTIF_ICONS, type MotifIconName } from "@/lib/icons";
 import { buildGuideGraph, buildMotifGraph } from "@/lib/seo/json-ld";
 import { guideMeta, motifMeta } from "@/lib/seo/metadata";
@@ -70,7 +72,7 @@ export default async function MotifPage({ params }: PageProps<"/[slug]">) {
   const { contact, booking, consultation } = content;
   const meta = (kind === "motif" ? motifMeta : guideMeta)(content, motif);
   // Maillage interne : une seule liste, toutes les autres pages publiées (motifs puis pages d'information).
-  const related = [...content.motifs, ...content.guides].filter((entry) => entry.page && entry.slug !== motif.slug);
+  const related = publishedPages(content).filter((entry) => entry.slug !== motif.slug);
   const Icon = MOTIF_ICONS[motif.icon as MotifIconName];
 
   return (
@@ -156,27 +158,9 @@ export default async function MotifPage({ params }: PageProps<"/[slug]">) {
             <h2 id="a-lire-aussi-title" className="text-2xl font-bold tracking-tight text-ink">
               {COPY.motifPage.related}
             </h2>
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {related.map((other) => {
-                const OtherIcon = MOTIF_ICONS[other.icon as MotifIconName];
-                return (
-                  <li key={other.slug}>
-                    <Link
-                      href={`/${other.slug}`}
-                      className="group flex h-full items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 transition hover:border-sage-200 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-700"
-                    >
-                      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-sage-100 text-sage-700">
-                        <OtherIcon aria-hidden="true" className="size-5" />
-                      </span>
-                      <span>
-                        <span className="font-semibold text-ink group-hover:text-sage-700">{other.title}</span>
-                        <span className="mt-1 block text-sm text-slate-600">{other.description}</span>
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+            <div className="mt-8">
+              <PageCards entries={related} />
+            </div>
           </div>
         </section>
       )}

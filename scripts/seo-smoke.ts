@@ -145,6 +145,19 @@ async function main() {
     }
   }
 
+  // /articles : liste de toutes les pages publiées, liée depuis le pied de page (donc depuis l'accueil).
+  if (published.length > 0) {
+    check(root.querySelectorAll('a[href="/articles"]').length >= 1, "lien vers /articles présent sur l'accueil (pied de page)");
+    check(sitemap.includes("/articles</loc>"), "sitemap : /articles");
+    const listRes = await fetch(`${base}/articles`);
+    check(listRes.status === 200, `GET /articles → ${listRes.status}`);
+    const list = parse(await listRes.text());
+    check(list.querySelectorAll("h1").length === 1, "un seul <h1> sur /articles");
+    check((list.querySelector('link[rel="canonical"]')?.getAttribute("href") ?? "").endsWith("/articles"), "canonical de /articles");
+    for (const { entry } of published) {
+      check(list.querySelectorAll(`main a[href="/${entry.slug}"]`).length === 1, `/articles : lien vers /${entry.slug}`);
+    }
+  }
   const unknown = await fetch(`${base}/page-qui-n-existe-pas`);
   check(unknown.status === 404, `slug inconnu → ${unknown.status} (404 attendu)`);
 

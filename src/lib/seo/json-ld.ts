@@ -184,3 +184,37 @@ export const buildMotifGraph = (c: SiteContent, motif: Motif, page: MotifPage, m
 
 export const buildGuideGraph = (c: SiteContent, guide: Motif, page: MotifPage, meta: PageMeta): Graph =>
   buildPageGraph(c, guide, page, meta, "WebPage");
+
+/** Graphe de /articles : CollectionPage (liste des pages publiées) + fil d'Ariane identique à l'affichage. */
+export function buildArticlesGraph(
+  pages: Motif[],
+  meta: { title: string; description: string },
+): Graph {
+  const path = "/articles";
+  const url = `${SITE_URL}${path}`;
+  const breadcrumbId = `${url}#breadcrumb`;
+  const collection = {
+    "@type": "CollectionPage",
+    "@id": ids.webpage(path),
+    url,
+    name: meta.title,
+    description: meta.description,
+    inLanguage: "fr-LU",
+    isPartOf: { "@id": ids.website },
+    publisher: { "@id": ids.organization },
+    breadcrumb: { "@id": breadcrumbId },
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: pages.map((p, i) => ({ "@type": "ListItem", position: i + 1, name: p.title, url: `${SITE_URL}/${p.slug}` })),
+    },
+  } as unknown as WebPage;
+  const breadcrumb: BreadcrumbList = {
+    "@type": "BreadcrumbList",
+    "@id": breadcrumbId,
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: COPY.motifPage.home, item: `${SITE_URL}/` },
+      { "@type": "ListItem", position: 2, name: meta.title, item: url },
+    ],
+  };
+  return { "@context": "https://schema.org", "@graph": [collection, breadcrumb] };
+}

@@ -34,6 +34,7 @@ describe("buildLlmsTxt", () => {
     expect(withGuides).toContain("[Guide a](https://exemple.test/a)");
     expect(withGuides).not.toContain("Guide b");
     expect(out).not.toContain("Pages d'information");
+    expect(withGuides).toContain("(https://exemple.test/articles)"); // des pages sont publiées
   });
 
   it("n'écrit jamais « médecin » ni « Dr »", () => {
@@ -86,6 +87,7 @@ describe("buildLlmsTxt : sortie exacte (contrat du fichier /llms.txt)", () => {
     "",
     "- [Page d'accueil](https://exemple.test/)",
     "- [Prise de rendez-vous en ligne](https://cal.eu/x)",
+    "- [Tous les articles](https://exemple.test/articles)",
     "- [Régler votre séance](https://exemple.test/paiement)",
     "- [Mentions légales](https://exemple.test/mentions-legales)",
     "- [Confidentialité](https://exemple.test/confidentialite)",
@@ -150,7 +152,8 @@ describe("buildLlmsTxt : sortie exacte (contrat du fichier /llms.txt)", () => {
       "- Remboursement : Mutuelles remboursent",
       "- Règlement : Après la séance.",
       "",
-      ...pages,
+      // Aucune page détaillée publiée : pas de lien vers /articles.
+      ...pages.filter((line) => !line.includes("/articles")),
     ]);
   });
 

@@ -106,6 +106,15 @@ export const COPY = {
       `Régler votre séance d'ostéopathie à ${city} avec Wero : les étapes, pourquoi c'est sûr et que faire si vous n'avez pas encore Wero.`,
     step: (n: number) => `Étape ${n} : `, // annoncé par les lecteurs d'écran (le numéro affiché est décoratif)
   },
+  // Page /articles : liste de toutes les pages détaillées publiées (motifs et pages d'information).
+  articles: {
+    metaTitle: "Tous les articles",
+    metaDescription: (city: string) =>
+      `Tous les articles du cabinet d'ostéopathie de ${city} : motifs de consultation et informations pratiques pour préparer votre séance.`,
+    title: "Tous les articles",
+    intro: (city: string) =>
+      `Les motifs de consultation et les informations pratiques du cabinet d'ostéopathie de ${city}, au même endroit.`,
+  },
   footer: {
     cabinet: "Cabinet",
     links: "Liens",
@@ -113,6 +122,7 @@ export const COPY = {
     legal: "Mentions légales",
     privacy: "Confidentialité",
     payment: "Régler votre séance",
+    articles: "Tous les articles",
     cookies: MANAGE_COOKIES,
   },
   // Bannière de consentement (GTM, docs/DECISIONS.md du 27/09).

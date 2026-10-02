@@ -80,10 +80,16 @@ describe("SiteFooter : pages d'information", () => {
     title: `Guide ${slug}`, slug, description: "Description.", icon: "Sparkles", notionPageId: null, page: published ? page : null,
   });
 
-  it("lie les pages d'information publiées (seul point d'entrée depuis l'accueil), jamais les autres", () => {
+  it("un seul lien « Tous les articles » (jamais un lien par page) quand des pages sont publiées", () => {
     const root = render(<SiteFooter content={{ ...C, guides: [guide("publie", true), guide("brouillon", false)] }} />);
-    expect(root.querySelector('a[href="/publie"]')?.text).toBe("Guide publie");
+    expect(root.querySelector('a[href="/articles"]')?.text).toBe("Tous les articles");
+    expect(root.querySelector('a[href="/publie"]')).toBeNull();
     expect(root.querySelector('a[href="/brouillon"]')).toBeNull();
+  });
+
+  it("aucune page publiée : pas de lien vers /articles (la page n'existerait pas)", () => {
+    const unpublished = { ...C, motifs: C.motifs.map((m) => ({ ...m, page: null })), guides: [guide("brouillon", false)] };
+    expect(render(<SiteFooter content={unpublished} />).querySelector('a[href="/articles"]')).toBeNull();
   });
 });
 
