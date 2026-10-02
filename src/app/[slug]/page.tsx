@@ -69,13 +69,8 @@ export default async function MotifPage({ params }: PageProps<"/[slug]">) {
   const { content, motif, page, kind } = found;
   const { contact, booking, consultation } = content;
   const meta = (kind === "motif" ? motifMeta : guideMeta)(content, motif);
-  const otherMotifs = content.motifs.filter((m) => m.page && m.slug !== motif.slug);
-  const otherGuides = content.guides.filter((g) => g.page && g.slug !== motif.slug);
-  // Maillage interne : les pages de même nature d'abord, puis l'autre famille.
-  const related =
-    kind === "motif"
-      ? [{ id: "autres-motifs", title: COPY.motifPage.others, entries: otherMotifs }, { id: "bon-a-savoir", title: COPY.motifPage.guides, entries: otherGuides }]
-      : [{ id: "bon-a-savoir", title: COPY.motifPage.guides, entries: otherGuides }, { id: "autres-motifs", title: COPY.motifPage.others, entries: otherMotifs }];
+  // Maillage interne : une seule liste, toutes les autres pages publiées (motifs puis pages d'information).
+  const related = [...content.motifs, ...content.guides].filter((entry) => entry.page && entry.slug !== motif.slug);
   const Icon = MOTIF_ICONS[motif.icon as MotifIconName];
 
   return (
@@ -155,38 +150,35 @@ export default async function MotifPage({ params }: PageProps<"/[slug]">) {
         <BackToHome className="mt-10" />
       </article>
 
-      {related.map(
-        ({ id, title, entries }) =>
-          entries.length > 0 && (
-            <section key={id} aria-labelledby={`${id}-title`} className="border-t border-slate-200/80 bg-white">
-              <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-                <h2 id={`${id}-title`} className="text-2xl font-bold tracking-tight text-ink">
-                  {title}
-                </h2>
-                <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {entries.map((other) => {
-                    const OtherIcon = MOTIF_ICONS[other.icon as MotifIconName];
-                    return (
-                      <li key={other.slug}>
-                        <Link
-                          href={`/${other.slug}`}
-                          className="group flex h-full items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 transition hover:border-sage-200 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-700"
-                        >
-                          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-sage-100 text-sage-700">
-                            <OtherIcon aria-hidden="true" className="size-5" />
-                          </span>
-                          <span>
-                            <span className="font-semibold text-ink group-hover:text-sage-700">{other.title}</span>
-                            <span className="mt-1 block text-sm text-slate-600">{other.description}</span>
-                          </span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </section>
-          ),
+      {related.length > 0 && (
+        <section aria-labelledby="a-lire-aussi-title" className="border-t border-slate-200/80 bg-white">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
+            <h2 id="a-lire-aussi-title" className="text-2xl font-bold tracking-tight text-ink">
+              {COPY.motifPage.related}
+            </h2>
+            <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {related.map((other) => {
+                const OtherIcon = MOTIF_ICONS[other.icon as MotifIconName];
+                return (
+                  <li key={other.slug}>
+                    <Link
+                      href={`/${other.slug}`}
+                      className="group flex h-full items-start gap-4 rounded-2xl border border-slate-200/80 bg-white p-5 transition hover:border-sage-200 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-700"
+                    >
+                      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-sage-100 text-sage-700">
+                        <OtherIcon aria-hidden="true" className="size-5" />
+                      </span>
+                      <span>
+                        <span className="font-semibold text-ink group-hover:text-sage-700">{other.title}</span>
+                        <span className="mt-1 block text-sm text-slate-600">{other.description}</span>
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </section>
       )}
     </main>
   );

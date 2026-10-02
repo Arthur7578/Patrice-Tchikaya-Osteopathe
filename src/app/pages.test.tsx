@@ -146,12 +146,28 @@ describe("pages d'information ([slug], guides)", () => {
     expectSiteRules(root);
   });
 
-  it("liens « à lire aussi » : guides puis motifs ; les motifs listent les guides à leur tour", async () => {
+  it("une seule liste « À lire aussi » : toutes les autres pages publiées (motifs puis pages), jamais la page courante ni une page non publiée", async () => {
+    const draft = { ...guide, slug: "brouillon", page: null };
+    getSiteContent.mockResolvedValue({ ...withGuide, guides: [guide, draft] });
+    const publishedMotifs = C.motifs.filter((m) => m.page).map((m) => `/${m.slug}`);
+    const linksOf = (root: Awaited<ReturnType<typeof renderPage>>) =>
+      root.querySelectorAll('section[aria-labelledby="a-lire-aussi-title"] li a').map((a) => a.getAttribute("href"));
+
     const guidePage = await renderPage(() => Motif(params(guide.slug)));
-    const motifLinks = C.motifs.filter((m) => m.page).map((m) => `/${m.slug}`);
-    for (const href of motifLinks) expect(guidePage.querySelectorAll(`a[href="${href}"]`).length).toBeGreaterThan(0);
+    expect(guidePage.querySelectorAll("h2").filter((h) => h.text === "À lire aussi")).toHaveLength(1);
+    expect(linksOf(guidePage)).toEqual(publishedMotifs);
+    // Plus de listes séparées « autres motifs » / « bon à savoir » (reliquat de pages distinctes).
+    expect(visibleText(guidePage)).not.toMatch(/autres motifs de consultation|bon à savoir/i);
+
     const motifPage = await renderPage(() => Motif(params(sample.slug)));
-    expect(motifPage.querySelectorAll(`a[href="/${guide.slug}"]`).length).toBeGreaterThan(0);
+    expect(linksOf(motifPage)).toEqual([...publishedMotifs.filter((href) => href !== `/${sample.slug}`), `/${guide.slug}`]);
+    expect(linksOf(motifPage)).not.toContain("/brouillon");
+  });
+
+  it("une seule page publiée : pas de liste « À lire aussi » vide", async () => {
+    getSiteContent.mockResolvedValue({ ...C, motifs: C.motifs.map((m) => ({ ...m, page: null })), guides: [guide] });
+    const root = await renderPage(() => Motif(params(guide.slug)));
+    expect(root.querySelector("#a-lire-aussi-title")).toBeNull();
   });
 
   it("métadonnées : titre « {Titre} | praticien », description Notion, canonical", async () => {
@@ -167,12 +183,10 @@ describe("pages d'information ([slug], guides)", () => {
     expect((await generateStaticParams()).map((p) => p.slug)).toContain(guide.slug);
   });
 
-  it("accueil : liste « Bon à savoir » avec les seuls guides publiés", async () => {
+  it("accueil : pas de section « Bon à savoir »", async () => {
     const root = await renderPage(() => Home());
-    expect(root.querySelectorAll(`a[href="/${guide.slug}"]`).length).toBeGreaterThan(0);
-    getSiteContent.mockResolvedValue({ ...C, guides: [{ ...guide, page: null }] });
-    const without = await renderPage(() => Home());
-    expect(without.querySelectorAll(`a[href="/${guide.slug}"]`)).toHaveLength(0);
+    expect(root.querySelectorAll(`#motifs a[href="/${guide.slug}"]`)).toHaveLength(0);
+    expect(visibleText(root)).not.toMatch(/bon à savoir/i);
   });
 });
 

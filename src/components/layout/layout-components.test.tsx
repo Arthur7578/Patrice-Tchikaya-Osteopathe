@@ -74,6 +74,19 @@ describe("SkipLink et BackToHome", () => {
   });
 });
 
+describe("SiteFooter : pages d'information", () => {
+  const page = { blocks: [], wordCount: 300, lastEdited: "2026-10-01T00:00:00.000Z" };
+  const guide = (slug: string, published: boolean) => ({
+    title: `Guide ${slug}`, slug, description: "Description.", icon: "Sparkles", notionPageId: null, page: published ? page : null,
+  });
+
+  it("lie les pages d'information publiées (seul point d'entrée depuis l'accueil), jamais les autres", () => {
+    const root = render(<SiteFooter content={{ ...C, guides: [guide("publie", true), guide("brouillon", false)] }} />);
+    expect(root.querySelector('a[href="/publie"]')?.text).toBe("Guide publie");
+    expect(root.querySelector('a[href="/brouillon"]')).toBeNull();
+  });
+});
+
 describe("SiteFooter : horaires", () => {
   it("liste les horaires seulement s'ils existent", () => {
     const withHours = { ...C, openingHoursLines: ["Lundi : 8h – 19h"] };
