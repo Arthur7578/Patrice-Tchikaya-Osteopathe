@@ -95,7 +95,7 @@ const MUTANTS: Mutant[] = [
   { name: "Footer : mobile affiché sans numéro", file: "src/components/layout/site-footer.tsx", find: "{contact.mobilePhone && (", replace: "{true && (", tests: [LAYOUT] },
   { name: "PracticalInfo : mobile affiché sans numéro", file: "src/components/sections/practical-info.tsx", find: "{contact.mobilePhone && (", replace: "{true && (", tests: [SECTIONS] },
   { name: "PracticalInfo : bloc repliable affiché sans aucune ligne (<dl> vide)", file: "src/components/sections/practical-info.tsx", find: "if (filled.length === 0) return null;", replace: "", tests: [SECTIONS] },
-  { name: "PracticalInfo : ancre #acces du menu « Accès » supprimée", file: "src/components/sections/practical-info.tsx", find: 'label={labels.address} id="acces"', replace: "label={labels.address}", tests: [SECTIONS] },
+  { name: "PracticalInfo : ancre #acces des liens des guides supprimée", file: "src/components/sections/practical-info.tsx", find: 'label={labels.address} id="acces"', replace: "label={labels.address}", tests: [SECTIONS] },
   // --- Consentement cookies (RGPD) ---
   { name: "cookies : GTM chargé sans consentement", file: "src/components/analytics/cookie-consent.tsx", find: '{consent === "accepted" && (', replace: "{true && (", tests: [COOKIES] },
   { name: "cookies : identifiant GTM non filtré (injection dans le script)", file: "src/components/analytics/cookie-consent.tsx", find: "/^GTM-[A-Z0-9]+$/.test(id)", replace: "true", tests: [COOKIES] },

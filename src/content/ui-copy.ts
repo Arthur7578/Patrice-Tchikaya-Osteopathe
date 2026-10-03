@@ -5,8 +5,7 @@ export const NAV = [
   { href: "/#a-propos", label: "À propos" },
   { href: "/#motifs", label: "Motifs" },
   { href: "/#faq", label: "FAQ" },
-  { href: "/#infos", label: "Infos & Tarifs" },
-  { href: "/#acces", label: "Accès" },
+  { href: "/#infos", label: "Accès & tarifs" },
 ] as const;
 
 /** Libellé du lien de pied de page qui rouvre la bannière cookies, cité aussi dans la bannière. */
