@@ -339,7 +339,7 @@ describe("PracticalInfo : essentiel visible, détails repliés", () => {
     expect(more).toEqual([labels.languages, labels.payment, labels.reimbursement]);
   });
 
-  it("l'ancre #acces (menu « Accès ») vise la ligne Adresse, toujours visible", () => {
+  it("l'ancre #acces (liens des guides) vise la ligne Adresse, toujours visible", () => {
     const root = render(<PracticalInfo content={C} />);
     expect(root.querySelectorAll("#acces")).toHaveLength(1);
     expect(root.querySelector("#acces")?.closest("details")).toBeNull();

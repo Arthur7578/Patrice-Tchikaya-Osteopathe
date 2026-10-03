@@ -10,6 +10,14 @@ import { SiteHeader } from "./site-header";
 import { SkipLink } from "./skip-link";
 
 vi.mock("./mobile-menu", () => ({ MobileMenu: () => <div data-testid="mobile-menu" /> }));
+// <Link> marqué : permet de vérifier quels liens passent par le routeur de Next.js.
+vi.mock("next/link", () => ({
+  default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
+    <a href={href} data-next-link="" {...rest}>
+      {children}
+    </a>
+  ),
+}));
 
 describe("SiteHeader", () => {
   const root = render(<SiteHeader content={C} />);
@@ -29,6 +37,13 @@ describe("SiteHeader", () => {
 
   it("propose un CTA de RDV en vrai <a href> (règle 6)", () => {
     expect(bookingAnchors(root, C.booking.url).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("les liens d'ancre sont des <a> natifs : <Link> ramène en haut de page quand l'ancre est déjà dans l'URL", () => {
+    const anchors = root.querySelectorAll("a").filter((a) => a.getAttribute("href")?.includes("#"));
+    expect(anchors.length).toBeGreaterThan(NAV.length); // la navigation et la pastille de la ville
+    for (const a of anchors) expect(a.hasAttribute("data-next-link"), a.getAttribute("href")).toBe(false);
+    expect(root.querySelector('a[href="/"][data-next-link]'), "« Accueil » reste un <Link>").not.toBeNull();
   });
 });
 

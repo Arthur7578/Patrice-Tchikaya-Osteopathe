@@ -95,6 +95,19 @@ test.describe("toutes les pages du sitemap", () => {
 });
 
 test.describe("accueil", () => {
+  test("header : un second clic sur la même ancre ramène à la section (ancre déjà dans l'URL)", async ({ page, isMobile }) => {
+    test.skip(isMobile, "navigation du header visible au-dessus de lg ; le menu mobile a son propre test");
+    await page.goto("/");
+    const link = page.getByRole("navigation", { name: "Navigation principale" }).getByRole("link", { name: "Accès & tarifs" });
+    await link.click();
+    await expect(page).toHaveURL(/#infos$/);
+    await expect(page.locator("#infos")).toBeInViewport();
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+    await expect(page.locator("#infos")).not.toBeInViewport();
+    await link.click();
+    await expect(page.locator("#infos")).toBeInViewport();
+  });
+
   test("hero sans animation d'apparition (règle 4 : élément LCP)", async ({ page }) => {
     await page.goto("/");
     const hero = page.locator('section[aria-labelledby="hero-title"]');
@@ -264,6 +277,20 @@ test.describe("mobile", () => {
     await page.getByRole("navigation", { name: "Menu principal" }).getByRole("link", { name: "FAQ" }).click();
     await expect(page).toHaveURL(/#faq$/);
     await expect(page.getByRole("navigation", { name: "Menu principal" })).toBeHidden();
+  });
+
+  test("menu : un second clic sur la même ancre ramène à la section (ancre déjà dans l'URL)", async ({ page }) => {
+    await page.goto("/");
+    const link = page.getByRole("navigation", { name: "Menu principal" }).getByRole("link", { name: "Accès & tarifs" });
+    await page.getByRole("button", { name: /menu/i }).click();
+    await link.click();
+    await expect(page).toHaveURL(/#infos$/);
+    await expect(page.locator("#infos")).toBeInViewport();
+    await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+    await expect(page.locator("#infos")).not.toBeInViewport();
+    await page.getByRole("button", { name: /menu/i }).click();
+    await link.click();
+    await expect(page.locator("#infos")).toBeInViewport();
   });
 
   test("barre d'action : masquée près du CTA du hero et de l'agenda, affichée entre les deux", async ({ page }) => {
