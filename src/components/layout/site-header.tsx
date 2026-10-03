@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 
 type Props = { content: SiteContent };
 
+const NAV_LINK = "text-sm font-medium text-slate-600 hover:text-sage-700";
+
 export function SiteHeader({ content }: Props) {
   const { practitioner, contact, booking } = content;
   return (
@@ -23,23 +25,30 @@ export function SiteHeader({ content }: Props) {
         </Link>
         <nav aria-label={COPY.navLabel} className="hidden lg:block">
           <ul className="flex items-center gap-8">
-            {[HOME_LINK, ...NAV].map((item) => (
+            <li>
+              <Link href={HOME_LINK.href} className={NAV_LINK}>
+                {HOME_LINK.label}
+              </Link>
+            </li>
+            {/* Ancres en <a> natif, pas <Link> : avec l'ancre déjà dans l'URL, <Link> ramène en haut de page au lieu de la section. */}
+            {NAV.map((item) => (
               <li key={item.href}>
-                <Link href={item.href} className="text-sm font-medium text-slate-600 hover:text-sage-700">
+                <a href={item.href} className={NAV_LINK}>
                   {item.label}
-                </Link>
+                </a>
               </li>
             ))}
           </ul>
         </nav>
         <div className="flex items-center gap-3">
-          <Link
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- ancre : <Link> ramène en haut de page si elle est déjà dans l'URL */}
+          <a
             href="/#infos"
             className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-sage-100 px-3 py-1.5 text-sm font-medium text-sage-800"
           >
             <MapPin aria-hidden="true" className="size-4" />
             {contact.locality}
-          </Link>
+          </a>
           <BookingLink booking={booking} className={cn(buttonVariants({ size: "sm" }))}>
             {COPY.cta.bookShort}
           </BookingLink>

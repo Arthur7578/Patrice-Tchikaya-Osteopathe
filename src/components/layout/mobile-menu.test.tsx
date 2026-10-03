@@ -5,7 +5,7 @@ import { COPY, HOME_LINK, NAV } from "@/content/ui-copy";
 
 vi.mock("next/link", () => ({
   default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
-    <a href={href} {...rest}>
+    <a href={href} data-next-link="" {...rest}>
       {children}
     </a>
   ),
@@ -52,6 +52,13 @@ describe("MobileMenu", () => {
     expect(screen.getByRole("button", { name: COPY.menu.close })).toHaveAttribute("aria-expanded", "true");
     expect(nav.querySelectorAll("a")).toHaveLength(1 + NAV.length);
     expect(screen.getByRole("link", { name: HOME_LINK.label })).toHaveAttribute("href", HOME_LINK.href);
+  });
+
+  it("les liens d'ancre sont des <a> natifs : <Link> ramène en haut de page quand l'ancre est déjà dans l'URL", () => {
+    render(<MobileMenu />);
+    fireEvent.click(toggle());
+    for (const item of NAV) expect(screen.getByRole("link", { name: item.label }), item.href).not.toHaveAttribute("data-next-link");
+    expect(screen.getByRole("link", { name: HOME_LINK.label }), "« Accueil » reste un <Link>").toHaveAttribute("data-next-link");
   });
 
   it("Échap ferme le menu et rend le focus au bouton", () => {

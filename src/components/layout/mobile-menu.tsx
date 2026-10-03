@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { COPY, HOME_LINK, NAV } from "@/content/ui-copy";
 
-const ITEMS = [HOME_LINK, ...NAV];
+const ITEM_LINK =
+  "block rounded-lg px-3 py-3 text-base font-medium text-slate-700 hover:bg-sage-50 hover:text-sage-700";
 
 /** Menu déroulant du header sous lg (au-dessus, la navigation horizontale prend le relais). */
 export function MobileMenu() {
@@ -57,15 +58,17 @@ export function MobileMenu() {
         className="absolute inset-x-0 top-full border-b border-slate-100 bg-white shadow-md"
       >
         <ul className="mx-auto max-w-6xl px-4 py-2 sm:px-6">
-          {ITEMS.map((item) => (
+          <li>
+            <Link href={HOME_LINK.href} onClick={() => setOpen(false)} className={ITEM_LINK}>
+              {HOME_LINK.label}
+            </Link>
+          </li>
+          {/* Ancres en <a> natif, pas <Link> : avec l'ancre déjà dans l'URL, <Link> ramène en haut de page au lieu de la section. */}
+          {NAV.map((item) => (
             <li key={item.href}>
-              <Link
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className="block rounded-lg px-3 py-3 text-base font-medium text-slate-700 hover:bg-sage-50 hover:text-sage-700"
-              >
+              <a href={item.href} onClick={() => setOpen(false)} className={ITEM_LINK}>
                 {item.label}
-              </Link>
+              </a>
             </li>
           ))}
         </ul>
