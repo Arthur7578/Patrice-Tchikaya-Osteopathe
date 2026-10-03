@@ -163,15 +163,18 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
           <div className="mt-4">
             <BookingInline booking={booking} />
           </div>
-          <a
-            href={booking.url}
-            target="_blank"
-            rel="noopener"
-            className="mt-4 inline-block font-semibold text-sage-700 underline underline-offset-4"
-          >
-            {COPY.infos.bookingFallback}
-            <span className="sr-only">{COPY.newTab}</span>
-          </a>
+          <p className="mt-3 text-sm text-slate-600">
+            {COPY.infos.bookingFallbackHint}{" "}
+            <a
+              href={booking.url}
+              target="_blank"
+              rel="noopener"
+              className="font-medium text-sage-700 underline underline-offset-4"
+            >
+              {COPY.infos.bookingFallback}
+              <span className="sr-only"> {COPY.newTab}</span>
+            </a>
+          </p>
         </div>
       </div>
     </Section>

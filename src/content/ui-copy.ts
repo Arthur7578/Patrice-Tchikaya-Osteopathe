@@ -90,7 +90,9 @@ export const COPY = {
     paymentLink: "Comment payer avec Wero",
     bookingTitle: "Réserver votre séance en ligne",
     bookingText: "Choisissez un créneau : la confirmation vous est envoyée par e-mail.",
-    bookingFallback: "Ouvrir l'agenda dans un nouvel onglet",
+    // Aide sous l'agenda intégré (seul repli sans JavaScript) : présentée comme une aide, pas comme un 3e moyen de réserver.
+    bookingFallbackHint: "Le calendrier ne s'affiche pas ?",
+    bookingFallback: "Ouvrir l'agenda",
   },
   // Agenda intégré (BookingInline) : pendant le chargement, puis si Cal.com ne répond pas.
   bookingInline: {
