@@ -82,7 +82,9 @@ export const COPY = {
       reimbursement: "Remboursement", hours: "Horaires", languages: "Langues",
       train: "Train", bus: "Bus", parking: "Stationnement", accessibility: "Accès PMR",
     },
-    accessTitle: "Accès",
+    // Blocs repliables ; sous le titre s'affichent les libellés des lignes qu'ils contiennent.
+    transportTitle: "Venir au cabinet",
+    moreTitle: "Bon à savoir",
     directions: "Itinéraire",
     map: "Voir sur Google Maps",
     paymentLink: "Comment payer avec Wero",

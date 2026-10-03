@@ -293,6 +293,60 @@ describe("PracticalInfo : téléphones, tarif, horaires et structure des listes"
   });
 });
 
+describe("PracticalInfo : essentiel visible, détails repliés", () => {
+  const sumOf = (d: ReturnType<typeof render>) => d.querySelector("summary h3")?.text;
+  const folded = (root: ReturnType<typeof render>) => root.querySelectorAll("#infos details");
+  const essentialLabels = (root: ReturnType<typeof render>) =>
+    root.querySelectorAll("#infos > div > div > div > dl > dd > p.font-semibold").map((p) => p.text);
+
+  it("adresse, téléphone, durée, tarif et horaires hors des blocs repliables ; transports et « bon à savoir » repliés", () => {
+    const root = render(<PracticalInfo content={{ ...C, consultation: { ...C.consultation, price: "60 €" }, openingHoursLines: ["Lundi : 8h – 19h"] }} />);
+    const { labels } = COPY.infos;
+    expect(essentialLabels(root)).toEqual([labels.address, labels.phone, labels.duration, labels.price, labels.hours]);
+    const blocks = folded(root);
+    expect(blocks.map(sumOf)).toEqual([COPY.infos.transportTitle, COPY.infos.moreTitle]);
+    expect(blocks.every((d) => !d.hasAttribute("open"))).toBe(true);
+    expect(blocks[0].querySelectorAll("dd > p.font-semibold").map((p) => p.text)).toEqual([labels.train, labels.bus, labels.parking, labels.accessibility]);
+    expect(blocks[1].querySelectorAll("dd > p.font-semibold").map((p) => p.text)).toEqual([labels.payment, labels.reimbursement, labels.languages]);
+  });
+
+  it("sous chaque titre replié : les libellés des seules lignes renseignées", () => {
+    const access = { ...C.access, bus: null, accessibility: null };
+    const root = render(<PracticalInfo content={{ ...C, access, languages: [] }} />);
+    const hints = folded(root).map((d) => d.querySelector("summary span")?.text);
+    expect(hints).toEqual([
+      `${COPY.infos.labels.train} · ${COPY.infos.labels.parking}`,
+      `${COPY.infos.labels.payment} · ${COPY.infos.labels.reimbursement}`,
+    ]);
+  });
+
+  it("bloc « Venir au cabinet » absent quand aucun transport n'est renseigné", () => {
+    const none = { train: null, bus: null, parking: null, accessibility: null };
+    const blocks = folded(render(<PracticalInfo content={{ ...C, access: none }} />));
+    expect(blocks.map(sumOf)).toEqual([COPY.infos.moreTitle]);
+  });
+
+  it("ordre Notion respecté dans chaque groupe (Infos_Ordre, Acces_Ordre)", () => {
+    const rowOrder = {
+      infos: ["langues", "horaires", "tarif", "reglement", "acces", "duree", "remboursement", "telephone"] as const,
+      access: ["pmr", "adresse", "parking", "train", "bus"] as const,
+    };
+    const root = render(<PracticalInfo content={{ ...C, rowOrder: { ...C.rowOrder, infos: [...rowOrder.infos], access: [...rowOrder.access] }, consultation: { ...C.consultation, price: "60 €" } }} />);
+    const { labels } = COPY.infos;
+    expect(essentialLabels(root)).toEqual([labels.hours, labels.price, labels.address, labels.duration, labels.phone]);
+    const [transport, more] = folded(root).map((d) => d.querySelectorAll("dd > p.font-semibold").map((p) => p.text));
+    expect(transport).toEqual([labels.accessibility, labels.parking, labels.train, labels.bus]);
+    expect(more).toEqual([labels.languages, labels.payment, labels.reimbursement]);
+  });
+
+  it("l'ancre #acces (menu « Accès ») vise la ligne Adresse, toujours visible", () => {
+    const root = render(<PracticalInfo content={C} />);
+    expect(root.querySelectorAll("#acces")).toHaveLength(1);
+    expect(root.querySelector("#acces")?.closest("details")).toBeNull();
+    expect(root.querySelector("#acces")?.nextElementSibling?.querySelector("address")).not.toBeNull();
+  });
+});
+
 describe("About : paragraphes de la biographie", () => {
   it("un retour à la ligne simple reste dans le paragraphe ; lignes vides en fin ignorées", () => {
     const c = { ...C, about: { ...C.about, longBio: "Premier.\nsuite\n\nDeuxième.\n\n" } };

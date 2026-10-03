@@ -183,10 +183,12 @@ describe("pages d'information ([slug], guides)", () => {
     expect((await generateStaticParams()).map((p) => p.slug)).toContain(guide.slug);
   });
 
-  it("accueil : pas de section « Bon à savoir »", async () => {
+  it("accueil : pas de section « Bon à savoir » de liens vers les pages d'information", async () => {
     const root = await renderPage(() => Home());
-    expect(root.querySelectorAll(`#motifs a[href="/${guide.slug}"]`)).toHaveLength(0);
-    expect(visibleText(root)).not.toMatch(/bon à savoir/i);
+    // Aucun lien vers une page d'information sur l'accueil (elles sont listées sur /articles).
+    expect(root.querySelectorAll(`a[href="/${guide.slug}"]`)).toHaveLength(0);
+    // Limité aux motifs : « Bon à savoir » est aussi le titre d'un bloc replié des infos pratiques (sans rapport).
+    expect(visibleText(root.querySelector("#motifs")!)).not.toMatch(/bon à savoir/i);
   });
 });
 
