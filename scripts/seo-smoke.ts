@@ -96,7 +96,7 @@ async function main() {
   check(payCanonical.endsWith("/paiement"), `canonical de /paiement : ${payCanonical}`);
 
   // Pages motifs (phase 9) : une page par motif publié (Page_Validée + seuil de mots), liée depuis
-  // l'accueil et le sitemap, avec ses propres métadonnées et son JSON-LD (MedicalWebPage + fil d'Ariane).
+  // l'accueil (motifs) ou /articles (tous) et le sitemap, avec ses propres métadonnées et son JSON-LD (MedicalWebPage + fil d'Ariane).
   // Les guides (Type = Page d'information : kiné, ordonnance, région frontalière…) suivent les mêmes contrôles, avec
   // une WebPage au lieu d'une MedicalWebPage et sans « à {ville} » imposé dans le <h1>.
   const published = [
@@ -107,7 +107,9 @@ async function main() {
   const sitemap = await (await fetch(`${base}/sitemap.xml`)).text();
   for (const { entry: m, kind } of published) {
     const path = `/${m.slug}`;
-    check(root.querySelectorAll(`a[href="${path}"]`).length >= 1, `accueil : lien vers ${path}`);
+    // Seuls les motifs ont une carte sur l'accueil ; les pages d'information sont atteintes par /articles
+    // (lien du pied de page, contrôlé plus bas, avec un lien par page publiée).
+    if (kind === "motif") check(root.querySelectorAll(`a[href="${path}"]`).length >= 1, `accueil : lien vers ${path}`);
     check(sitemap.includes(`${path}</loc>`), `sitemap : ${path}`);
     const r = await fetch(`${base}${path}`);
     check(r.status === 200, `GET ${path} → ${r.status}`);
