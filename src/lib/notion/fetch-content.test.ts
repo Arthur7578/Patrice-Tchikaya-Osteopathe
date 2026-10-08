@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { NOTION_DATABASES, type NotionDatabaseKey } from "@/config/site";
 import { FALLBACK_CONTENT } from "@/lib/content/fallback";
+import { ACCESS_ROW_IDS, DEFAULT_HERO_POINTS, INFO_ROW_IDS } from "@/lib/content/rows";
 import type { NotionClient } from "./client";
 import { fetchSiteContent } from "./fetch-content";
 
@@ -298,7 +299,7 @@ describe("fetchSiteContent : ordre des blocs Infos pratiques / lignes Accès", (
 
   it("sans clé : ordre par défaut", async () => {
     const { content } = await fetchSiteContent(fakeNotion({ general: [kvRow("Nom_Praticien", "Patrice")] }));
-    expect(content.rowOrder).toEqual(FALLBACK_CONTENT.rowOrder);
+    expect(content.rowOrder).toEqual({ infos: [...INFO_ROW_IDS], access: [...ACCESS_ROW_IDS], hero: [...DEFAULT_HERO_POINTS] });
   });
 });
 

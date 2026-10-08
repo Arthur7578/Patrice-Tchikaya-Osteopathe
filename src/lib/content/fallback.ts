@@ -1,4 +1,3 @@
-import { ACCESS_ROW_IDS, DEFAULT_HERO_POINTS, INFO_ROW_IDS } from "./rows";
 import { motifPageFromMarkdown } from "./blocks";
 import type { SiteContent } from "./types";
 
@@ -42,7 +41,7 @@ Cela dépend de la blessure, de votre niveau et de votre calendrier. À la fin d
 ### Quand consulter après une blessure ?
 Si les signes ci-dessus font craindre une lésion grave, faites-la d'abord évaluer. Pour une contracture ou une gêne qui traîne, inutile d'attendre qu'elle s'installe davantage.
 `,
-  "2026-09-29T21:03:59.543Z",
+  "2026-10-02T22:32:00.000Z",
 );
 
 const TMS_PAGE = motifPageFromMarkdown(
@@ -79,7 +78,7 @@ Quand une gêne revient régulièrement malgré les pauses et les réglages du p
 ### Et si je travaille debout ou en déplacement ?
 Les TMS ne concernent pas que le travail de bureau : gestes répétés, port de charges, longues heures de conduite ou station debout prolongée peuvent aussi être en cause. Le principe reste le même : comprendre ce que votre journée impose à votre corps, et l'adapter.
 `,
-  "2026-09-29T21:03:57.263Z",
+  "2026-10-02T22:32:00.000Z",
 );
 
 const TRAUMA_PAGE = motifPageFromMarkdown(
@@ -120,7 +119,7 @@ Oui, en l'absence des signes d'alerte ci-dessus. La séance est adaptée à l'in
 ### Faut-il faire une radio avant de venir ?
 Non, aucun examen n'est nécessaire pour consulter. Si vous en avez déjà, apportez-les : ils complètent l'examen.
 `,
-  "2026-09-29T21:03:58.130Z",
+  "2026-10-02T22:32:00.000Z",
 );
 
 const BILAN_PAGE = motifPageFromMarkdown(
@@ -149,7 +148,7 @@ Par son point de départ. Au lieu de partir d'une douleur précise, Patrice rega
 ### Que faut-il apporter ?
 Vos examens ou comptes rendus récents s'il y en a, la liste de vos traitements en cours et, si vous êtes sportif, votre programme d'entraînement.
 `,
-  "2026-09-29T21:03:58.864Z",
+  "2026-10-02T22:32:00.000Z",
 );
 
 /**
@@ -161,9 +160,9 @@ Vos examens ou comptes rendus récents s'il y en a, la liste de vos traitements 
 export const FALLBACK_CONTENT: SiteContent = {
   practitioner: { name: "Patrice Tchikaya", title: "Ostéopathe D.O." },
   seo: {
-    h1: "Ostéopathe à Dudelange – Patrice Tchikaya",
+    h1: "Ostéopathe à Dudelange – Mal de dos, douleurs de cou et blessures du sport",
     heroSubtitle:
-      "Prise en charge globale des douleurs articulaires et musculaires. Expertise dédiée aux sportifs, actifs et accompagnement sur-mesure.",
+      "Ancien handballeur de 1re division Française et ancien cadre, Patrice Tchikaya soulage lumbagos, cervicalgies, tendinites et tensions dues au travail ou activité physique, et vous donne les conseils pour éviter qu'elles reviennent.",
     metaTitle: null,
     metaDescription: null,
   },
@@ -183,10 +182,10 @@ export const FALLBACK_CONTENT: SiteContent = {
     email: "patrice.tchikaya.pro@gmail.com",
   },
   booking: {
-    url: "https://cal.eu/patrice-tchikaya-pro/consultation",
+    url: "https://cal.com/patrice-tchikaya-pro",
     provider: "cal",
-    calLink: "patrice-tchikaya-pro/consultation",
-    calOrigin: "https://app.cal.eu",
+    calLink: "patrice-tchikaya-pro",
+    calOrigin: "https://app.cal.com",
   },
   googleBusinessUrl: "https://g.page/r/CY0QxWkj7WfJEBM",
   consultation: {
@@ -305,7 +304,11 @@ export const FALLBACK_CONTENT: SiteContent = {
     parking: "Parking à 150 mètres.",
     accessibility: "1er étage avec ascenseur.",
   },
-  rowOrder: { infos: [...INFO_ROW_IDS], access: [...ACCESS_ROW_IDS], hero: [...DEFAULT_HERO_POINTS] },
+  rowOrder: {
+    infos: ["telephone", "duree", "tarif", "reglement", "remboursement", "horaires", "langues", "acces"],
+    access: ["adresse", "parking", "bus", "train", "pmr"],
+    hero: ["duree", "tarif", "ordonnance"],
+  },
   languages: ["Français", "Anglais", "Italien", "Espagnol", "notions de Portugais"],
   about: {
     education: "London School of Osteopathy - 2010",
@@ -386,7 +389,7 @@ export const FALLBACK_CONTENT: SiteContent = {
     {
       author: "Michelle Y.",
       rating: 5,
-      text: "On m'a recommandé Patrice lorsque j'étais enceinte et que j'avais mal au dos. Après une seule séance, la douleur avait complètement disparu ! Il a un souci du détail incroyable et m'a donné des exercices à faire pour s'assurer que la douleur ne revienne pas. (translated)",
+      text: "On m'a recommandé Patrice lorsque j'étais enceinte et que j'avais mal au dos. Après une seule séance, la douleur avait complètement disparu ! Il a un souci du détail incroyable et m'a donné des exercices à faire pour s'assurer que la douleur ne revienne pas. (traduit de l’anglais)",
       date: "2026-07-05",
     },
   ],

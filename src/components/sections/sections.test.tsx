@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { COPY } from "@/content/ui-copy";
 import { FALLBACK_CONTENT as C } from "@/lib/content/fallback";
+import { ACCESS_ROW_IDS, INFO_ROW_IDS } from "@/lib/content/rows";
 import type { SiteContent } from "@/lib/content/types";
 import { bookingAnchors, expectSiteRules, render, visibleText } from "@/test/render";
 import { About } from "./about";
@@ -298,9 +299,11 @@ describe("PracticalInfo : essentiel visible, détails repliés", () => {
   const folded = (root: ReturnType<typeof render>) => root.querySelectorAll("#infos details");
   const essentialLabels = (root: ReturnType<typeof render>) =>
     root.querySelectorAll("#infos > div > div > div > dl > dd > p.font-semibold").map((p) => p.text);
+  /** Ordre par défaut du code : celui de Notion, recopié dans le secours, peut changer. */
+  const defaultOrder = { ...C.rowOrder, infos: [...INFO_ROW_IDS], access: [...ACCESS_ROW_IDS] };
 
   it("adresse, téléphone, durée, tarif et horaires hors des blocs repliables ; transports et « bon à savoir » repliés", () => {
-    const root = render(<PracticalInfo content={{ ...C, consultation: { ...C.consultation, price: "60 €" }, openingHoursLines: ["Lundi : 8h – 19h"] }} />);
+    const root = render(<PracticalInfo content={{ ...C, rowOrder: defaultOrder, consultation: { ...C.consultation, price: "60 €" }, openingHoursLines: ["Lundi : 8h – 19h"] }} />);
     const { labels } = COPY.infos;
     expect(essentialLabels(root)).toEqual([labels.address, labels.phone, labels.duration, labels.price, labels.hours]);
     const blocks = folded(root);
@@ -312,7 +315,7 @@ describe("PracticalInfo : essentiel visible, détails repliés", () => {
 
   it("sous chaque titre replié : les libellés des seules lignes renseignées", () => {
     const access = { ...C.access, bus: null, accessibility: null };
-    const root = render(<PracticalInfo content={{ ...C, access, languages: [] }} />);
+    const root = render(<PracticalInfo content={{ ...C, rowOrder: defaultOrder, access, languages: [] }} />);
     const hints = folded(root).map((d) => d.querySelector("summary span")?.text);
     expect(hints).toEqual([
       `${COPY.infos.labels.train} · ${COPY.infos.labels.parking}`,
