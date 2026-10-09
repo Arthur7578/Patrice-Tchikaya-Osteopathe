@@ -30,7 +30,7 @@ async function main() {
     const drift = contentDrift(FALLBACK_CONTENT, content);
     if (drift.length === 0) console.log("✓ Contenu de secours (fallback.ts) à jour avec Notion");
     else {
-      const summary = `Contenu de secours en retard sur Notion (${drift.length} écart${drift.length > 1 ? "s" : ""}) : à recopier dans src/lib/content/fallback.ts`;
+      const summary = `Contenu de secours en retard sur Notion (${drift.length} écart${drift.length > 1 ? "s" : ""}) : rattrapé chaque mois par la PR « Synchronisation du contenu de secours » (ou npm run fallback:sync)`;
       console.warn(`⚠ ${summary}`);
       for (const line of drift.slice(0, 25)) console.warn(`  - ${line}`);
       if (drift.length > 25) console.warn(`  … et ${drift.length - 25} autre(s)`);

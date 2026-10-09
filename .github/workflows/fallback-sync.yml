@@ -1,0 +1,85 @@
+name: Synchronisation du contenu de secours
+
+# Une fois par mois (le 1er, avec un deuxième essai le 8), ou à la demande : relit Notion et, si le contenu de
+# secours (src/lib/content/fallback.ts) est en retard, ouvre UNE PR à relire. Le contenu éditorial n'entre jamais
+# dans le dépôt sans relecture (règle 2).
+# - Tampon : si une ligne Notion a été modifiée depuis moins de 3 jours, rien n'est fait (une erreur qu'on corrige
+#   encore ne doit pas être figée) ; le deuxième essai du mois, ou un lancement manuel, reprend plus tard.
+# - La PR n'est ouverte qu'après lint, typecheck, tests et build sur le nouveau contenu. Une PR créée par ce workflow
+#   ne déclenche pas la CI (limite de GitHub) : ces contrôles sont donc faits ici.
+# - Une seule PR par mois (branche fallback-sync/AAAA-MM) : si elle existe déjà, ouverte, fusionnée ou fermée, rien.
+# Prérequis : secret NOTION_TOKEN, et Settings > Actions > General > « Allow GitHub Actions to create and approve
+# pull requests » coché.
+on:
+  schedule:
+    - cron: "23 6 1,8 * *"
+  workflow_dispatch:
+    inputs:
+      buffer_days:
+        description: "Tampon en jours (aucune ligne Notion modifiée depuis moins de N jours)"
+        default: "3"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BRANCH_PREFIX: fallback-sync
+    steps:
+      - uses: actions/checkout@v5
+      - id: branch
+        run: |
+          branch="${BRANCH_PREFIX}/$(date -u +%Y-%m)"
+          echo "name=$branch" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::La branche $branch existe déjà : synchronisation de ce mois déjà faite."
+          fi
+      - if: steps.branch.outputs.exists != 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.branch.outputs.exists != 'true'
+        run: npm ci
+      - name: Relecture de Notion et réécriture de fallback.ts
+        id: sync
+        if: steps.branch.outputs.exists != 'true'
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          FALLBACK_SYNC_BUFFER_DAYS: ${{ inputs.buffer_days || '3' }}
+        run: npm run fallback:sync
+      # Contrôles sans NOTION_TOKEN : comme la CI, sur le contenu de secours que la PR proposerait.
+      - name: Lint, typecheck, tests
+        if: steps.sync.outputs.status == 'changed'
+        run: |
+          npm run lint
+          npm run typecheck
+          npm test
+      - name: Build
+        if: steps.sync.outputs.status == 'changed'
+        run: npm run build
+      - name: Ouverture de la PR
+        if: steps.sync.outputs.status == 'changed'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.branch.outputs.name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add src/lib/content/fallback.ts
+          git commit -m "chore: contenu de secours synchronisé avec Notion"
+          git push -u origin "$BRANCH"
+          if ! gh pr create --base "${{ github.event.repository.default_branch }}" --head "$BRANCH" \
+            --title "chore: contenu de secours synchronisé avec Notion ($(date -u +%Y-%m))" \
+            --body-file fallback-sync-summary.md; then
+            # Sans PR, la branche bloquerait le mois : on la retire pour qu'un nouvel essai soit possible.
+            git push origin --delete "$BRANCH"
+            echo "::error::PR non créée. Cocher Settings > Actions > General > « Allow GitHub Actions to create and approve pull requests »."
+            exit 1
+          fi

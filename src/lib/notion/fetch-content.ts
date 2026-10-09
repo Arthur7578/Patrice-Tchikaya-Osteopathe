@@ -44,7 +44,7 @@ import { getCheckbox, getDateStart, getNumber, getText, getUrl } from "./propert
 type Rows = PageObjectResponse[];
 
 /** Base Notion -> data source (API 2025-09-03) -> toutes les lignes (pages). */
-async function queryDatabase(notion: NotionClient, databaseId: string): Promise<Rows> {
+export async function queryDatabase(notion: NotionClient, databaseId: string): Promise<Rows> {
   const db = await notion.databases.retrieve({ database_id: databaseId });
   if (!isFullDatabase(db) || db.data_sources.length === 0) {
     throw new Error(`Base Notion ${databaseId} inaccessible (intégration non connectée ?)`);

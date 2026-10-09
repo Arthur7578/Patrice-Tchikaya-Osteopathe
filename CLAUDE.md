@@ -14,10 +14,13 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
 - `npm run dev` : serveur de dev (http://localhost:3000)
 - `npm run lint` · `npm run typecheck` · `npm test` · `npm run build` : **tous verts avant chaque commit**
 - `npm run notion:check` : diagnostic Notion (nécessite `NOTION_TOKEN` dans `.env.local`) ; signale aussi, en avertissement,
-  les écarts entre Notion et `fallback.ts` (à recopier à la main : le contenu de secours ne se met pas à jour tout seul)
+  les écarts entre Notion et `fallback.ts` (rattrapés chaque mois par une PR, voir `fallback:sync`)
 - `npm run seo:smoke` : contrôles SEO sur un serveur lancé (`npm run build && npm start`) ; signale aussi les textes
   d'attente « [À COMPLÉTER …] » visibles (avertissement). Avec `SMOKE_CHECK_BOOKING=1` (production seulement),
   vérifie que le lien de RDV répond chez le prestataire (404 ou 410 : échec ; autre réponse hors 2xx : avertissement)
+- `npm run fallback:sync` : réécrit `fallback.ts` (fichier **généré**, ne pas le modifier à la main) d'après Notion si aucune
+  ligne n'a été modifiée depuis 3 jours (`FALLBACK_SYNC_BUFFER_DAYS`) ; nécessite `NOTION_TOKEN` dans l'environnement.
+  `.github/workflows/fallback-sync.yml` le lance les 1er et 8 de chaque mois et ouvre une PR à relire (règle 2)
 - `npm run test:coverage` : couverture v8 (rapport HTML dans `coverage/`, seuils dans `vitest.config.mts`)
 - `npm run test:e2e` : Playwright + axe sur le build (`npm run build` d'abord ; en cloud,
   `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux*/chrome`). Parcourt chaque URL du sitemap.

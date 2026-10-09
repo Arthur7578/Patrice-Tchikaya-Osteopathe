@@ -13,6 +13,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "notion:check": "tsx --env-file=.env.local scripts/notion-check.ts",
+    "fallback:sync": "tsx scripts/fallback-sync.ts",
     "seo:smoke": "tsx scripts/seo-smoke.ts",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",

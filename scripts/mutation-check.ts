@@ -30,6 +30,7 @@ const SECTIONS = "src/components/sections/sections.test.tsx";
 const LAYOUT = "src/components/layout/layout-components.test.tsx";
 const LAYOUT_ROOT = "src/app/layout.test.tsx";
 const COOKIES = "src/components/analytics/cookie-consent.test.tsx";
+const SYNC = "src/lib/content/fallback-sync.test.ts";
 
 const MUTANTS: Mutant[] = [
   // --- JSON-LD (règles 7 et 10) ---
@@ -70,6 +71,11 @@ const MUTANTS: Mutant[] = [
   { name: "/articles : rendue même sans page publiée", file: "src/app/articles/page.tsx", find: "if (pages.length === 0) notFound();", replace: "", tests: ["src/app/articles/page.test.tsx"] },
   { name: "sitemap : /articles daté de la plus ancienne page", file: "src/app/sitemap.ts", find: "Math.max(...edited", replace: "Math.min(...edited", tests: ["src/app/sitemap.test.ts"] },
   { name: "pied de page : lien /articles affiché sans page publiée", file: "src/components/layout/site-footer.tsx", find: "publishedPages(content).length > 0", replace: "true", tests: [LAYOUT] },
+  // --- Synchronisation du contenu de secours (tampon, périmètre) ---
+  { name: "fallback-sync : une ligne modifiée il y a exactement N jours compte comme récente", file: "src/lib/content/fallback-sync.ts", find: "!(new Date(row.lastEdited).getTime() <= limit)", replace: "!(new Date(row.lastEdited).getTime() < limit)", tests: [SYNC] },
+  { name: "fallback-sync : une date illisible compte comme ancienne", file: "src/lib/content/fallback-sync.ts", find: "!(new Date(row.lastEdited).getTime() <= limit)", replace: "new Date(row.lastEdited).getTime() > limit", tests: [SYNC] },
+  { name: "fallback-sync : URL des photos gardées dans le secours", file: "src/lib/content/fallback-sync.ts", find: "({ ...image, src: null })", replace: "({ ...image })", tests: [SYNC] },
+  { name: "fallback-sync : pages d'information gardées dans le secours", file: "src/lib/content/fallback-sync.ts", find: "    guides: [],\n", replace: "", tests: [SYNC] },
   // --- Cache du contenu Notion ---
   { name: "getSiteContent : cache sans étiquette (revalidate ne purge plus)", file: "src/lib/content/get-site-content.ts", find: "{ revalidate: 60, tags: [SITE_CONTENT_TAG] }", replace: "{ revalidate: 60 }", tests: ["src/lib/content/get-site-content.test.ts"] },
   { name: "/api/revalidate : cache du contenu non purgé", file: "src/app/api/revalidate/route.ts", find: "revalidateTag(SITE_CONTENT_TAG, { expire: 0 });", replace: "", tests: [REVALIDATE] },
