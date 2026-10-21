@@ -14,6 +14,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function ConfidentialitePage() {
   const c = await getSiteContent();
   const gtmEnabled = /^GTM-[A-Z0-9]+$/.test(process.env.NEXT_PUBLIC_GTM_ID ?? "");
+  // Hôte du prestataire de RDV (ex. www.doctena.lu), nommé quand ses pages sont ouvertes par un simple lien.
+  const bookingHost = new URL(c.booking.url).hostname;
 
   return (
     <main id="contenu">
@@ -46,19 +48,30 @@ export default async function ConfidentialitePage() {
 
           <section>
             <h2 className="text-xl font-semibold text-ink">Prise de rendez-vous en ligne</h2>
-            <p className="mt-2">
-              La prise de rendez-vous est assurée par un service tiers de réservation en ligne, chargé uniquement à
-              votre initiative (survol, clic ou approche de l&apos;agenda). Les données que vous saisissez pour
-              réserver un créneau (nom, e-mail, téléphone) sont traitées directement par ce service, selon sa propre
-              politique de confidentialité. Ce site n&apos;a accès à aucune de ces données.
-            </p>
+            {c.booking.provider === "cal" ? (
+              <p className="mt-2">
+                La prise de rendez-vous est assurée par un service tiers de réservation en ligne, chargé uniquement à
+                votre initiative (survol, clic ou approche de l&apos;agenda). Les données que vous saisissez pour
+                réserver un créneau (nom, e-mail, téléphone) sont traitées directement par ce service, selon sa propre
+                politique de confidentialité. Ce site n&apos;a accès à aucune de ces données.
+              </p>
+            ) : (
+              <p className="mt-2">
+                La prise de rendez-vous est assurée par un service tiers de réservation en ligne ({bookingHost}). Les
+                boutons « Prendre rendez-vous » ouvrent sa page de réservation : aucun de ses scripts n&apos;est chargé
+                sur ce site. Les données que vous saisissez pour réserver un créneau sont traitées directement par ce
+                service, selon sa propre politique de confidentialité. Ce site n&apos;a accès à aucune de ces données.
+              </p>
+            )}
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-ink">Mesure d&apos;audience sans cookie</h2>
             <p className="mt-2">
               Si une mesure d&apos;audience Vercel est activée en complément, elle fonctionne sans cookie et sans
-              donnée personnelle identifiable, à des fins statistiques uniquement.
+              donnée personnelle identifiable, à des fins statistiques uniquement. Elle compte aussi les clics sur les
+              boutons de prise de rendez-vous, avec le seul emplacement du bouton (en-tête, accueil, FAQ…), pour savoir
+              lesquels sont utiles.
             </p>
           </section>
 

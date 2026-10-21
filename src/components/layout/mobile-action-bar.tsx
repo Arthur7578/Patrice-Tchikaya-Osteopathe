@@ -38,7 +38,7 @@ export function MobileActionBar({ booking, phoneE164, phoneDisplay }: Props) {
       )}
     >
       <div className="flex gap-3">
-        <BookingLink booking={booking} className={cn(buttonVariants({ size: "lg" }), "flex-1")}>
+        <BookingLink booking={booking} placement="mobile-bar" className={cn(buttonVariants({ size: "lg" }), "flex-1")}>
           <CalendarDays aria-hidden="true" /> {COPY.cta.bookMobile}
         </BookingLink>
         <a

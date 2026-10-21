@@ -207,6 +207,30 @@ describe("confidentialité : section Google Tag Manager", () => {
   });
 });
 
+describe("confidentialité : prise de rendez-vous", () => {
+  const bookingSection = async () =>
+    (await renderPage(Confidentialite)).querySelectorAll("main p").map((p) => p.text.replace(/\s+/g, " ")).join(" | ");
+
+  it("Cal.com : service chargé à l'initiative du visiteur", async () => {
+    expect(await bookingSection()).toContain("chargé uniquement à votre initiative");
+  });
+
+  it("autre prestataire : nommé par son hôte, ouvert par un lien, sans script sur le site", async () => {
+    getSiteContent.mockResolvedValue({
+      ...C,
+      booking: { url: "https://www.doctena.lu/fr/rdv", provider: "generic", calLink: null, calOrigin: null },
+    });
+    const text = await bookingSection();
+    expect(text).toContain("(www.doctena.lu)");
+    expect(text).toContain("aucun de ses scripts n'est chargé");
+    expect(text).not.toContain("chargé uniquement à votre initiative");
+  });
+
+  it("signale le comptage des clics de RDV dans la mesure d'audience", async () => {
+    expect(await bookingSection()).toContain("boutons de prise de rendez-vous, avec le seul emplacement du bouton");
+  });
+});
+
 describe("mentions légales : contenu", () => {
   const paragraphs = async (c: SiteContent) => {
     getSiteContent.mockResolvedValue(c);

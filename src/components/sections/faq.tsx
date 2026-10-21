@@ -83,7 +83,7 @@ export function Faq({ content }: { content: SiteContent }) {
                 {contact.phoneDisplay}
               </a>
             </div>
-            <BookingLink booking={booking} className={cn(buttonVariants({ variant: "secondary" }), "w-full")}>
+            <BookingLink booking={booking} placement="faq" className={cn(buttonVariants({ variant: "secondary" }), "w-full")}>
               {COPY.cta.bookShort}
             </BookingLink>
           </div>
