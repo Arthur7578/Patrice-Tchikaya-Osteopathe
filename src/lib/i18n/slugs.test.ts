@@ -54,6 +54,19 @@ describe("resolveSlugs", () => {
     expect(store.list).toHaveBeenCalledWith(); // lecture en cache seulement
   });
 
+  it("lecture en cache périmée : relecture sans cache avant de créer, aucun doublon si un autre processus a déjà enregistré", async () => {
+    const existing: SlugRecord[] = [
+      { ...SPORT, locale: "de", slug: "deja-de", createdAt: 1 },
+      { ...SPORT, locale: "en", slug: "deja-en", createdAt: 1 },
+    ];
+    const store: SlugStore = { list: vi.fn(async (o?: { fresh?: boolean }) => (o?.fresh ? existing : [])), create: vi.fn() };
+    translate.mockClear();
+    const map = await resolveSlugs({ ...base, pages: [SPORT], store });
+    expect(map.get(SPORT.frSlug)!.slugs).toEqual({ fr: SPORT.frSlug, de: "deja-de", en: "deja-en" });
+    expect(store.create).not.toHaveBeenCalled();
+    expect(translate).not.toHaveBeenCalled();
+  });
+
   it("nouvelle langue : seuls les slugs manquants sont traduits", async () => {
     const { store } = memoryStore([{ ...SPORT, locale: "de", slug: "sport-de", createdAt: 1 }]);
     translate.mockClear();
