@@ -74,8 +74,8 @@ describe("decideLocaleRoute", () => {
     expect(decideLocaleRoute(req("/paiement", headers, extra), enabled).type).toBe("rewrite");
   });
 
-  it("page juridique (français seulement) : jamais redirigée", () => {
-    expect(decideLocaleRoute(req("/mentions-legales", { ...CHROME, "accept-language": "en" }), ALL).type).toBe("rewrite");
+  it("page juridique : redirigée comme les autres (elle existe dans chaque langue)", () => {
+    expect(decideLocaleRoute(req("/mentions-legales", { ...CHROME, "accept-language": "en" }), ALL)).toEqual({ type: "redirect", location: "/en/mentions-legales", status: 307 });
   });
 
   it("une langue choisie auparavant (cookie) l'emporte sur le navigateur, si elle est publiée", () => {

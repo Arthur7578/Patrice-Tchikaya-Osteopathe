@@ -35,14 +35,19 @@ describe("composants dans une autre langue", () => {
     expect(render(<SiteHeader content={C} />).querySelector("summary")?.getAttribute("aria-label")).toBe("Langue du site");
   });
 
-  it("pied de page : pages juridiques en français annoncées, aucune mention de traduction automatique", () => {
+  it("pied de page : liens vers les pages de la langue (juridiques comprises), aucune mention de traduction", () => {
     const root = render(<SiteFooter content={EN} />);
-    const text = visibleText(root);
-    expect(text).not.toMatch(/translated/i);
-    expect(text).toContain("Legal notice (in French)");
-    expect(root.querySelector('a[href="/mentions-legales"]')?.getAttribute("hreflang")).toBe("fr");
-    expect(hrefs(root)).toEqual(expect.arrayContaining(["/en/paiement", "/en#faq"]));
-    expect(visibleText(render(<SiteFooter content={C} />))).not.toContain("(en français)");
+    expect(visibleText(root)).not.toMatch(/translated/i);
+    expect(hrefs(root)).toEqual(expect.arrayContaining(["/en/paiement", "/en#faq", "/en/mentions-legales", "/en/confidentialite"]));
+    expect(visibleText(root)).toContain("Legal notice");
+  });
+
+  it("avis : mention « Translated » sous un avis traduit, rien sous un avis laissé tel quel", () => {
+    const [first, second] = C.reviews;
+    const root = render(<Reviews content={{ ...EN, reviews: [{ ...first!, text: "Great osteopath!", translated: true }, second!] }} />);
+    const captions = root.querySelectorAll("figcaption").map((f) => f.text);
+    expect(captions[0]).toContain("Translated");
+    expect(captions[1]).not.toContain("Translated");
   });
 
   it("sections de l'accueil : nombres au format anglais, liens vers les pages de la langue", () => {

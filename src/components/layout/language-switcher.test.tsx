@@ -32,10 +32,12 @@ describe("LanguageSwitcher", () => {
     expect(screen.getByRole("link", { name: "Français" })).not.toHaveAttribute("aria-current");
   });
 
-  it("page juridique (français seulement) : les autres langues mènent à leur accueil", () => {
+  it("page juridique : même page dans chaque langue", () => {
     window.history.replaceState(null, "", "/mentions-legales");
     render(<LanguageSwitcher current="fr" options={OPTIONS} label="Langue du site" />);
-    expect(hrefs()).toEqual({ Français: "/", Deutsch: "/de", English: "/en", Lëtzebuergesch: "/lb", Português: "/pt" });
+    expect(hrefs()).toEqual({
+      Français: "/mentions-legales", Deutsch: "/de/mentions-legales", English: "/en/mentions-legales", Lëtzebuergesch: "/lb/mentions-legales", Português: "/pt/mentions-legales",
+    });
   });
 
   it("variante « inline » (menu mobile) : liste nommée, mêmes liens", () => {

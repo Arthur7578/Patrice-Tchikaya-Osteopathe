@@ -68,6 +68,7 @@ export const COPY_FR = {
     listLabel: "Avis patients", // liste défilante des avis (zone focalisable)
     seeAll: "Voir tous les avis sur Google",
     leaveReview: "Laisser un avis",
+    translated: "Traduit", // sous un avis traduit dans la langue de la page (jamais affiché en français)
   },
   faq: {
     eyebrow: "FAQ",
@@ -156,10 +157,47 @@ export const COPY_FR = {
     home: "Page d'accueil",
   },
   newTab: "(nouvel onglet)",
-  // Sélecteur de langue (header) ; mention des pages juridiques, en français seulement (vide en français).
-  languages: {
-    label: "Langue du site",
-    frenchOnly: "",
+  // Sélecteur de langue (header).
+  languages: { label: "Langue du site" },
+  // Pages juridiques : les données du cabinet viennent de Notion ; sans elles, textes d'attente (LEGAL_PLACEHOLDERS).
+  legalNotice: {
+    title: "Mentions légales",
+    metaDescription: (name: string, title: string, city: string) => `Mentions légales du site de ${name}, ${title} à ${city}.`,
+    publisher: "Éditeur du site",
+    phone: "Téléphone :",
+    email: "E-mail :",
+    regulated: "Profession réglementée",
+    regulatedText: (name: string) =>
+      `L'ostéopathie est une profession de santé réglementée au Grand-Duché de Luxembourg, inscrite sur la liste des professions de santé fixée par la loi modifiée du 26 mars 1992 sur l'exercice et la revalorisation de certaines professions de santé (ajout opéré par la loi du 21 août 2018). ${name} exerce sous autorisation d'exercer délivrée par le ministre de la Santé du Luxembourg et figure au registre professionnel tenu par ce ministère.`,
+    authorization: "Numéro d'autorisation d'exercer :",
+    education: "École et année du diplôme :",
+    vat: "Numéro de TVA / immatriculation :",
+    hosting: "Hébergement",
+    hostingText: "Ce site est hébergé par Vercel Inc. — adresse et informations légales disponibles sur",
+    credits: "Crédits",
+    creditsText: (name: string) => `Conception et développement : ${name}. Photographies : droits réservés`,
+    translationNote: "", // vide en français : version de référence
+  },
+  privacy: {
+    title: "Confidentialité",
+    metaDescription: (name: string, title: string, city: string) =>
+      `Politique de confidentialité du site de ${name}, ${title} à ${city}.`,
+    collected: "Données collectées par ce site",
+    collectedText: "Ce site ne comporte aucun formulaire. Il ne dépose aucun cookie sans votre accord explicite.",
+    gtm: "Google Tag Manager (avec votre accord)",
+    gtmText:
+      "Ce site utilise Google Tag Manager, chargé uniquement si vous l'acceptez via la bannière affichée lors de votre première visite. Tant que vous n'avez pas donné votre accord (ou si vous le refusez), aucun cookie lié à cet outil n'est déposé et aucun script correspondant n'est chargé.",
+    gtmChoice: `Vous pouvez revenir sur votre choix à tout moment via le lien « ${MANAGE_COOKIES} » en pied de page, qui rouvre la bannière de consentement.`,
+    booking: "Prise de rendez-vous en ligne",
+    bookingText:
+      "La prise de rendez-vous est assurée par un service tiers de réservation en ligne, chargé uniquement à votre initiative (survol, clic ou approche de l'agenda). Les données que vous saisissez pour réserver un créneau (nom, e-mail, téléphone) sont traitées directement par ce service, selon sa propre politique de confidentialité. Ce site n'a accès à aucune de ces données.",
+    audience: "Mesure d'audience sans cookie",
+    audienceText:
+      "Si une mesure d'audience Vercel est activée en complément, elle fonctionne sans cookie et sans donnée personnelle identifiable, à des fins statistiques uniquement.",
+    rights: "Vos droits",
+    rightsText: (name: string, phone: string) =>
+      `Conformément au Règlement général sur la protection des données (RGPD), vous disposez d'un droit d'accès, de rectification, d'effacement et d'opposition sur vos données personnelles. Pour toute question, vous pouvez contacter ${name} au ${phone}.`,
+    authority: "Autorité de contrôle compétente au Luxembourg : Commission nationale pour la protection des données (CNPD).",
   },
   // Métadonnées et données structurées (le contenu vient de Notion ; ici, les formulations par défaut).
   meta: {
@@ -175,6 +213,18 @@ export const COPY_FR = {
 };
 
 export type UiCopy = typeof COPY_FR;
+
+/**
+ * Textes d'attente des pages juridiques, tant que la donnée manque dans Notion : consignes pour le cabinet, en
+ * français dans toutes les langues (seo:smoke les signale sur chaque page du sitemap).
+ */
+export const LEGAL_PLACEHOLDERS = {
+  email: "[À COMPLÉTER : adresse e-mail professionnelle — champ Notion Email_Contact]",
+  authorization: "[À COMPLÉTER — champ Notion Numero_Autorisation_Exercer ; délivré par le ministère de la Santé]",
+  education: "[À COMPLÉTER — champ Notion Formation, base Section A_Propos]",
+  vat: "[À COMPLÉTER — champ Notion Statut_TVA ; les soins de santé sont en général exonérés de TVA (art. 44 de la loi TVA), à confirmer avec votre comptable]",
+  photos: "[À COMPLÉTER si une source externe est utilisée]",
+};
 
 const COPIES: Record<Locale, UiCopy> = { fr: COPY_FR, de: COPY_DE, en: COPY_EN, lb: COPY_LB, pt: COPY_PT };
 

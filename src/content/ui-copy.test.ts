@@ -22,7 +22,7 @@ describe("textes d'interface : chaque langue", () => {
     const copy = leaves(getCopy(locale));
     expect(copy.map(([path]) => path)).toEqual(fr.map(([path]) => path));
     // Seuls ces textes peuvent rester vides (mentions propres aux pages traduites) ; en français, ils le sont.
-    const optional = new Set(["languages.frenchOnly"]);
+    const optional = new Set(["legalNotice.translationNote"]);
     for (const [path, value] of copy) {
       if (!optional.has(path)) expect(String(value).trim(), `${locale} ${path}`).not.toBe("");
     }
@@ -46,10 +46,11 @@ describe("textes d'interface : chaque langue", () => {
     expect(getCopy("pt").reviews.ratingCount(3)).toBe("3 opiniões");
   });
 
-  it("pages juridiques en français seulement : signalé dans les autres langues, pas en français", () => {
-    expect(COPY_FR.languages.frenchOnly).toBe("");
-    for (const locale of ["de", "en", "lb", "pt"] as const) expect(getCopy(locale).languages.frenchOnly, locale).not.toBe("");
+  it("pages juridiques : les traductions précisent que la version française fait foi ; pas le français", () => {
+    expect(COPY_FR.legalNotice.translationNote).toBe("");
+    for (const locale of ["de", "en", "lb", "pt"] as const) expect(getCopy(locale).legalNotice.translationNote, locale).not.toBe("");
   });
+
 });
 
 describe("liens de navigation", () => {

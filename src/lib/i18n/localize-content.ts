@@ -11,7 +11,9 @@ import { markupToRichText, richTextToMarkup } from "./rich-text";
 export type TranslationGroups = Record<string, Record<string, string>>;
 
 /** Lot d'un champ hors pages détaillées, d'après le début de sa clé ; le reste va dans « general ». */
-const GROUPS: Record<string, string> = { faq: "faq", about: "about", payment: "payment", paymentPage: "payment", motif: "cards", guide: "cards" };
+const GROUPS: Record<string, string> = {
+  faq: "faq", about: "about", payment: "payment", paymentPage: "payment", motif: "cards", guide: "cards", reviews: "reviews",
+};
 const groupOf = (key: string) => GROUPS[key.split(".")[0]!] ?? "general";
 
 /** (lot, clé, texte français) → texte affiché. */
@@ -19,8 +21,8 @@ type Visit = (group: string, key: string, text: string) => string;
 
 /**
  * Seuls les champs listés ici sont traduits. Ne le sont jamais : noms propres (praticien, auteurs d'avis), adresse
- * postale et ville (recherchées telles quelles : « Dudelange »), téléphones, URL, slugs, icônes, avis patients
- * (citations : on ne met pas de mots traduits dans la bouche d'un patient), données juridiques (pages en français).
+ * postale et ville (recherchées telles quelles : « Dudelange »), téléphones, URL, slugs, icônes, données juridiques
+ * (pages juridiques traduites avec le code). Les avis patients sont traduits et marqués `translated` (mention affichée).
  */
 function mapContent(c: SiteContent, visit: Visit): SiteContent {
   const s = (key: string, text: string) => (text.trim() ? visit(groupOf(key), key, text) : text);
@@ -102,6 +104,10 @@ function mapContent(c: SiteContent, visit: Visit): SiteContent {
     },
     motifs: c.motifs.map((m) => entry("motif", m)),
     guides: c.guides.map((g) => entry("guide", g)),
+    reviews: c.reviews.map((r, i) => {
+      const text = s(`reviews.${i}`, r.text);
+      return text === r.text ? r : { ...r, text, translated: true as const };
+    }),
     faq: c.faq.map((f, i) => ({ question: s(`faq.${i}.q`, f.question), answer: s(`faq.${i}.a`, f.answer) })),
     images: {
       hero: { ...c.images.hero, alt: s("images.hero.alt", c.images.hero.alt) },

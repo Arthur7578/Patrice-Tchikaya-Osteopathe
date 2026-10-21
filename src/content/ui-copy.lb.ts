@@ -58,6 +58,7 @@ export const COPY_LB: UiCopy = {
     listLabel: "Patientebewäertungen",
     seeAll: "All d'Bewäertungen op Google",
     leaveReview: "Eng Bewäertung schreiwen",
+    translated: "Iwwersat",
   },
   faq: {
     eyebrow: "FAQ",
@@ -134,9 +135,44 @@ export const COPY_LB: UiCopy = {
     home: "Startsäit",
   },
   newTab: "(neien Tab)",
-  languages: {
-    label: "Sprooch vun der Websäit",
-    frenchOnly: "(op Franséisch)",
+  languages: { label: "Sprooch vun der Websäit" },
+  legalNotice: {
+    title: "Impressum",
+    metaDescription: (name, title, city) => `Impressum vun der Websäit vum ${name}, ${title} zu ${city}.`,
+    publisher: "Editeur vun der Websäit",
+    phone: "Telefon:",
+    email: "E-Mail:",
+    regulated: "Reglementéierte Beruff",
+    regulatedText: (name) =>
+      `D'Osteopathie ass am Groussherzogtum Lëtzebuerg e reglementéierte Gesondheetsberuff. Si steet op der Lëscht vun de Gesondheetsberuffer, déi duerch dat geännert Gesetz vum 26. Mäerz 1992 iwwer d'Ausübung an d'Opwäertung vu bestëmmte Gesondheetsberuffer festgeluecht ass (derbäigesat duerch d'Gesetz vum 21. August 2018). ${name} schafft mat enger Autorisatioun, déi de lëtzebuergesche Gesondheetsminister ausgestallt huet, a steet am Beruffsregister vun dësem Ministère.`,
+    authorization: "Nummer vun der Autorisatioun:",
+    education: "Schoul a Joer vum Diplom:",
+    vat: "TVA- / Immatrikulatiounsnummer:",
+    hosting: "Hosting",
+    hostingText: "Dës Websäit gëtt vu Vercel Inc. gehost — Adress a juristesch Informatiounen op",
+    credits: "Credits",
+    creditsText: (name) => `Konzeptioun an Entwécklung: ${name}. Fotoen: all Rechter reservéiert`,
+    translationNote: "Iwwersetzung vun der franséischer Versioun; am Zweiwelsfall ass déi franséisch Versioun bindend.",
+  },
+  privacy: {
+    title: "Dateschutz",
+    metaDescription: (name, title, city) => `Dateschutzerklärung vun der Websäit vum ${name}, ${title} zu ${city}.`,
+    collected: "Donnéeën, déi dës Websäit sammelt",
+    collectedText: "Dës Websäit huet kee Formulaire. Si setzt keng Cookien ouni Är ausdrécklech Zoustëmmung.",
+    gtm: "Google Tag Manager (mat Ärer Zoustëmmung)",
+    gtmText:
+      "Dës Websäit benotzt Google Tag Manager, deen nëmme gelueden gëtt, wann Dir en iwwer de Banner bei Ärem éischte Besuch akzeptéiert. Soulaang Dir net zougestëmmt hutt (oder wann Dir refuséiert), gëtt keen Cookie vun dësem Tool gesat a keen dozougehéierege Script gelueden.",
+    gtmChoice: "Dir kënnt Är Wiel zu all Moment iwwer de Link „Cookien astellen“ ënnen op der Säit änneren; en mécht de Banner fir d'Zoustëmmung nees op.",
+    booking: "Rendez-vous online",
+    bookingText:
+      "D'Rendez-vousen ginn iwwer en externe Service fir online Reservatiounen geholl, deen nëmmen op Är Initiativ gelueden gëtt (mat der Maus driwwer goen, klicken oder no beim Agenda scrollen). D'Donnéeën, déi Dir fir eng Reservatioun agitt (Numm, E-Mail, Telefon), ginn direkt vun dësem Service veraarbecht, no senger eegener Dateschutzerklärung. Dës Websäit huet keen Zougang zu dësen Donnéeën.",
+    audience: "Publikumsmoossung ouni Cookien",
+    audienceText:
+      "Wann zousätzlech eng Publikumsmoossung vu Vercel aktivéiert ass, fonctionnéiert se ouni Cookien an ouni identifizéierbar perséinlech Donnéeën, nëmme fir statistesch Zwecker.",
+    rights: "Är Rechter",
+    rightsText: (name, phone) =>
+      `No der Datenschutz-Grondveruerdnung (DSGVO) hutt Dir d'Recht op Zougang, Korrektur, Läschen an Oppositioun wat Är perséinlech Donnéeën ugeet. Fir all Fro erreecht Dir ${name} um ${phone}.`,
+    authority: "Zoustänneg Kontrollautoritéit zu Lëtzebuerg: Commission nationale pour la protection des données (CNPD).",
   },
   meta: {
     homeTitle: (city, name) => `Osteopath zu ${city} – ${name}, D.O.`,

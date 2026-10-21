@@ -8,7 +8,7 @@ export const revalidate = 3600;
 
 /**
  * Une entrée par page et par langue publiée, chacune avec ses équivalents (hreflang, dont x-default = français) :
- * c'est ainsi que Google montre à chacun la version dans sa langue. Pages juridiques : français seulement.
+ * c'est ainsi que Google montre à chacun la version dans sa langue.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const pages = publishedPages(await getSiteContent());
@@ -23,6 +23,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // /articles liste ces pages : sa date est celle de la plus récente (absente s'il n'y a rien à lister).
     ...(newest ? [{ path: "/articles", lastModified: newest }] : []),
     { path: "/paiement" },
+    { path: "/mentions-legales" },
+    { path: "/confidentialite" },
   ];
   const url = (locale: (typeof ENABLED_LOCALES)[number], path: string) => `${SITE_URL}${localePath(locale, path)}`;
   return [
@@ -42,7 +44,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           : {}),
       })),
     ),
-    { url: `${SITE_URL}/mentions-legales` },
-    { url: `${SITE_URL}/confidentialite` },
   ];
 }

@@ -8,18 +8,29 @@ export const FORBIDDEN_TITLES = /médecin|\bDr\b|\bdoctors?\b|\bphysicians?\b|\b
 const PT_DETERMINERS = "o|a|os|as|um|uma|uns|umas|seu|sua|seus|suas|meu|minha|teu|tua|ao|à|aos|às|do|da|dos|das|no|na|nos|nas|pelo|pela|outro|outra";
 
 /**
+ * Spécialités médicales en français : l'allemand les traduit souvent par un composé en « -arzt » (« généraliste » →
+ * « Hausarzt », « pédiatre » → « Kinderarzt », « dentiste » → « Zahnarzt ») ; elles comptent donc comme un médecin.
+ */
+const FRENCH_SPECIALISTS =
+  "généralistes?|spécialistes?|pédiatres?|gynécologues?|dentistes?|rhumatologues?|orthopédistes?|chirurgiens?|neurologues?|cardiologues?|radiologues?|ophtalmologues?|ophtalmologistes?|dermatologues?|psychiatres?|urgentistes?|anesthésistes?";
+
+/**
  * Mentions d'un médecin (la profession) dans les 5 langues du site : « médecin », « docteur », « Dr », « doctor »,
- * « physician », « Arzt » (et « Hausarzt », « Arztpraxis », « Ärztin »…), « Doktor », « Dokter », « doutor », « um médico ».
- * Les adjectifs (« ärztliche Verordnung », « acompanhamento médico ») ne comptent pas.
+ * « physician », « Arzt » (et « Hausarzt », « Arztpraxis », « Ärztin »…), « Doktor », « Dokter », « doutor », « um médico »,
+ * et les spécialités en français (FRENCH_SPECIALISTS). Les adjectifs (« ärztliche Verordnung », « acompanhamento médico »)
+ * ne comptent pas.
  */
 const DOCTOR_MENTION = new RegExp(
-  `(?<!\\p{L})(?:médecins?|docteurs?|doctoresses?|dre?|drs|doctors?|physicians?|\\p{L}*arzt\\p{L}*|\\p{L}*ärzt(?:in|innen|e|en)|doktor(?:in|innen|en)?|\\p{L}*dokter(?:en|in|inne)?|doktesch|doutor(?:a|es|as)?|dra)(?!\\p{L})` +
+  `(?<!\\p{L})(?:${FRENCH_SPECIALISTS}|médecins?|docteurs?|doctoresses?|dre?|drs|doctors?|physicians?|\\p{L}*arzt\\p{L}*|\\p{L}*ärzt(?:in|innen|e|en)|doktor(?:in|innen|en)?|\\p{L}*dokter(?:en|in|inne)?|doktesch|doutor(?:a|es|as)?|dra)(?!\\p{L})` +
     `|(?<=(?<!\\p{L})(?:${PT_DETERMINERS})\\s+)médic[oa]s?(?!\\p{L})`,
   "giu",
 );
 
-/** Nombre de mentions d'un médecin dans un texte (voir DOCTOR_MENTION). */
-export const countDoctorMentions = (text: string) => text.match(DOCTOR_MENTION)?.length ?? 0;
+/** Mentions d'un médecin dans un texte, dans l'ordre (voir DOCTOR_MENTION). */
+export const doctorMentions = (text: string): string[] => text.match(DOCTOR_MENTION) ?? [];
+
+/** Nombre de mentions d'un médecin dans un texte. */
+export const countDoctorMentions = (text: string) => doctorMentions(text).length;
 
 /** Titres ; le point n'est permis qu'après une abréviation (« Dr. Tchikaya », mais « … a doctor. Patrice … » est permis). */
 const TITLES = "(?:dr|dre|dra)\\.?|docteur|doctor|doktor|dokter|doutor|doutora";

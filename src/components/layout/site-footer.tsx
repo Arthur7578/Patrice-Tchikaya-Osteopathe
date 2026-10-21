@@ -85,16 +85,13 @@ export function SiteFooter({ content }: Props) {
                 </Link>
               </li>
               <li>
-                {/* Pages juridiques en français seulement (texte propre à la page, non traduit) : signalé dans les autres langues. */}
-                <Link href="/mentions-legales" hrefLang="fr" className="text-sage-100/80 hover:text-white hover:underline">
+                <Link href={localePath(locale, "/mentions-legales")} className="text-sage-100/80 hover:text-white hover:underline">
                   {copy.footer.legal}
-                  {copy.languages.frenchOnly && ` ${copy.languages.frenchOnly}`}
                 </Link>
               </li>
               <li>
-                <Link href="/confidentialite" hrefLang="fr" className="text-sage-100/80 hover:text-white hover:underline">
+                <Link href={localePath(locale, "/confidentialite")} className="text-sage-100/80 hover:text-white hover:underline">
                   {copy.footer.privacy}
-                  {copy.languages.frenchOnly && ` ${copy.languages.frenchOnly}`}
                 </Link>
               </li>
               {gtmEnabled && (

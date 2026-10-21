@@ -35,17 +35,18 @@ describe("collectTranslatable", () => {
 
   it("un lot par thème et un lot par page détaillée (modifier une page ne fait retraduire qu'elle)", () => {
     expect(Object.keys(groups).sort()).toEqual(
-      ["about", "cards", "faq", "general", "page:guide", "payment", ...C.motifs.filter((m) => m.page).map((m) => `page:${m.slug}`)].sort(),
+      ["about", "cards", "faq", "general", "page:guide", "payment", "reviews", ...C.motifs.filter((m) => m.page).map((m) => `page:${m.slug}`)].sort(),
     );
   });
 
-  it("contient les textes éditoriaux, jamais les noms propres, coordonnées, URL, slugs ni avis patients", () => {
+  it("contient les textes éditoriaux et les avis, jamais les noms propres, coordonnées, URL ni slugs", () => {
     const all = Object.values(groups).flatMap((batch) => Object.values(batch)).join("\n");
     expect(groups.general!["seo.h1"]).toBe(C.seo.h1);
     expect(groups.faq!["faq.0.q"]).toBe(C.faq[0]!.question);
     expect(groups["page:guide"]!["0"]).toBe('Voir <a n="0">le dos</a> ou <a n="1">ce site</a>');
     expect(groups["page:guide"]!["2.alt"]).toBe("Texte alternatif");
-    for (const value of [C.practitioner.name, C.contact.phoneDisplay, C.contact.street, C.booking.url, "/mal-de-dos", ...C.reviews.map((r) => r.text)]) {
+    expect(Object.values(groups.reviews!)).toEqual(C.reviews.map((r) => r.text));
+    for (const value of [C.practitioner.name, C.contact.phoneDisplay, C.contact.street, C.booking.url, "/mal-de-dos", ...C.reviews.map((r) => r.author)]) {
       expect(all.split("\n"), value).not.toContain(value);
     }
   });
@@ -68,7 +69,7 @@ describe("applyTranslations", () => {
     expect(out.images.hero.alt).toBe(`[EN]${C.images.hero.alt}`);
     expect(out.practitioner.name).toBe(C.practitioner.name);
     expect(out.contact).toEqual({ ...C.contact, countryName: `[EN]${C.contact.countryName}` });
-    expect(out.reviews).toEqual(C.reviews);
+    expect(out.reviews).toEqual(C.reviews.map((r) => ({ ...r, text: `[EN]${r.text}`, translated: true })));
     expect(out.motifs.map((m) => m.slug)).toEqual(C.motifs.map((m) => m.slug));
   });
 
@@ -85,6 +86,14 @@ describe("applyTranslations", () => {
 
   it("traduction absente : le français reste (jamais de texte vide)", () => {
     expect(applyTranslations(source, "en", {}).seo.h1).toBe(C.seo.h1);
+  });
+
+  it("avis déjà dans la langue de la page (texte rendu inchangé) : pas de mention « traduit »", () => {
+    const translations = fakeTranslate(collectTranslatable(source));
+    translations.reviews!["reviews.0"] = C.reviews[0]!.text;
+    const out = applyTranslations(source, "en", translations);
+    expect(out.reviews[0]).toEqual(C.reviews[0]);
+    expect(out.reviews[1]!.translated).toBe(true);
   });
 
   it("balisage abîmé par la traduction : texte brut sans balises plutôt que rien", () => {

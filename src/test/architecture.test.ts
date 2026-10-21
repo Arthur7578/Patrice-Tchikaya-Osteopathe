@@ -31,8 +31,6 @@ const CODE_ELEMENTS = new Set(["style", "script", "Script"]);
 /** Règle 2 : fichiers autorisés à contenir du texte en dur, avec la raison. */
 const HARDCODED_TEXT_ALLOWED = [
   "src/app/(admin)/admin/photos/page.tsx", // outil interne temporaire, jamais vu des patients
-  "src/app/[locale]/confidentialite/page.tsx", // texte juridique propre à la page (PLAN §J), en français seulement
-  "src/app/[locale]/mentions-legales/page.tsx", // idem
   "src/app/apple-icon.tsx", // monogramme « PT » de l'icône, comme icon.svg
 ];
 

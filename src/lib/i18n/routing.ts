@@ -3,9 +3,6 @@ import { DEFAULT_LOCALE, isLocale, localePath, splitLocalePath, type Locale } fr
 /** Cookie du choix de langue : posé quand le visiteur change de langue avec le sélecteur, respecté ensuite. */
 export const LOCALE_COOKIE = "locale";
 
-/** Pages qui n'existent qu'en français (texte juridique) : jamais de redirection vers une autre langue. */
-export const FRENCH_ONLY_PATHS: ReadonlySet<string> = new Set(["/mentions-legales", "/confidentialite"]);
-
 /** Robots et outils d'aperçu : toujours la page demandée, jamais de redirection selon la langue. */
 const BOT = /bot|crawl|spider|slurp|facebookexternalhit|whatsapp|embedly|preview|lighthouse|headless|axe-core/i;
 
@@ -50,8 +47,7 @@ export type ProxyDecision =
  * - à l'ENTRÉE sur le site (lien externe, favori, adresse tapée) sur une page française, un visiteur dont le
  *   navigateur préfère une autre langue publiée (ou qui l'a déjà choisie : cookie) est redirigé (307) vers sa
  *   langue. Jamais pour un robot (Googlebot n'envoie pas d'Accept-Language : il indexe chaque langue via hreflang),
- *   jamais en navigation interne (le visiteur qui clique sur « Français » reste en français), jamais sur les pages
- *   juridiques (uniquement en français) ;
+ *   jamais en navigation interne (le visiteur qui clique sur « Français » reste en français) ;
  * - changer de langue avec le sélecteur (navigation interne vers une autre langue) mémorise le choix (cookie).
  */
 export function decideLocaleRoute(req: ProxyRequest, enabled: readonly Locale[]): ProxyDecision {
@@ -76,7 +72,7 @@ export function decideLocaleRoute(req: ProxyRequest, enabled: readonly Locale[])
   const isPage = req.method === "GET" || req.method === "HEAD";
   const entering = !isSameOrigin(req);
   const ua = req.headers.get("user-agent") ?? "";
-  if (isPage && entering && !BOT.test(ua) && !FRENCH_ONLY_PATHS.has(path)) {
+  if (isPage && entering && !BOT.test(ua)) {
     const remembered = req.cookie && isLocale(req.cookie) && enabled.includes(req.cookie) ? req.cookie : null;
     const target = remembered ?? preferredLocale(req.headers.get("accept-language"), enabled);
     if (target && target !== DEFAULT_LOCALE) return { type: "redirect", location: `${localePath(target, path)}${search}`, status: 307 };

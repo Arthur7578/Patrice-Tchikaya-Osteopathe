@@ -55,6 +55,7 @@ export const COPY_PT: UiCopy = {
     listLabel: "Opiniões de pacientes",
     seeAll: "Ver todas as opiniões no Google",
     leaveReview: "Deixar uma opinião",
+    translated: "Traduzido",
   },
   faq: {
     eyebrow: "FAQ",
@@ -131,9 +132,44 @@ export const COPY_PT: UiCopy = {
     home: "Página inicial",
   },
   newTab: "(novo separador)",
-  languages: {
-    label: "Língua do site",
-    frenchOnly: "(em francês)",
+  languages: { label: "Língua do site" },
+  legalNotice: {
+    title: "Informações legais",
+    metaDescription: (name, title, city) => `Informações legais do site de ${name}, ${title} em ${city}.`,
+    publisher: "Editor do site",
+    phone: "Telefone:",
+    email: "E-mail:",
+    regulated: "Profissão regulamentada",
+    regulatedText: (name) =>
+      `A osteopatia é uma profissão de saúde regulamentada no Grão-Ducado do Luxemburgo, incluída na lista das profissões de saúde fixada pela lei alterada de 26 de março de 1992 relativa ao exercício e à valorização de certas profissões de saúde (aditamento introduzido pela lei de 21 de agosto de 2018). ${name} exerce ao abrigo de uma autorização de exercício emitida pelo ministro da Saúde do Luxemburgo e consta do registo profissional mantido por esse ministério.`,
+    authorization: "Número da autorização de exercício:",
+    education: "Escola e ano do diploma:",
+    vat: "Número de IVA / registo:",
+    hosting: "Alojamento",
+    hostingText: "Este site está alojado pela Vercel Inc. — morada e informações legais disponíveis em",
+    credits: "Créditos",
+    creditsText: (name) => `Conceção e desenvolvimento: ${name}. Fotografias: todos os direitos reservados`,
+    translationNote: "Tradução da versão francesa, que prevalece em caso de divergência.",
+  },
+  privacy: {
+    title: "Privacidade",
+    metaDescription: (name, title, city) => `Política de privacidade do site de ${name}, ${title} em ${city}.`,
+    collected: "Dados recolhidos por este site",
+    collectedText: "Este site não tem nenhum formulário. Não instala nenhum cookie sem o seu consentimento expresso.",
+    gtm: "Google Tag Manager (com o seu consentimento)",
+    gtmText:
+      "Este site utiliza o Google Tag Manager, carregado apenas se o aceitar através da faixa apresentada na sua primeira visita. Enquanto não der o seu consentimento (ou se o recusar), nenhum cookie relacionado com esta ferramenta é instalado e nenhum script correspondente é carregado.",
+    gtmChoice: "Pode alterar a sua escolha a qualquer momento através da ligação «Gerir cookies» no fundo da página, que volta a abrir a faixa de consentimento.",
+    booking: "Marcação online",
+    bookingText:
+      "As marcações são feitas através de um serviço externo de reservas online, carregado apenas por sua iniciativa (passar o rato, clicar ou aproximar-se da agenda). Os dados que introduz para reservar um horário (nome, e-mail, telefone) são tratados diretamente por esse serviço, segundo a sua própria política de privacidade. Este site não tem acesso a nenhum desses dados.",
+    audience: "Medição de audiência sem cookies",
+    audienceText:
+      "Se uma medição de audiência da Vercel estiver também ativada, funciona sem cookies e sem dados pessoais identificáveis, apenas para fins estatísticos.",
+    rights: "Os seus direitos",
+    rightsText: (name, phone) =>
+      `Nos termos do Regulamento Geral sobre a Proteção de Dados (RGPD), tem o direito de acesso, retificação, apagamento e oposição relativamente aos seus dados pessoais. Para qualquer questão, pode contactar ${name} através do ${phone}.`,
+    authority: "Autoridade de controlo competente no Luxemburgo: Commission nationale pour la protection des données (CNPD).",
   },
   meta: {
     homeTitle: (city, name) => `Osteopata em ${city} – ${name}, D.O.`,

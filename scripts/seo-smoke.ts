@@ -3,7 +3,7 @@
  * Usage : npm run build && npm start   puis   npm run seo:smoke [-- http://localhost:3000]
  */
 import { parse } from "node-html-parser";
-import { LOCALE_META, isLocale } from "@/config/i18n";
+import { LOCALE_META, isLocale, splitLocalePath } from "@/config/i18n";
 import { FALLBACK_CONTENT } from "@/lib/content/fallback";
 import { localizeBooking } from "@/lib/i18n/localize-content";
 import { createNotionClient } from "@/lib/notion/client";
@@ -150,7 +150,10 @@ async function main() {
   }
   // Textes d'attente encore visibles (« [À COMPLÉTER …] ») sur chaque page du sitemap : critère de mise en ligne
   // du plan (§J). Signalés sans faire échouer : seules des données du cabinet peuvent les remplacer.
-  const sitemapPaths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
+  // Pages françaises seulement : les textes d'attente sont les mêmes (en français) dans toutes les langues.
+  const sitemapPaths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)]
+    .map((m) => new URL(m[1]).pathname)
+    .filter((path) => splitLocalePath(path).locale === "fr");
   for (const path of sitemapPaths) {
     const text = parse(await (await fetch(`${base}${path}`)).text()).querySelector("main")?.text ?? "";
     for (const placeholder of text.match(/\[[^\]]*(?:à compléter|à valider|mettre le)[^\]]*\]/gi) ?? []) {

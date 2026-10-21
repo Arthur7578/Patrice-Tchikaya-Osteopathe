@@ -55,6 +55,7 @@ export function Reviews({ content }: { content: SiteContent }) {
                 {formatReviewDate(review.date, content.locale) && <> · {formatReviewDate(review.date, content.locale)}</>}
                 {" · "}
                 {copy.reviews.source}
+                {review.translated && <> · {copy.reviews.translated}</>}
               </figcaption>
             </figure>
           </Reveal>

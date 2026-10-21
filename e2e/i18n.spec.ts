@@ -24,12 +24,11 @@ test.describe("langues", () => {
     }
   });
 
-  test("sitemap : chaque page traduisible dans les 5 langues, pages juridiques en français seulement", async ({ request }) => {
+  test("sitemap : chaque page dans les 5 langues", async ({ request }) => {
     const paths = await sitemapPaths(request);
-    for (const path of ["/paiement", "/articles"]) {
+    for (const path of ["/paiement", "/articles", "/mentions-legales", "/confidentialite"]) {
       expect(paths).toEqual(expect.arrayContaining([path, `/de${path}`, `/en${path}`, `/lb${path}`, `/pt${path}`]));
     }
-    expect(paths.filter((p) => p.endsWith("/mentions-legales"))).toEqual(["/mentions-legales"]);
   });
 
   test("/fr/… redirige vers l'adresse sans préfixe (une seule URL par page)", async ({ request }) => {
@@ -38,11 +37,13 @@ test.describe("langues", () => {
     expect(res.headers().location).toBe("/paiement");
   });
 
-  test("pages juridiques : 404 dans les autres langues, lien « (in French) » depuis le pied de page anglais", async ({ page }) => {
-    expect((await page.goto("/en/mentions-legales"))?.status()).toBe(404);
-    await page.goto("/en");
-    await expect(page.locator('footer a[href="/mentions-legales"]')).toContainText("(in French)");
+  test("pages juridiques traduites : mention « la version française fait foi », lien depuis le pied de page", async ({ page }) => {
+    await page.goto("/de");
+    await page.locator('footer a[href="/de/mentions-legales"]').click();
+    await expect(page.locator("h1")).toHaveText("Impressum");
+    await expect(page.locator("main")).toContainText("französischen Fassung");
   });
+
 
   test("sélecteur de langue : mène à la même page dans l'autre langue, et ce choix est retenu", async ({ page, isMobile }) => {
     test.skip(isMobile, "même composant sur mobile");

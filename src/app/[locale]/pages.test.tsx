@@ -257,6 +257,29 @@ describe("mentions légales : contenu", () => {
   });
 });
 
+describe("pages juridiques traduites (textes du code, pas d'API)", () => {
+  it.each([
+    ["mentions légales", Mentions, mentionsMetadata, "/mentions-legales", "Impressum"],
+    ["confidentialité", Confidentialite, confidentialiteMetadata, "/confidentialite", "Datenschutz"],
+  ] as const)("%s en allemand : titre, mention « la version française fait foi », canonical et liens de la langue", async (_n, Page, metadata, path, title) => {
+    getSiteContent.mockResolvedValue({ ...C, locale: "de" });
+    const root = await renderPage(() => Page(routeProps({ locale: "de" })));
+    expect(root.querySelector("h1")?.text).toBe(title);
+    expect(visibleText(root)).toContain("Übersetzung der französischen Fassung, die im Zweifelsfall maßgeblich ist.");
+    expect(root.querySelector('a[href="/de"]')).not.toBeNull(); // retour à l'accueil allemand
+    expectSiteRules(root);
+    expect((await metadata(routeProps({ locale: "de" }))).alternates?.canonical).toBe(`/de${path}`);
+  });
+
+  it("français : pas de mention de traduction, textes d'attente en français dans toutes les langues", async () => {
+    const fr = visibleText(await renderPage(Mentions));
+    expect(fr).not.toContain("fait foi");
+    getSiteContent.mockResolvedValue({ ...C, locale: "pt", legal: { ...C.legal, vatStatus: null } });
+    const pt = visibleText(await renderPage(() => Mentions(routeProps({ locale: "pt" }))));
+    expect(pt).toContain("Número de IVA / registo: [À COMPLÉTER — champ Notion Statut_TVA");
+  });
+});
+
 describe("confidentialité et accueil : métadonnées", () => {
   it("confidentialité : titre et description avec le praticien et la ville", async () => {
     expect(await confidentialiteMetadata(routeProps())).toMatchObject({

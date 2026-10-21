@@ -34,7 +34,8 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
 - Tests de pages/sections : `src/test/render.tsx` (rendu statique + `expectSiteRules`) ; toute nouvelle page a son test.
   `src/test/architecture.test.ts` : règles 1 et 2, aucun gestionnaire `on…={}` dans un Server Component.
 - CI : `.github/workflows/ci.yml` (lint, typecheck, couverture, build, `seo:smoke`, e2e Chromium + WebKit, `test:mutants`) ;
-  `smoke-production.yml` lance `seo:smoke` chaque matin sur la production (secret `NOTION_TOKEN` recommandé).
+  `smoke-production.yml` lance `seo:smoke` chaque matin sur la production (secret `NOTION_TOKEN` recommandé) ; en cas
+  d'échec, issue assignée au propriétaire du dépôt (étiquette `production-smoke`), fermée au premier contrôle vert.
 
 ## Environnement cloud
 
@@ -56,7 +57,7 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
 2. Aucun contenu éditorial en dur hors `fallback.ts` et `src/content/ui-copy*.ts` ; tout passe par
    `getSiteContent(locale)` et `getCopy(locale)`. Modifier `ui-copy.ts` = mettre à jour `ui-copy.de/en/lb/pt.ts` dans le
    même commit (le typage et `ui-copy.test.ts` le vérifient). Liens internes via `localePath(locale, …)`.
-   Vérifié sur le JSX par `src/test/architecture.test.ts` (exceptions listées : pages juridiques, outil d'upload, icône).
+   Vérifié sur le JSX par `src/test/architecture.test.ts` (exceptions listées : outil d'upload, icône).
 3. Images Notion : colonne `URL` uniquement, jamais les fichiers Notion ; toujours l'`alt` Notion ; placeholder
    si pas d'URL (composant `SiteImage`).
 4. Aucune animation sur le hero / l'élément LCP ; respecter `prefers-reduced-motion`.

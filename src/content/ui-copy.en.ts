@@ -55,6 +55,7 @@ export const COPY_EN: UiCopy = {
     listLabel: "Patient reviews",
     seeAll: "See all reviews on Google",
     leaveReview: "Leave a review",
+    translated: "Translated",
   },
   faq: {
     eyebrow: "FAQ",
@@ -131,9 +132,44 @@ export const COPY_EN: UiCopy = {
     home: "Home page",
   },
   newTab: "(new tab)",
-  languages: {
-    label: "Site language",
-    frenchOnly: "(in French)",
+  languages: { label: "Site language" },
+  legalNotice: {
+    title: "Legal notice",
+    metaDescription: (name, title, city) => `Legal notice for the website of ${name}, ${title} in ${city}.`,
+    publisher: "Website publisher",
+    phone: "Phone:",
+    email: "Email:",
+    regulated: "Regulated profession",
+    regulatedText: (name) =>
+      `Osteopathy is a regulated health profession in the Grand Duchy of Luxembourg, included in the list of health professions set by the amended law of 26 March 1992 on the practice and upgrading of certain health professions (added by the law of 21 August 2018). ${name} practises under an authorisation to practise issued by the Luxembourg Minister of Health and is listed in the professional register kept by that ministry.`,
+    authorization: "Authorisation to practise number:",
+    education: "School and year of graduation:",
+    vat: "VAT / registration number:",
+    hosting: "Hosting",
+    hostingText: "This website is hosted by Vercel Inc. — address and legal information available at",
+    credits: "Credits",
+    creditsText: (name) => `Design and development: ${name}. Photographs: all rights reserved`,
+    translationNote: "Translation of the French version, which prevails in case of discrepancy.",
+  },
+  privacy: {
+    title: "Privacy",
+    metaDescription: (name, title, city) => `Privacy policy of the website of ${name}, ${title} in ${city}.`,
+    collected: "Data collected by this website",
+    collectedText: "This website has no forms. It does not set any cookie without your explicit consent.",
+    gtm: "Google Tag Manager (with your consent)",
+    gtmText:
+      "This website uses Google Tag Manager, loaded only if you accept it in the banner shown on your first visit. Until you have given your consent (or if you refuse), no cookie related to this tool is set and no related script is loaded.",
+    gtmChoice: "You can change your choice at any time with the “Manage cookies” link at the bottom of the page, which reopens the consent banner.",
+    booking: "Online booking",
+    bookingText:
+      "Appointments are booked through a third-party online booking service, loaded only on your initiative (hovering, clicking or scrolling to the calendar). The data you enter to book a slot (name, email, phone) is processed directly by that service, under its own privacy policy. This website has no access to any of this data.",
+    audience: "Cookieless audience measurement",
+    audienceText:
+      "If Vercel audience measurement is also enabled, it works without cookies and without identifiable personal data, for statistical purposes only.",
+    rights: "Your rights",
+    rightsText: (name, phone) =>
+      `Under the General Data Protection Regulation (GDPR), you have the right to access, rectify, erase and object to the processing of your personal data. For any question, you can contact ${name} on ${phone}.`,
+    authority: "Competent supervisory authority in Luxembourg: Commission nationale pour la protection des données (CNPD).",
   },
   meta: {
     homeTitle: (city, name) => `Osteopath in ${city} – ${name}, D.O.`,

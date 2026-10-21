@@ -1,92 +1,85 @@
 import type { Metadata } from "next";
 import { BackToHome } from "@/components/layout/back-to-home";
-import { DEFAULT_LOCALE } from "@/config/i18n";
+import { localeAlternates } from "@/config/i18n";
+import { getCopy, LEGAL_PLACEHOLDERS } from "@/content/ui-copy";
 import { getSiteContent } from "@/lib/content/get-site-content";
-import { frenchOnly } from "@/lib/i18n/route-locale";
+import { routeLocale } from "@/lib/i18n/route-locale";
+
+const VERCEL_LEGAL_URL = "https://vercel.com/legal";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/mentions-legales">): Promise<Metadata> {
-  await frenchOnly(params);
-  const c = await getSiteContent();
+  const c = await getSiteContent(await routeLocale(params));
+  const { legalNotice } = getCopy(c.locale);
   return {
-    title: "Mentions légales",
-    description: `Mentions légales du site de ${c.practitioner.name}, ${c.practitioner.title} à ${c.contact.locality}.`,
-    alternates: { canonical: "/mentions-legales" },
+    title: legalNotice.title,
+    description: legalNotice.metaDescription(c.practitioner.name, c.practitioner.title, c.contact.locality),
+    alternates: localeAlternates(c.locale, "/mentions-legales"),
   };
 }
 
-/** Texte juridique en français seulement : /en/mentions-legales et les autres langues renvoient une 404. */
+/** Mentions légales, traduites avec le code (ui-copy*.ts) ; la version française fait foi (mention dans les autres langues). */
 export default async function MentionsLegalesPage({ params }: PageProps<"/[locale]/mentions-legales">) {
-  await frenchOnly(params);
-  const c = await getSiteContent();
+  const c = await getSiteContent(await routeLocale(params));
+  const copy = getCopy(c.locale);
+  const t = copy.legalNotice;
 
   return (
     <main id="contenu">
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-extrabold tracking-tight text-ink">Mentions légales</h1>
+        <h1 className="text-4xl font-extrabold tracking-tight text-ink">{t.title}</h1>
+        {t.translationNote && <p className="mt-4 text-sm text-slate-500">{t.translationNote}</p>}
 
         <div className="prose-content mt-8 space-y-8 leading-relaxed text-slate-600">
           <section>
-            <h2 className="text-xl font-semibold text-ink">Éditeur du site</h2>
+            <h2 className="text-xl font-semibold text-ink">{t.publisher}</h2>
             <p className="mt-2">
               {c.practitioner.name} — {c.practitioner.title}
               <br />
               {c.contact.street}, {c.contact.postalCode} {c.contact.locality}, {c.contact.countryName}
               <br />
-              Téléphone : {c.contact.phoneDisplay}
+              {t.phone} {c.contact.phoneDisplay}
               <br />
-              E-mail : {c.contact.email ?? "[À COMPLÉTER : adresse e-mail professionnelle — champ Notion Email_Contact]"}
+              {t.email} {c.contact.email ?? LEGAL_PLACEHOLDERS.email}
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-ink">Profession réglementée</h2>
+            <h2 className="text-xl font-semibold text-ink">{t.regulated}</h2>
+            <p className="mt-2">{t.regulatedText(c.practitioner.name)}</p>
             <p className="mt-2">
-              L&apos;ostéopathie est une profession de santé réglementée au Grand-Duché de Luxembourg, inscrite sur
-              la liste des professions de santé fixée par la loi modifiée du 26 mars 1992 sur l&apos;exercice et la
-              revalorisation de certaines professions de santé (ajout opéré par la loi du 21 août 2018). {c.practitioner.name}{" "}
-              exerce sous autorisation d&apos;exercer délivrée par le ministre de la Santé du Luxembourg et figure au
-              registre professionnel tenu par ce ministère.
-            </p>
-            <p className="mt-2">
-              Numéro d&apos;autorisation d&apos;exercer :{" "}
-              {c.legal.authorizationNumber ??
-                "[À COMPLÉTER — champ Notion Numero_Autorisation_Exercer ; délivré par le ministère de la Santé]"}
+              {t.authorization} {c.legal.authorizationNumber ?? LEGAL_PLACEHOLDERS.authorization}
               <br />
-              École et année du diplôme :{" "}
-              {c.about.education ?? "[À COMPLÉTER — champ Notion Formation, base Section A_Propos]"}
+              {t.education} {c.about.education ?? LEGAL_PLACEHOLDERS.education}
               <br />
-              Numéro de TVA / immatriculation :{" "}
-              {c.legal.vatStatus ??
-                "[À COMPLÉTER — champ Notion Statut_TVA ; les soins de santé sont en général exonérés de TVA (art. 44 de la loi TVA), à confirmer avec votre comptable]"}
+              {t.vat} {c.legal.vatStatus ?? LEGAL_PLACEHOLDERS.vat}
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-ink">Hébergement</h2>
+            <h2 className="text-xl font-semibold text-ink">{t.hosting}</h2>
             <p className="mt-2">
-              Ce site est hébergé par Vercel Inc. — adresse et informations légales disponibles sur{" "}
+              {t.hostingText}{" "}
               <a
-                href="https://vercel.com/legal"
+                href={VERCEL_LEGAL_URL}
                 target="_blank"
                 rel="noopener"
                 className="font-semibold text-sage-700 underline underline-offset-4"
               >
-                vercel.com/legal
-                <span className="sr-only">(nouvel onglet)</span>
+                {VERCEL_LEGAL_URL.replace(/^https:\/\//, "")}
+                <span className="sr-only"> {copy.newTab}</span>
               </a>
               .
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-ink">Crédits</h2>
+            <h2 className="text-xl font-semibold text-ink">{t.credits}</h2>
             <p className="mt-2">
-              Conception et développement : {c.practitioner.name}. Photographies : droits réservés — [À COMPLÉTER si
-              une source externe est utilisée].
+              {t.creditsText(c.practitioner.name)} — {LEGAL_PLACEHOLDERS.photos}.
             </p>
           </section>
         </div>
-        <BackToHome locale={DEFAULT_LOCALE} className="mt-12" />
+        <BackToHome locale={c.locale} className="mt-12" />
       </div>
     </main>
   );

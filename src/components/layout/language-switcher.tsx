@@ -4,7 +4,6 @@ import { Languages } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
 import { localePath, splitLocalePath, type Locale } from "@/config/i18n";
-import { FRENCH_ONLY_PATHS } from "@/lib/i18n/routing";
 
 type Option = { locale: Locale; label: string; htmlLang: string; hreflang: string };
 /** `dropdown` : bouton de l'en-tête (à partir de sm) ; `inline` : liste dans le menu mobile (l'en-tête est trop étroit). */
@@ -18,13 +17,12 @@ const serverPath = () => null;
  * Sélecteur de langue (<details> natif : s'ouvre sans JS). Sans JS, ou avant l'hydratation, chaque langue mène à son
  * accueil ; ensuite, à la même page dans l'autre langue. Le chemin est lu dans l'URL du navigateur et non dans le
  * rendu serveur : le proxy réécrit les pages françaises (« / » → « /fr »), le serveur ne connaît pas l'adresse
- * affichée (docs Next : usePathname et réécritures). Les pages juridiques, en français seulement, mènent à l'accueil.
+ * affichée (docs Next : usePathname et réécritures).
  */
 export function LanguageSwitcher({ current, options, label, variant = "dropdown" }: Props) {
   usePathname(); // nouveau rendu à chaque navigation interne
   const pathname = useSyncExternalStore(noSubscribe, browserPath, serverPath);
-  const path = pathname === null ? "/" : splitLocalePath(pathname).path;
-  const target = FRENCH_ONLY_PATHS.has(path) ? "/" : path;
+  const target = pathname === null ? "/" : splitLocalePath(pathname).path;
   const active = options.find((o) => o.locale === current);
   const link = (option: Option, className: string) => (
     <a

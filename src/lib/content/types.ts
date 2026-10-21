@@ -63,6 +63,8 @@ export type Review = {
   rating: number | null; // 0..5
   text: string;
   date: string | null; // ISO "2026-09-21"
+  /** Texte traduit dans la langue de la page (mention « Traduit » affichée sous l'avis). */
+  translated?: true;
 };
 
 export type FaqItem = { question: string; answer: string };
