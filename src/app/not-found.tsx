@@ -16,7 +16,7 @@ export default async function NotFound() {
           <Link href="/" className={buttonVariants({ variant: "secondary", size: "lg" })}>
             {COPY.backToHome}
           </Link>
-          <BookingLink booking={content.booking} className={buttonVariants({ size: "lg" })}>
+          <BookingLink booking={content.booking} placement="not-found" className={buttonVariants({ size: "lg" })}>
             {COPY.cta.book}
           </BookingLink>
         </div>

@@ -200,6 +200,33 @@ describe("Reviews : avis et note Google", () => {
   });
 });
 
+describe("PracticalInfo : bloc de réservation selon le prestataire", () => {
+  const doctena = { ...C, booking: { url: "https://www.doctena.lu/fr/rdv", provider: "generic", calLink: null, calOrigin: null } } as SiteContent;
+
+  it("Cal.com : agenda intégré et lien de secours dans un nouvel onglet", () => {
+    const root = render(<PracticalInfo content={C} />);
+    const text = visibleText(root.querySelector("#rendez-vous")!);
+    expect(text).toContain(COPY.infos.bookingText);
+    expect(text).toContain(COPY.infos.bookingFallback);
+    expect(text).not.toContain(COPY.infos.bookingExternalText);
+  });
+
+  it("autre prestataire (Doctena) : un bouton de RDV et l'appel, jamais le message d'échec de l'agenda", () => {
+    const root = render(<PracticalInfo content={doctena} />);
+    const block = root.querySelector("#rendez-vous")!;
+    const text = visibleText(block);
+    expect(text).toContain(COPY.infos.bookingExternalText);
+    expect(text).not.toContain(COPY.bookingInline.failed);
+    expect(text).not.toContain(COPY.infos.bookingFallback);
+    const links = bookingAnchors(block, doctena.booking.url);
+    expect(links).toHaveLength(1);
+    expect(links[0]!.getAttribute("target")).toBeUndefined(); // même onglet : le retour arrière ramène au site
+    expect(links[0]!.text).toContain(COPY.cta.book);
+    expect(block.querySelectorAll(`a[href="tel:${C.contact.phoneE164}"]`)).toHaveLength(1);
+    expectSiteRules(root);
+  });
+});
+
 describe("PracticalInfo : horaires", () => {
   it("affiche chaque ligne d'horaires seulement si elles existent", () => {
     const withHours = { ...C, openingHoursLines: ["Lundi : 8h – 19h", "Samedi : 9h – 12h"] };

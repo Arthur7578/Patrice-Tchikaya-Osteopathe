@@ -49,7 +49,7 @@ export function SiteHeader({ content }: Props) {
             <MapPin aria-hidden="true" className="size-4" />
             {contact.locality}
           </a>
-          <BookingLink booking={booking} className={cn(buttonVariants({ size: "sm" }))}>
+          <BookingLink booking={booking} placement="header" className={cn(buttonVariants({ size: "sm" }))}>
             {COPY.cta.bookShort}
           </BookingLink>
           <MobileMenu />

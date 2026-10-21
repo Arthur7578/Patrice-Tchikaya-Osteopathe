@@ -90,6 +90,8 @@ export const COPY = {
     bookingTitle: "Réserver votre séance en ligne",
     bookingText: "Choisissez un créneau : la confirmation vous est envoyée par e-mail.",
     bookingFallback: "Ouvrir l'agenda dans un nouvel onglet",
+    // Prestataire sans agenda intégré (ex. Doctena) : les boutons mènent à sa page de réservation.
+    bookingExternalText: "Consultez les créneaux disponibles et réservez votre séance sur l'agenda en ligne du cabinet.",
   },
   // Agenda intégré (BookingInline) : pendant le chargement, puis si Cal.com ne répond pas.
   bookingInline: {

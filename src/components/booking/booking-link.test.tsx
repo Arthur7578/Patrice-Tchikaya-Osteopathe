@@ -11,6 +11,8 @@ vi.mock("./cal", () => ({
   loadCalPopup,
   waitForCalScript,
 }));
+const trackBookingClick = vi.fn();
+vi.mock("./track", () => ({ trackBookingClick }));
 
 const { BookingLink } = await import("./booking-link");
 
@@ -22,23 +24,24 @@ describe("BookingLink", () => {
     cal.mockReset();
     loadCalPopup.mockReset().mockResolvedValue(cal);
     waitForCalScript.mockReset().mockResolvedValue(undefined);
+    trackBookingClick.mockReset();
   });
   afterEach(cleanup);
 
   it("rend toujours un vrai <a href> (fonctionne sans JS, règle 6)", () => {
-    render(<BookingLink booking={CAL}>Prendre RDV</BookingLink>);
+    render(<BookingLink booking={CAL} placement="hero">Prendre RDV</BookingLink>);
     expect(screen.getByRole("link", { name: "Prendre RDV" })).toHaveAttribute("href", CAL.url);
   });
 
   it("prestataire générique : lien direct, aucun chargement Cal.com", () => {
-    render(<BookingLink booking={GENERIC}>RDV</BookingLink>);
+    render(<BookingLink booking={GENERIC} placement="hero">RDV</BookingLink>);
     fireEvent.click(screen.getByRole("link"));
     expect(screen.getByRole("link")).toHaveAttribute("href", GENERIC.url);
     expect(loadCalPopup).not.toHaveBeenCalled();
   });
 
   it("clic gauche : ouvre la popup Cal.com avec l'origine passée explicitement", async () => {
-    render(<BookingLink booking={CAL}>RDV</BookingLink>);
+    render(<BookingLink booking={CAL} placement="hero">RDV</BookingLink>);
     const notPrevented = fireEvent.click(screen.getByRole("link"));
     expect(notPrevented).toBe(false); // preventDefault appelé
     await waitFor(() =>
@@ -57,7 +60,7 @@ describe("BookingLink", () => {
     ["Alt", { altKey: true }],
     ["clic molette", { button: 1 }],
   ])("%s + clic : laisse le navigateur suivre le lien (pas de popup)", (_label, init) => {
-    render(<BookingLink booking={CAL}>RDV</BookingLink>);
+    render(<BookingLink booking={CAL} placement="hero">RDV</BookingLink>);
     const notPrevented = fireEvent.click(screen.getByRole("link"), init);
     expect(notPrevented).toBe(true);
     expect(cal).not.toHaveBeenCalled();
@@ -65,7 +68,7 @@ describe("BookingLink", () => {
 
   it("respecte un onClick parent qui appelle preventDefault", () => {
     render(
-      <BookingLink booking={CAL} onClick={(e) => e.preventDefault()}>
+      <BookingLink booking={CAL} placement="hero" onClick={(e) => e.preventDefault()}>
         RDV
       </BookingLink>,
     );
@@ -77,7 +80,7 @@ describe("BookingLink", () => {
     const assign = vi.fn();
     vi.stubGlobal("location", { ...window.location, assign });
     waitForCalScript.mockRejectedValue(new Error("Cal.com embed indisponible"));
-    render(<BookingLink booking={CAL}>RDV</BookingLink>);
+    render(<BookingLink booking={CAL} placement="hero">RDV</BookingLink>);
     fireEvent.click(screen.getByRole("link"));
     await waitFor(() => expect(assign).toHaveBeenCalledWith(CAL.url));
     expect(cal).not.toHaveBeenCalled();
@@ -86,9 +89,42 @@ describe("BookingLink", () => {
 
   it("préchauffe l'embed au survol et au focus, sans faire échouer le rendu si le chargement échoue", () => {
     loadCalPopup.mockRejectedValue(new Error("réseau"));
-    render(<BookingLink booking={CAL}>RDV</BookingLink>);
+    render(<BookingLink booking={CAL} placement="hero">RDV</BookingLink>);
     fireEvent.pointerEnter(screen.getByRole("link"));
     fireEvent.focus(screen.getByRole("link"));
     expect(loadCalPopup).toHaveBeenCalledTimes(2);
+  });
+  it.each([
+    ["générique", GENERIC],
+    ["Cal.com", CAL],
+  ])("prestataire %s : compte le clic avec son emplacement", (_label, booking) => {
+    render(
+      <BookingLink booking={booking} placement="mobile-bar">
+        RDV
+      </BookingLink>,
+    );
+    fireEvent.click(screen.getByRole("link"));
+    expect(trackBookingClick).toHaveBeenCalledExactlyOnceWith("mobile-bar", booking.provider);
+  });
+
+  it("compte aussi un Ctrl+clic (nouvel onglet : le visiteur entre dans le parcours)", () => {
+    render(<BookingLink booking={CAL} placement="faq">RDV</BookingLink>);
+    fireEvent.click(screen.getByRole("link"), { ctrlKey: true });
+    expect(trackBookingClick).toHaveBeenCalledExactlyOnceWith("faq", "cal");
+  });
+
+  it.each([
+    ["générique", GENERIC],
+    ["Cal.com", CAL],
+  ])("prestataire %s : appelle l'onClick parent, et ne compte pas un clic qu'il annule", (_label, booking) => {
+    const parent = vi.fn((e: { preventDefault: () => void }) => e.preventDefault());
+    render(
+      <BookingLink booking={booking} placement="hero" onClick={parent}>
+        RDV
+      </BookingLink>,
+    );
+    fireEvent.click(screen.getByRole("link"));
+    expect(parent).toHaveBeenCalledOnce();
+    expect(trackBookingClick).not.toHaveBeenCalled();
   });
 });
