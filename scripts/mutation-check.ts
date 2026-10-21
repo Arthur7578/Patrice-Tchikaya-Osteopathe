@@ -122,7 +122,7 @@ const MUTANTS: Mutant[] = [
   // --- Server Components ---
   { name: "admin : gestionnaire d'événement dans un Server Component (erreur 500)", file: "src/app/(admin)/admin/photos/page.tsx", find: 'aria-label="URL publique de la photo"', replace: 'aria-label="URL publique de la photo"\n              onFocus={() => undefined}', tests: ["src/test/architecture.test.ts"] },
   // --- Langues (routage, traduction automatique, SEO multilingue) ---
-  { name: "langues : robots redirigés selon la langue (Googlebot n'indexerait que l'anglais)", file: "src/lib/i18n/routing.ts", find: "!BOT.test(ua) && ", replace: "", tests: [ROUTING] },
+  { name: "langues : robots redirigés selon la langue (Googlebot n'indexerait que l'anglais)", file: "src/lib/i18n/routing.ts", find: "entering && !BOT.test(ua))", replace: "entering)", tests: [ROUTING] },
   { name: "langues : redirection en navigation interne (impossible de revenir au français)", file: "src/lib/i18n/routing.ts", find: "const entering = !isSameOrigin(req);", replace: "const entering = true;", tests: [ROUTING] },
   { name: "langues : /fr/… servi au lieu d'être redirigé (deux URL par page)", file: "src/lib/i18n/routing.ts", find: 'return { type: "redirect", location: `${rest}${search}`, status: 308 };', replace: 'return { type: "next" };', tests: [ROUTING] },
   { name: "langues : langue non publiée servie (français sous /en)", file: "src/lib/i18n/routing.ts", find: "if (!enabled.includes(locale)) return", replace: "if (false) return", tests: [ROUTING] },
