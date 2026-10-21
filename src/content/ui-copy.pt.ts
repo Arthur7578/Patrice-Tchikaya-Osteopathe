@@ -80,6 +80,7 @@ export const COPY_PT: UiCopy = {
     bookingTitle: "Marque a sua sessão online",
     bookingText: "Escolha um horário: receberá a confirmação por e-mail.",
     bookingFallback: "Abrir a agenda num novo separador",
+    bookingExternalText: "Consulte as vagas disponíveis e marque a sua sessão na agenda online do consultório.",
   },
   bookingInline: {
     loading: "A carregar a agenda…",
@@ -163,9 +164,11 @@ export const COPY_PT: UiCopy = {
     booking: "Marcação online",
     bookingText:
       "As marcações são feitas através de um serviço externo de reservas online, carregado apenas por sua iniciativa (passar o rato, clicar ou aproximar-se da agenda). Os dados que introduz para reservar um horário (nome, e-mail, telefone) são tratados diretamente por esse serviço, segundo a sua própria política de privacidade. Este site não tem acesso a nenhum desses dados.",
+    bookingExternalText: (host: string) =>
+      `As marcações são feitas através de um serviço externo de reservas online (${host}). Os botões de marcação abrem a sua página de reservas: nenhum dos seus scripts é carregado neste site. Os dados que introduz para reservar um horário são tratados diretamente por esse serviço, segundo a sua própria política de privacidade. Este site não tem acesso a nenhum desses dados.`,
     audience: "Medição de audiência sem cookies",
     audienceText:
-      "Se uma medição de audiência da Vercel estiver também ativada, funciona sem cookies e sem dados pessoais identificáveis, apenas para fins estatísticos.",
+      "Se uma medição de audiência da Vercel estiver também ativada, funciona sem cookies e sem dados pessoais identificáveis, apenas para fins estatísticos. Conta também os cliques nos botões de marcação, registando apenas a localização do botão (cabeçalho, página inicial, FAQ…), para saber quais são úteis.",
     rights: "Os seus direitos",
     rightsText: (name, phone) =>
       `Nos termos do Regulamento Geral sobre a Proteção de Dados (RGPD), tem o direito de acesso, retificação, apagamento e oposição relativamente aos seus dados pessoais. Para qualquer questão, pode contactar ${name} através do ${phone}.`,

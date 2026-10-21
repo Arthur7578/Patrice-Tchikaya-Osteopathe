@@ -21,6 +21,8 @@ export default async function ConfidentialitePage({ params }: PageProps<"/[local
   const copy = getCopy(c.locale);
   const t = copy.privacy;
   const gtmEnabled = /^GTM-[A-Z0-9]+$/.test(process.env.NEXT_PUBLIC_GTM_ID ?? "");
+  // Hôte du prestataire de RDV (ex. www.doctena.lu), nommé quand ses pages sont ouvertes par un simple lien.
+  const bookingHost = new URL(c.booking.url).hostname;
 
   return (
     <main id="contenu">
@@ -44,7 +46,7 @@ export default async function ConfidentialitePage({ params }: PageProps<"/[local
 
           <section>
             <h2 className="text-xl font-semibold text-ink">{t.booking}</h2>
-            <p className="mt-2">{t.bookingText}</p>
+            <p className="mt-2">{c.booking.provider === "cal" ? t.bookingText : t.bookingExternalText(bookingHost)}</p>
           </section>
 
           <section>

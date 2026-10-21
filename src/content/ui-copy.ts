@@ -94,6 +94,8 @@ export const COPY_FR = {
     bookingTitle: "Réserver votre séance en ligne",
     bookingText: "Choisissez un créneau : la confirmation vous est envoyée par e-mail.",
     bookingFallback: "Ouvrir l'agenda dans un nouvel onglet",
+    // Prestataire sans agenda intégré (ex. Doctena) : les boutons mènent à sa page de réservation.
+    bookingExternalText: "Consultez les créneaux disponibles et réservez votre séance sur l'agenda en ligne du cabinet.",
   },
   // Agenda intégré (BookingInline) : pendant le chargement, puis si Cal.com ne répond pas.
   bookingInline: {
@@ -191,9 +193,11 @@ export const COPY_FR = {
     booking: "Prise de rendez-vous en ligne",
     bookingText:
       "La prise de rendez-vous est assurée par un service tiers de réservation en ligne, chargé uniquement à votre initiative (survol, clic ou approche de l'agenda). Les données que vous saisissez pour réserver un créneau (nom, e-mail, téléphone) sont traitées directement par ce service, selon sa propre politique de confidentialité. Ce site n'a accès à aucune de ces données.",
+    bookingExternalText: (host: string) =>
+      `La prise de rendez-vous est assurée par un service tiers de réservation en ligne (${host}). Les boutons « Prendre rendez-vous » ouvrent sa page de réservation : aucun de ses scripts n'est chargé sur ce site. Les données que vous saisissez pour réserver un créneau sont traitées directement par ce service, selon sa propre politique de confidentialité. Ce site n'a accès à aucune de ces données.`,
     audience: "Mesure d'audience sans cookie",
     audienceText:
-      "Si une mesure d'audience Vercel est activée en complément, elle fonctionne sans cookie et sans donnée personnelle identifiable, à des fins statistiques uniquement.",
+      "Si une mesure d'audience Vercel est activée en complément, elle fonctionne sans cookie et sans donnée personnelle identifiable, à des fins statistiques uniquement. Elle compte aussi les clics sur les boutons de prise de rendez-vous, avec le seul emplacement du bouton (en-tête, accueil, FAQ…), pour savoir lesquels sont utiles.",
     rights: "Vos droits",
     rightsText: (name: string, phone: string) =>
       `Conformément au Règlement général sur la protection des données (RGPD), vous disposez d'un droit d'accès, de rectification, d'effacement et d'opposition sur vos données personnelles. Pour toute question, vous pouvez contacter ${name} au ${phone}.`,

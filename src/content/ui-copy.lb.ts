@@ -83,6 +83,7 @@ export const COPY_LB: UiCopy = {
     bookingTitle: "Är Sëtzung online reservéieren",
     bookingText: "Wielt en Termin: d'Confirmatioun kritt Dir per E-Mail.",
     bookingFallback: "Den Agenda an engem neien Tab opmaachen",
+    bookingExternalText: "Kuckt déi fräi Terminer a reservéiert Är Sëtzung am Online-Agenda vum Cabinet.",
   },
   bookingInline: {
     loading: "Den Agenda gëtt gelueden…",
@@ -166,9 +167,11 @@ export const COPY_LB: UiCopy = {
     booking: "Rendez-vous online",
     bookingText:
       "D'Rendez-vousen ginn iwwer en externe Service fir online Reservatiounen geholl, deen nëmmen op Är Initiativ gelueden gëtt (mat der Maus driwwer goen, klicken oder no beim Agenda scrollen). D'Donnéeën, déi Dir fir eng Reservatioun agitt (Numm, E-Mail, Telefon), ginn direkt vun dësem Service veraarbecht, no senger eegener Dateschutzerklärung. Dës Websäit huet keen Zougang zu dësen Donnéeën.",
+    bookingExternalText: (host: string) =>
+      `D'Rendez-vousen ginn iwwer en externe Service fir online Reservatiounen geholl (${host}). D'Reservatiounsknäppercher maachen seng Reservatiounssäit op: keen vu senge Skripter gëtt op dëser Websäit gelueden. D'Donnéeën, déi Dir fir eng Reservatioun agitt, ginn direkt vun dësem Service veraarbecht, no senger eegener Dateschutzerklärung. Dës Websäit huet keen Zougang zu dësen Donnéeën.`,
     audience: "Publikumsmoossung ouni Cookien",
     audienceText:
-      "Wann zousätzlech eng Publikumsmoossung vu Vercel aktivéiert ass, fonctionnéiert se ouni Cookien an ouni identifizéierbar perséinlech Donnéeën, nëmme fir statistesch Zwecker.",
+      "Wann zousätzlech eng Publikumsmoossung vu Vercel aktivéiert ass, fonctionnéiert se ouni Cookien an ouni identifizéierbar perséinlech Donnéeën, nëmme fir statistesch Zwecker. Si zielt och d'Klicken op d'Knäppercher fir e Rendez-vous, nëmme mat der Plaz vum Knäppchen (Kappzeil, Startsäit, FAQ…), fir ze wëssen, wéi eng nëtzlech sinn.",
     rights: "Är Rechter",
     rightsText: (name, phone) =>
       `No der Datenschutz-Grondveruerdnung (DSGVO) hutt Dir d'Recht op Zougang, Korrektur, Läschen an Oppositioun wat Är perséinlech Donnéeën ugeet. Fir all Fro erreecht Dir ${name} um ${phone}.`,

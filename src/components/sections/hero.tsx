@@ -42,7 +42,7 @@ export function Hero({ content }: { content: SiteContent }) {
           <p className="mt-5 text-lg text-pretty text-slate-600">{seo.heroSubtitle}</p>
 
           <div id="hero-cta" className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <BookingLink booking={booking} className={cn(buttonVariants({ size: "lg" }), "max-sm:whitespace-normal max-sm:text-center")}>
+            <BookingLink booking={booking} placement="hero" className={cn(buttonVariants({ size: "lg" }), "max-sm:whitespace-normal max-sm:text-center")}>
               <CalendarDays aria-hidden="true" />
               {copy.cta.book}
             </BookingLink>

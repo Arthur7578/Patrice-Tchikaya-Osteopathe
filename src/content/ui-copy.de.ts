@@ -80,6 +80,7 @@ export const COPY_DE: UiCopy = {
     bookingTitle: "Ihre Sitzung online buchen",
     bookingText: "Wählen Sie einen Termin: Die Bestätigung erhalten Sie per E-Mail.",
     bookingFallback: "Den Kalender in einem neuen Tab öffnen",
+    bookingExternalText: "Sehen Sie die freien Termine ein und buchen Sie Ihre Sitzung im Online-Kalender der Praxis.",
   },
   bookingInline: {
     loading: "Kalender wird geladen…",
@@ -163,9 +164,11 @@ export const COPY_DE: UiCopy = {
     booking: "Online-Terminbuchung",
     bookingText:
       "Die Terminbuchung erfolgt über einen externen Online-Buchungsdienst, der nur auf Ihre Veranlassung geladen wird (Überfahren mit der Maus, Klick oder Annäherung an den Kalender). Die Daten, die Sie für die Buchung eingeben (Name, E-Mail, Telefon), werden direkt von diesem Dienst gemäß seiner eigenen Datenschutzerklärung verarbeitet. Diese Website hat keinen Zugriff auf diese Daten.",
+    bookingExternalText: (host: string) =>
+      `Die Terminbuchung erfolgt über einen externen Online-Buchungsdienst (${host}). Die Buchungsschaltflächen öffnen dessen Buchungsseite: Keines seiner Skripte wird auf dieser Website geladen. Die Daten, die Sie für die Buchung eingeben, werden direkt von diesem Dienst gemäß seiner eigenen Datenschutzerklärung verarbeitet. Diese Website hat keinen Zugriff auf diese Daten.`,
     audience: "Reichweitenmessung ohne Cookies",
     audienceText:
-      "Falls zusätzlich eine Reichweitenmessung von Vercel aktiviert ist, funktioniert sie ohne Cookies und ohne identifizierbare personenbezogene Daten, ausschließlich zu statistischen Zwecken.",
+      "Falls zusätzlich eine Reichweitenmessung von Vercel aktiviert ist, funktioniert sie ohne Cookies und ohne identifizierbare personenbezogene Daten, ausschließlich zu statistischen Zwecken. Sie zählt auch die Klicks auf die Schaltflächen zur Terminbuchung, nur mit der Position der Schaltfläche (Kopfzeile, Startseite, FAQ…), um zu erkennen, welche nützlich sind.",
     rights: "Ihre Rechte",
     rightsText: (name, phone) =>
       `Gemäß der Datenschutz-Grundverordnung (DSGVO) haben Sie das Recht auf Auskunft, Berichtigung, Löschung und Widerspruch in Bezug auf Ihre personenbezogenen Daten. Bei Fragen erreichen Sie ${name} unter ${phone}.`,

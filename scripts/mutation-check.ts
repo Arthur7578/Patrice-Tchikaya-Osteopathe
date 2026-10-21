@@ -25,6 +25,7 @@ const REVALIDATE = "src/app/api/revalidate/route.test.ts";
 const PAGES = "src/app/[locale]/pages.test.tsx";
 const PAIEMENT = "src/app/[locale]/paiement/page.test.tsx";
 const BOOKING = "src/components/booking/booking-link.test.tsx";
+const TRACK = "src/components/booking/track.test.ts";
 const MENU = "src/components/layout/mobile-menu.test.tsx";
 const SECTIONS = "src/components/sections/sections.test.tsx";
 const LAYOUT = "src/components/layout/layout-components.test.tsx";
@@ -92,6 +93,11 @@ const MUTANTS: Mutant[] = [
   { name: "BookingLink : clic molette intercepté", file: "src/components/booking/booking-link.tsx", find: "event.button !== 0 || ", replace: "", tests: [BOOKING] },
   { name: "BookingLink : pas de repli si l'embed échoue", file: "src/components/booking/booking-link.tsx", find: "window.location.assign(booking.url);", replace: "", tests: [BOOKING] },
   { name: "BookingLink : prestataire générique traité comme Cal.com", file: "src/components/booking/booking-link.tsx", find: 'booking.provider !== "cal"', replace: "false", tests: [BOOKING] },
+  { name: "BookingLink : clic de RDV non compté", file: "src/components/booking/booking-link.tsx", find: "if (!event.defaultPrevented) trackBookingClick(placement, booking.provider);", replace: "", tests: [BOOKING] },
+  { name: "trackBookingClick : une erreur de mesure bloque le RDV", file: "src/components/booking/track.ts", find: "    // mesure perdue, RDV intact", replace: '    throw new Error("mesure");', tests: [TRACK] },
+  { name: "trackBookingClick : dataLayer GTM utilisé sans consentement", file: "src/components/booking/track.ts", find: "if (Array.isArray(dataLayer)) {", replace: "if (true) {", tests: [TRACK] },
+  { name: "PracticalInfo : agenda intégré (et son message d'échec) pour un prestataire autre que Cal.com", file: "src/components/sections/practical-info.tsx", find: '{booking.provider === "cal" ? (', replace: "{true ? (", tests: [SECTIONS] },
+  { name: "confidentialité : texte Cal.com pour tout prestataire", file: "src/app/[locale]/confidentialite/page.tsx", find: 'c.booking.provider === "cal" ? t.bookingText', replace: "true ? t.bookingText", tests: [PAGES] },
   { name: "MobileMenu : Échap sans effet", file: "src/components/layout/mobile-menu.tsx", find: 'e.key === "Escape"', replace: 'e.key === "F13"', tests: [MENU] },
   { name: "MobileMenu : focus non rendu au bouton", file: "src/components/layout/mobile-menu.tsx", find: "buttonRef.current?.focus();", replace: "", tests: [MENU] },
   { name: "MobileMenu : clic extérieur sans effet", file: "src/components/layout/mobile-menu.tsx", find: "!rootRef.current.contains(e.target as Node)", replace: "false", tests: [MENU] },

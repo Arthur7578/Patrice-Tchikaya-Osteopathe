@@ -134,6 +134,7 @@ export default async function MotifPage({ params }: PageProps<"/[locale]/[slug]"
           <div id="hero-cta" className="mt-8 flex flex-col gap-3 sm:flex-row">
             <BookingLink
               booking={booking}
+              placement="motif-hero"
               className={cn(buttonVariants({ size: "lg" }), "max-sm:whitespace-normal max-sm:text-center")}
             >
               <CalendarDays aria-hidden="true" />
@@ -158,6 +159,7 @@ export default async function MotifPage({ params }: PageProps<"/[locale]/[slug]"
           <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center">
             <BookingLink
               booking={booking}
+              placement="motif-cta"
               className={cn(buttonVariants({ size: "lg" }), "bg-white text-sage-800 hover:bg-sage-50 focus-visible:outline-white")}
             >
               <CalendarDays aria-hidden="true" />

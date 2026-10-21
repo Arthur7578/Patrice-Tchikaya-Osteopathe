@@ -80,6 +80,7 @@ export const COPY_EN: UiCopy = {
     bookingTitle: "Book your session online",
     bookingText: "Choose a time slot: you will receive a confirmation by email.",
     bookingFallback: "Open the calendar in a new tab",
+    bookingExternalText: "See the available slots and book your session in the practice's online calendar.",
   },
   bookingInline: {
     loading: "Loading the calendar…",
@@ -163,9 +164,11 @@ export const COPY_EN: UiCopy = {
     booking: "Online booking",
     bookingText:
       "Appointments are booked through a third-party online booking service, loaded only on your initiative (hovering, clicking or scrolling to the calendar). The data you enter to book a slot (name, email, phone) is processed directly by that service, under its own privacy policy. This website has no access to any of this data.",
+    bookingExternalText: (host: string) =>
+      `Appointments are booked through a third-party online booking service (${host}). The booking buttons open its booking page: none of its scripts are loaded on this website. The data you enter to book a slot is processed directly by that service, under its own privacy policy. This website has no access to any of this data.`,
     audience: "Cookieless audience measurement",
     audienceText:
-      "If Vercel audience measurement is also enabled, it works without cookies and without identifiable personal data, for statistical purposes only.",
+      "If Vercel audience measurement is also enabled, it works without cookies and without identifiable personal data, for statistical purposes only. It also counts clicks on the booking buttons, recording only the button's location (header, home page, FAQ…), to learn which ones are useful.",
     rights: "Your rights",
     rightsText: (name, phone) =>
       `Under the General Data Protection Regulation (GDPR), you have the right to access, rectify, erase and object to the processing of your personal data. For any question, you can contact ${name} on ${phone}.`,

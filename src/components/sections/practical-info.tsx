@@ -18,6 +18,8 @@ import Link from "next/link";
 import { Fragment } from "react";
 import type { ReactNode } from "react";
 import { BookingInline } from "@/components/booking/booking-inline";
+import { BookingLink } from "@/components/booking/booking-link";
+import { buttonVariants } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { InfoRow } from "@/components/ui/info-row";
@@ -28,6 +30,7 @@ import { getCopy } from "@/content/ui-copy";
 import type { AccessRowId, InfoRowId } from "@/lib/content/rows";
 import type { SiteContent } from "@/lib/content/types";
 import { googleMapsDirectionsUrl, googleMapsSearchUrl } from "@/lib/maps";
+import { cn } from "@/lib/utils";
 
 const DL = "grid grid-cols-[auto_1fr] gap-x-4 gap-y-5";
 
@@ -161,19 +164,43 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
 
         <div id="rendez-vous">
           <h3 className="text-lg font-semibold text-ink">{copy.infos.bookingTitle}</h3>
-          <p className="mt-2 text-slate-600">{copy.infos.bookingText}</p>
-          <div className="mt-4">
-            <BookingInline booking={booking} copy={copy.bookingInline} />
-          </div>
-          <a
-            href={booking.url}
-            target="_blank"
-            rel="noopener"
-            className="mt-4 inline-block font-semibold text-sage-700 underline underline-offset-4"
-          >
-            {copy.infos.bookingFallback}
-            <span className="sr-only">{copy.newTab}</span>
-          </a>
+          {booking.provider === "cal" ? (
+            <>
+              <p className="mt-2 text-slate-600">{copy.infos.bookingText}</p>
+              <div className="mt-4">
+                <BookingInline booking={booking} copy={copy.bookingInline} />
+              </div>
+              <a
+                href={booking.url}
+                target="_blank"
+                rel="noopener"
+                className="mt-4 inline-block font-semibold text-sage-700 underline underline-offset-4"
+              >
+                {copy.infos.bookingFallback}
+                <span className="sr-only">{copy.newTab}</span>
+              </a>
+            </>
+          ) : (
+            // Prestataire sans agenda intégrable (ex. Doctena) : un seul parcours, le lien vers sa page de réservation
+            // (docs/DECISIONS.md, 21/10/2026). Jamais le message d'échec de l'agenda intégré.
+            <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white p-6 md:p-8">
+              <p className="text-slate-600">{copy.infos.bookingExternalText}</p>
+              <div className="mt-6 flex flex-col gap-3">
+                <BookingLink
+                  booking={booking}
+                  placement="infos"
+                  className={cn(buttonVariants({ size: "lg" }), "max-sm:whitespace-normal max-sm:text-center")}
+                >
+                  <CalendarDays aria-hidden="true" />
+                  {copy.cta.book}
+                </BookingLink>
+                <a href={`tel:${contact.phoneE164}`} className={buttonVariants({ variant: "secondary", size: "lg" })}>
+                  <Phone aria-hidden="true" />
+                  {copy.cta.call(contact.phoneDisplay)}
+                </a>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </Section>
