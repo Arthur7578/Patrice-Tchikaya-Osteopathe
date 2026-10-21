@@ -3,8 +3,8 @@
 # Site Patrice Tchikaya — Ostéopathe D.O. à Dudelange
 
 Landing page SEO local : Next.js 16 (App Router) + TypeScript + Tailwind CSS v4, contenu Notion (lecture seule),
-prise de RDV Cal.com (compte UE `cal.eu`) ou Doctena, déploiement Vercel. Site en 4 langues : français (source, sans
-préfixe), `/en`, `/lb`, `/pt`, traduites automatiquement depuis le français (`src/lib/i18n`, API Claude,
+prise de RDV Cal.com (compte UE `cal.eu`) ou Doctena, déploiement Vercel. Site en 5 langues : français (source, sans
+préfixe), `/de`, `/en`, `/lb`, `/pt`, traduites automatiquement depuis le français (`src/lib/i18n`, API Claude,
 `ANTHROPIC_API_KEY` ; sans elle, français seul). Voir `docs/DECISIONS.md` (21/10/2026).
 
 **Source de vérité : `docs/PLAN.md`.** Relire la section de la phase en cours avant d'écrire du code.
@@ -23,7 +23,7 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
   vérifie que le lien de RDV répond chez le prestataire (404 ou 410 : échec ; autre réponse hors 2xx : avertissement)
 - `npm run test:coverage` : couverture v8 (rapport HTML dans `coverage/`, seuils dans `vitest.config.mts`)
 - `npm run test:e2e` : Playwright + axe sur le build (`TRANSLATION_MODE=identity npm run build` d'abord, pour publier
-  les 4 langues sans appel API ; en cloud, `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux*/chrome`).
+  les 5 langues sans appel API ; en cloud, `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux*/chrome`).
   Parcourt chaque URL du sitemap ; `e2e/i18n.spec.ts` est ignoré si seules les pages françaises sont publiées.
 - `npm run test:mutants` : casse volontairement ~50 règles critiques, au moins un test doit échouer à chaque fois
   (`scripts/mutation-check.ts` ; ajouter une entrée quand on ajoute une règle ; fichiers commités requis ; ~3 min)
@@ -54,7 +54,7 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
    `LanguageSwitcher` (21/10). Un composant client reçoit des chaînes déjà traduites (jamais `getCopy`, ni fonctions).
    Liste vérifiée par `src/test/architecture.test.ts`.
 2. Aucun contenu éditorial en dur hors `fallback.ts` et `src/content/ui-copy*.ts` ; tout passe par
-   `getSiteContent(locale)` et `getCopy(locale)`. Modifier `ui-copy.ts` = mettre à jour `ui-copy.en/lb/pt.ts` dans le
+   `getSiteContent(locale)` et `getCopy(locale)`. Modifier `ui-copy.ts` = mettre à jour `ui-copy.de/en/lb/pt.ts` dans le
    même commit (le typage et `ui-copy.test.ts` le vérifient). Liens internes via `localePath(locale, …)`.
    Vérifié sur le JSX par `src/test/architecture.test.ts` (exceptions listées : pages juridiques, outil d'upload, icône).
 3. Images Notion : colonne `URL` uniquement, jamais les fichiers Notion ; toujours l'`alt` Notion ; placeholder
@@ -66,8 +66,10 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
 8. Un seul `<h1>` par page.
 9. `alternates` défini dans chaque page avec `localeAlternates(locale, chemin)` (canonical + hreflang), jamais dans le
    layout racine (`src/app/[locale]/layout.tsx`).
-10. Ne jamais écrire « médecin » ni « Dr » (ni « doctor », « Dokter »… : `src/lib/i18n/rules.ts`) : l'ostéopathie est
-    une profession de santé distincte. Les traductions automatiques sont vérifiées avant mise en cache.
+10. Ne jamais écrire « médecin » ni « Dr » (ni « doctor », « Arzt », « Dokter »…) dans les textes du code : l'ostéopathie
+    est une profession de santé distincte. Le contenu Notion peut citer un médecin comme autre professionnel
+    (« consultez un médecin en cas d'urgence ») : la traduction le garde, mais n'en ajoute jamais et n'accole jamais de
+    titre au praticien (`src/lib/i18n/rules.ts`, vérifié avant mise en cache).
 
 ## Pièges Next.js 16 (vérifiés sur 16.3.6)
 

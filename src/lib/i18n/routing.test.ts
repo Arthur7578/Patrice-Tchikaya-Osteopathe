@@ -6,10 +6,11 @@ describe("preferredLocale (Accept-Language)", () => {
   it.each([
     ["pt-PT,pt;q=0.9,fr;q=0.8", "pt"],
     ["fr-FR,fr;q=0.9,en;q=0.8", "fr"],
-    ["de-DE,de;q=0.9,en;q=0.7", "en"], // allemand non proposé : la langue suivante disponible
+    ["de-DE,de;q=0.9,en;q=0.7", "de"],
+    ["it-IT,it;q=0.9,en;q=0.7", "en"], // italien non proposé : la langue suivante disponible
     ["en;q=0.5,lb;q=0.9", "lb"], // ordre de qualité, pas d'écriture
     ["en,pt", "en"], // même qualité : ordre de l'en-tête
-    ["de,it", null],
+    ["it,es", null],
     ["*", null],
     ["pt;q=0", null], // q=0 : refusée
     ["", null],

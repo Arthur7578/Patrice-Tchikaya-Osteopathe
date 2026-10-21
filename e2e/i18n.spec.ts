@@ -14,20 +14,20 @@ test.describe("langues", () => {
   });
 
   test("chaque langue : <html lang>, hreflang vers toutes les versions + x-default, canonical propre", async ({ page }) => {
-    for (const [path, lang] of [["/", "fr-LU"], ["/en", "en"], ["/lb", "lb"], ["/pt", "pt-PT"]] as const) {
+    for (const [path, lang] of [["/", "fr-LU"], ["/de", "de"], ["/en", "en"], ["/lb", "lb"], ["/pt", "pt-PT"]] as const) {
       await page.goto(path);
       await expect(page.locator("html")).toHaveAttribute("lang", lang);
       const alternates = await page.locator('link[rel="alternate"][hreflang]').evaluateAll((links) =>
         links.map((l) => `${l.getAttribute("hreflang")} ${new URL(l.getAttribute("href")!).pathname}`),
       );
-      expect(alternates.sort(), path).toEqual(["en /en", "fr /", "lb /lb", "pt /pt", "x-default /"]);
+      expect(alternates.sort(), path).toEqual(["de /de", "en /en", "fr /", "lb /lb", "pt /pt", "x-default /"]);
     }
   });
 
-  test("sitemap : chaque page traduisible dans les 4 langues, pages juridiques en français seulement", async ({ request }) => {
+  test("sitemap : chaque page traduisible dans les 5 langues, pages juridiques en français seulement", async ({ request }) => {
     const paths = await sitemapPaths(request);
     for (const path of ["/paiement", "/articles"]) {
-      expect(paths).toEqual(expect.arrayContaining([path, `/en${path}`, `/lb${path}`, `/pt${path}`]));
+      expect(paths).toEqual(expect.arrayContaining([path, `/de${path}`, `/en${path}`, `/lb${path}`, `/pt${path}`]));
     }
     expect(paths.filter((p) => p.endsWith("/mentions-legales"))).toEqual(["/mentions-legales"]);
   });

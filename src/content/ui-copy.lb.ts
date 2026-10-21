@@ -136,7 +136,6 @@ export const COPY_LB: UiCopy = {
   newTab: "(neien Tab)",
   languages: {
     label: "Sprooch vun der Websäit",
-    machineTranslated: "Dës Säit gouf automatesch aus dem Franséischen iwwersat.",
     frenchOnly: "(op Franséisch)",
   },
   meta: {

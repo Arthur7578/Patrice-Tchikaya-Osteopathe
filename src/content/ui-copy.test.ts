@@ -22,7 +22,7 @@ describe("textes d'interface : chaque langue", () => {
     const copy = leaves(getCopy(locale));
     expect(copy.map(([path]) => path)).toEqual(fr.map(([path]) => path));
     // Seuls ces textes peuvent rester vides (mentions propres aux pages traduites) ; en français, ils le sont.
-    const optional = new Set(["languages.machineTranslated", "languages.frenchOnly"]);
+    const optional = new Set(["languages.frenchOnly"]);
     for (const [path, value] of copy) {
       if (!optional.has(path)) expect(String(value).trim(), `${locale} ${path}`).not.toBe("");
     }
@@ -46,12 +46,9 @@ describe("textes d'interface : chaque langue", () => {
     expect(getCopy("pt").reviews.ratingCount(3)).toBe("3 opiniões");
   });
 
-  it("les pages traduites signalent la traduction automatique et les pages en français seulement ; pas le français", () => {
-    expect(COPY_FR.languages).toMatchObject({ machineTranslated: "", frenchOnly: "" });
-    for (const locale of ["en", "lb", "pt"] as const) {
-      expect(getCopy(locale).languages.machineTranslated, locale).not.toBe("");
-      expect(getCopy(locale).languages.frenchOnly, locale).not.toBe("");
-    }
+  it("pages juridiques en français seulement : signalé dans les autres langues, pas en français", () => {
+    expect(COPY_FR.languages.frenchOnly).toBe("");
+    for (const locale of ["de", "en", "lb", "pt"] as const) expect(getCopy(locale).languages.frenchOnly, locale).not.toBe("");
   });
 });
 

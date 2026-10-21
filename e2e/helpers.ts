@@ -40,8 +40,8 @@ export async function sitemapPaths(request: APIRequestContext): Promise<string[]
 
 /** Pages françaises (sans préfixe de langue) d'une liste de chemins, plus l'accueil de chaque autre langue. */
 export function frenchPathsAndHomes(paths: string[]): string[] {
-  const translated = /^\/(en|lb|pt)(\/|$)/;
-  return paths.filter((p) => !translated.test(p) || /^\/(en|lb|pt)$/.test(p));
+  const translated = /^\/(de|en|lb|pt)(\/|$)/;
+  return paths.filter((p) => !translated.test(p) || /^\/(de|en|lb|pt)$/.test(p));
 }
 
 /** CTA de prise de rendez-vous : tout lien dont le texte parle de rendez-vous (hors ancres internes). */

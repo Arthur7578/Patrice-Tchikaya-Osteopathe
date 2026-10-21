@@ -2510,8 +2510,7 @@ export function BookingInline({ booking }: { booking: SiteContent["booking"] }) 
   Zoufftgen) : seulement dans des phrases vraies (ex. accès), jamais en liste de mots-clés.
 - Allemand/anglais (« Osteopath Düdelingen », « osteopath Dudelange ») : public réel au Luxembourg → version
   DE/EN recommandée plus tard (hors périmètre).
-  **Mis à jour le 21/10/2026** : versions EN, LB et PT traduites automatiquement (voir `docs/DECISIONS.md`) ;
-  l'allemand n'est pas encore proposé (une ligne dans `src/config/i18n.ts` + `ui-copy.de.ts`).
+  **Mis à jour le 21/10/2026** : versions DE, EN, LB et PT traduites automatiquement (voir `docs/DECISIONS.md`).
 
 ### 10.2 Métadonnées
 

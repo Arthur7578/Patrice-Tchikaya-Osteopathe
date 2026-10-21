@@ -1,4 +1,5 @@
 import { localePath, type Locale } from "@/config/i18n";
+import { COPY_DE } from "./ui-copy.de";
 import { COPY_EN } from "./ui-copy.en";
 import { COPY_LB } from "./ui-copy.lb";
 import { COPY_PT } from "./ui-copy.pt";
@@ -7,9 +8,9 @@ import { COPY_PT } from "./ui-copy.pt";
 const MANAGE_COOKIES = "Gérer les cookies";
 
 /**
- * Textes d'interface en français (langue source). Les autres langues : ui-copy.en.ts, ui-copy.lb.ts, ui-copy.pt.ts,
+ * Textes d'interface en français (langue source). Les autres langues : ui-copy.<code>.ts (de, en, lb, pt),
  * typées sur celui-ci (une clé ajoutée ici sans traduction ne compile pas). Les traductions sont faites avec le code,
- * pas à l'exécution : modifier un texte ici = mettre à jour les trois autres fichiers dans le même commit.
+ * pas à l'exécution : modifier un texte ici = mettre à jour les autres fichiers dans le même commit.
  */
 export const COPY_FR = {
   skipLink: "Aller au contenu",
@@ -155,11 +156,10 @@ export const COPY_FR = {
     home: "Page d'accueil",
   },
   newTab: "(nouvel onglet)",
-  // Sélecteur de langue (header) et mentions propres aux pages traduites.
+  // Sélecteur de langue (header) ; mention des pages juridiques, en français seulement (vide en français).
   languages: {
     label: "Langue du site",
-    machineTranslated: "", // vide en français : texte source
-    frenchOnly: "", // pages juridiques, uniquement en français
+    frenchOnly: "",
   },
   // Métadonnées et données structurées (le contenu vient de Notion ; ici, les formulations par défaut).
   meta: {
@@ -176,7 +176,7 @@ export const COPY_FR = {
 
 export type UiCopy = typeof COPY_FR;
 
-const COPIES: Record<Locale, UiCopy> = { fr: COPY_FR, en: COPY_EN, lb: COPY_LB, pt: COPY_PT };
+const COPIES: Record<Locale, UiCopy> = { fr: COPY_FR, de: COPY_DE, en: COPY_EN, lb: COPY_LB, pt: COPY_PT };
 
 /** Textes d'interface d'une langue. */
 export const getCopy = (locale: Locale): UiCopy => COPIES[locale];

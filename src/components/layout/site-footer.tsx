@@ -109,13 +109,6 @@ export function SiteFooter({ content }: Props) {
         </div>
         <p className="mt-12 border-t border-white/10 pt-6 text-xs text-sage-100/60">
           © {year} {practitioner.name} – {practitioner.title}
-          {/* Pages traduites automatiquement : on le dit (le texte de référence reste le français). */}
-          {copy.languages.machineTranslated && (
-            <>
-              <br />
-              {copy.languages.machineTranslated}
-            </>
-          )}
         </p>
       </div>
     </footer>

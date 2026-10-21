@@ -65,12 +65,12 @@ describe("langues publiées et hreflang", () => {
     expect(m.localeAlternates("fr", "/paiement")).toEqual({ canonical: "/paiement" });
   });
 
-  it("avec traduction : 4 langues, hreflang vers chacune + x-default (le français)", async () => {
+  it("avec traduction : 5 langues, hreflang vers chacune + x-default (le français)", async () => {
     const m = await load({ ANTHROPIC_API_KEY: "cle" });
-    expect(m.ENABLED_LOCALES).toEqual(["fr", "en", "lb", "pt"]);
+    expect(m.ENABLED_LOCALES).toEqual(["fr", "de", "en", "lb", "pt"]);
     expect(m.localeAlternates("en", "/paiement")).toEqual({
       canonical: "/en/paiement",
-      languages: { fr: "/paiement", en: "/en/paiement", lb: "/lb/paiement", pt: "/pt/paiement", "x-default": "/paiement" },
+      languages: { fr: "/paiement", de: "/de/paiement", en: "/en/paiement", lb: "/lb/paiement", pt: "/pt/paiement", "x-default": "/paiement" },
     });
   });
 });

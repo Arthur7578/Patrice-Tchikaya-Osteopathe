@@ -1,10 +1,10 @@
 /**
  * Langues du site. Le français est la langue source (Notion, ui-copy.ts) et sert à la racine (« / ») ;
- * les autres langues ont un préfixe (« /en », « /lb », « /pt ») et sont traduites automatiquement
+ * les autres langues ont un préfixe (« /de », « /en », « /lb », « /pt ») et sont traduites automatiquement
  * (contenu Notion : src/lib/i18n/translate.ts ; textes d'interface : src/content/ui-copy.*.ts).
  * Ajouter une langue : l'ajouter ici + un fichier ui-copy.<code>.ts (le typage signale ce qui manque).
  */
-export const LOCALES = ["fr", "en", "lb", "pt"] as const;
+export const LOCALES = ["fr", "de", "en", "lb", "pt"] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = "fr";
 
@@ -30,6 +30,9 @@ type LocaleMeta = {
 
 export const LOCALE_META: Record<Locale, LocaleMeta> = {
   fr: { htmlLang: "fr-LU", hreflang: "fr", ogLocale: "fr_LU", intl: "fr-LU", label: "Français", englishName: "French", bookingLang: "fr" },
+  // Allemand standard (pas de variante suisse/autrichienne) : celui de la presse et de l'administration au Luxembourg.
+  // Page de réservation Doctena en allemand (« /de/… ») : non vérifiée (doctena.lu inaccessible depuis le cloud).
+  de: { htmlLang: "de", hreflang: "de", ogLocale: "de_LU", intl: "de-LU", label: "Deutsch", englishName: "German", bookingLang: "de" },
   en: { htmlLang: "en", hreflang: "en", ogLocale: "en_GB", intl: "en-GB", label: "English", englishName: "British English", bookingLang: "en" },
   lb: { htmlLang: "lb", hreflang: "lb", ogLocale: "lb_LU", intl: "lb", label: "Lëtzebuergesch", englishName: "Luxembourgish", bookingLang: "fr" },
   // Portugais d'Europe : la communauté portugaise du Luxembourg vient surtout du Portugal.

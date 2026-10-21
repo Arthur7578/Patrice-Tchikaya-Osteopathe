@@ -1,3 +1,6 @@
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FALLBACK_CONTENT as C } from "@/lib/content/fallback";
 
@@ -13,8 +16,8 @@ vi.mock("next/cache", () => ({
     return store.get(key);
   },
 }));
-const translator = vi.fn(async (batch: Record<string, string>, locale: string) =>
-  Object.fromEntries(Object.entries(batch).map(([k, v]) => [k, `[${locale}]${v}`])),
+const translator = vi.fn<(batch: Record<string, string>, locale: string, names?: string[]) => Promise<Record<string, string>>>(
+  async (batch, locale) => Object.fromEntries(Object.entries(batch).map(([k, v]) => [k, `[${locale}]${v}`])),
 );
 vi.mock("./translate", async (orig) => ({
   ...(await orig<typeof import("./translate")>()),
@@ -29,14 +32,21 @@ describe("localizeContent", () => {
     cacheOptions.length = 0;
     translator.mockClear();
     vi.stubEnv("ANTHROPIC_API_KEY", "cle");
+    // Cache disque propre à chaque test (sinon une traduction d'un test précédent serait relue).
+    vi.stubEnv("TRANSLATION_CACHE_DIR", mkdtempSync(join(tmpdir(), "translations-")));
   });
-  afterEach(() => vi.unstubAllEnvs());
+  afterEach(() => {
+    rmSync(process.env.TRANSLATION_CACHE_DIR!, { recursive: true, force: true });
+    vi.unstubAllEnvs();
+  });
 
   it("traduit chaque lot (en parallèle) et applique les traductions", async () => {
     const out = await localizeContent(C, "pt");
     expect(out.locale).toBe("pt");
     expect(out.seo.h1).toBe(`[pt]${C.seo.h1}`);
     expect(translator.mock.calls.every(([, locale]) => locale === "pt")).toBe(true);
+    // Noms du praticien transmis à la vérification (« Dr Tchikaya » refusé).
+    expect(translator.mock.calls[0]![2]).toEqual(C.practitioner.name.split(" "));
   });
 
   it("cache sans expiration, étiqueté (jamais purgé par /api/revalidate) : un contenu inchangé n'est pas retraduit", async () => {

@@ -1,0 +1,148 @@
+import type { UiCopy } from "./ui-copy";
+
+/** Textes d'interface en allemand, traduits de COPY_FR (ui-copy.ts) : mêmes clés, même sens. */
+export const COPY_DE: UiCopy = {
+  skipLink: "Zum Inhalt springen",
+  home: "Startseite",
+  nav: { about: "Vorstellung", motifs: "Beschwerden", faq: "FAQ", infos: "Anfahrt & Preise" },
+  navLabel: "Hauptnavigation",
+  ratingOn: "auf",
+  googleMaps: "Google Maps",
+  starRating: (value) => `Bewertung: ${value} von 5`,
+  cta: {
+    book: "Online einen Termin buchen",
+    bookShort: "Termin buchen",
+    bookMobile: "Termin buchen",
+    call: (phone) => `${phone} anrufen`,
+    callCabinet: (phone) => `Die Praxis unter ${phone} anrufen`,
+  },
+  hero: {
+    location: (city) => `Praxis in ${city}`,
+    points: {
+      ordonnance: "Ohne Verordnung",
+      duree: (duration) => `Sitzung von ${duration}`,
+      mutuelle: "Rechnung für Ihre Zusatzversicherung",
+      tarif: (price) => `Preis: ${price}`,
+      confirmation: "Bestätigung per E-Mail",
+    },
+    cardTitle: (minutes) => `Behandlung ${minutes} Min.`,
+    cardSubtitle: "Nach Terminvereinbarung · ohne Verordnung",
+  },
+  about: { eyebrow: "Vorstellung", training: "Ausbildung" },
+  motifs: {
+    eyebrow: "Behandlungsgründe",
+    title: (city) => `Warum zum Osteopathen in ${city}?`,
+    intro: (city) =>
+      `In der Praxis in ${city} beginnt jede Sitzung mit einer gründlichen Untersuchung, um die Ursache der Schmerzen zu behandeln und nicht nur das Symptom.`,
+    helpLine: "Sie sind unsicher, ob eine Behandlung für Sie infrage kommt? Rufen Sie die Praxis an:",
+    discover: (title) => `Mehr erfahren: ${title}`,
+  },
+  motifPage: {
+    breadcrumb: "Brotkrumennavigation",
+    home: "Startseite",
+    h1: (title, city) => `${title} in ${city}`,
+    ctaTitle: (city) => `Termin in der Praxis in ${city}`,
+    ctaText: (duration) =>
+      `Sitzung von ${duration}, ohne Verordnung. Buchen Sie online oder rufen Sie die Praxis an, wenn Sie vorab eine Frage haben.`,
+    related: "Weitere Artikel",
+  },
+  reviews: {
+    eyebrow: "Patientenbewertungen",
+    title: "Das sagen die Patienten",
+    source: "Google-Bewertungen",
+    ratingLabel: "Bewertung",
+    ratingCount: (count) => (count === 1 ? "1 Bewertung" : `${count} Bewertungen`),
+    listLabel: "Patientenbewertungen",
+    seeAll: "Alle Bewertungen auf Google",
+    leaveReview: "Bewertung schreiben",
+  },
+  faq: {
+    eyebrow: "FAQ",
+    title: "Häufige Fragen zur Osteopathie",
+    more: (n) => (n === 1 ? "Nächste Frage anzeigen" : `Die ${n} weiteren Fragen anzeigen`),
+    helpTitle: "Sie finden Ihre Antwort nicht?",
+    helpText: "Rufen Sie die Praxis an, wir helfen Ihnen gerne weiter.",
+  },
+  infos: {
+    eyebrow: "Praktische Informationen",
+    title: "Praktische Informationen, Anfahrt & Preise",
+    labels: {
+      address: "Adresse", phone: "Telefon", phoneOffice: "Praxis:", phoneMobile: "Mobil:", duration: "Dauer", price: "Preis", payment: "Bezahlung",
+      reimbursement: "Erstattung", hours: "Öffnungszeiten", languages: "Sprachen",
+      train: "Zug", bus: "Bus", parking: "Parken", accessibility: "Barrierefreiheit",
+    },
+    transportTitle: "Anfahrt zur Praxis",
+    moreTitle: "Gut zu wissen",
+    directions: "Route",
+    map: "Auf Google Maps ansehen",
+    paymentLink: "So bezahlen Sie mit Wero",
+    bookingTitle: "Ihre Sitzung online buchen",
+    bookingText: "Wählen Sie einen Termin: Die Bestätigung erhalten Sie per E-Mail.",
+    bookingFallback: "Den Kalender in einem neuen Tab öffnen",
+  },
+  bookingInline: {
+    loading: "Kalender wird geladen…",
+    failed: "Der Kalender konnte hier nicht geladen werden.",
+    open: "Den Buchungskalender öffnen",
+  },
+  payment: {
+    metaTitle: "Ihre Sitzung mit Wero bezahlen",
+    metaDescription: (city) =>
+      `Ihre Osteopathie-Sitzung in ${city} mit Wero bezahlen: die Schritte, warum es sicher ist und was Sie tun können, wenn Sie Wero noch nicht haben.`,
+    step: (n) => `Schritt ${n}: `,
+  },
+  articles: {
+    metaTitle: "Alle Artikel",
+    metaDescription: (city) =>
+      `Alle Artikel der Osteopathie-Praxis in ${city}: Behandlungsgründe und praktische Informationen zur Vorbereitung Ihrer Sitzung.`,
+    title: "Alle Artikel",
+    intro: (city) => `Die Behandlungsgründe und praktischen Informationen der Osteopathie-Praxis in ${city} an einem Ort.`,
+  },
+  footer: {
+    cabinet: "Praxis",
+    links: "Links",
+    googleProfile: "Google-Profil",
+    legal: "Impressum",
+    privacy: "Datenschutz",
+    payment: "Ihre Sitzung bezahlen",
+    articles: "Alle Artikel",
+    cookies: "Cookie-Einstellungen",
+  },
+  cookies: {
+    label: "Cookie-Einwilligung",
+    text: "Diese Website verwendet Cookies zur Reichweitenmessung (Google Tag Manager) nur mit Ihrer Einwilligung. Sie können Ihre Entscheidung jederzeit über den Link „Cookie-Einstellungen“ unten auf der Seite ändern.",
+    refuse: "Ablehnen",
+    accept: "Akzeptieren",
+  },
+  notFound: {
+    title: "Seite nicht gefunden",
+    text: "Die gesuchte Seite existiert nicht oder nicht mehr. Sie können zur Startseite zurückkehren oder direkt einen Termin buchen.",
+  },
+  ogImage: { tagline: (city) => `Osteopath in ${city} – Online-Terminbuchung` },
+  backToHome: "Zurück zur Startseite",
+  menu: { open: "Menü öffnen", close: "Menü schließen", label: "Hauptmenü" },
+  llms: {
+    practical: "Praktische Informationen",
+    motifs: "Behandlungsgründe",
+    guides: "Informationsseiten",
+    faq: "Häufige Fragen",
+    pages: "Seiten der Website",
+    booking: "Online-Terminbuchung",
+    home: "Startseite",
+  },
+  newTab: "(neuer Tab)",
+  languages: {
+    label: "Sprache der Website",
+    frenchOnly: "(auf Französisch)",
+  },
+  meta: {
+    homeTitle: (city, name) => `Osteopath in ${city} – ${name}, D.O.`,
+    homeDescription: (city, duration) =>
+      `Osteopathie-Praxis in ${city} (Luxemburg): Rücken, Nacken, Gelenke, Sport und Belastungen am Arbeitsplatz. Sitzung von ${duration}. Online-Terminbuchung.`,
+    titleTemplate: (name, city) => `%s | ${name}, Osteopath in ${city}`,
+    motifLocal: (city) => `Osteopath in ${city}, ohne Verordnung.`,
+    imageAlt: (name, title, city) => `${name}, ${title} in ${city}`,
+    websiteName: (name, city) => `${name} – Osteopath in ${city}`,
+    knowsAbout: { osteopathy: "Osteopathie", msd: "Muskel-Skelett-Erkrankungen", handball: "Handball" },
+  },
+};

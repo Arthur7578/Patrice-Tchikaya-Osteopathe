@@ -133,7 +133,6 @@ export const COPY_PT: UiCopy = {
   newTab: "(novo separador)",
   languages: {
     label: "Língua do site",
-    machineTranslated: "Esta página foi traduzida automaticamente do francês.",
     frenchOnly: "(em francês)",
   },
   meta: {

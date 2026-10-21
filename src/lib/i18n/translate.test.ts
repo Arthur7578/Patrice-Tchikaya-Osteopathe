@@ -19,12 +19,29 @@ describe("validateTranslation", () => {
     expect(validateTranslation(source, translated)).toEqual(problems);
   });
 
-  it("règle 10 : refuse « doctor », « Dokter »… sauf si le français cite lui-même un médecin", () => {
-    expect(validateTranslation({ a: "Votre ostéopathe" }, { a: "Your doctor" })).toEqual(["a : titre interdit (règle 10)"]);
-    expect(validateTranslation({ a: "Votre ostéopathe" }, { a: "Ären Dokter" })).toEqual(["a : titre interdit (règle 10)"]);
-    expect(validateTranslation({ a: "Votre ostéopathe" }, { a: "Dr Tchikaya" })).toEqual(["a : titre interdit (règle 10)"]);
-    expect(validateTranslation({ a: "Parlez-en à votre médecin" }, { a: "Talk to your doctor" })).toEqual([]);
+  it("règle 10 : un médecin cité comme profession se traduit fidèlement, dans chaque langue", () => {
+    const source = { a: "Consultez un médecin en cas d'urgence.", b: "Consultez un docteur si la douleur persiste." };
+    expect(validateTranslation(source, { a: "See a doctor in an emergency.", b: "See a doctor if the pain persists." })).toEqual([]);
+    expect(validateTranslation(source, { a: "Im Notfall einen Arzt aufsuchen.", b: "Gehen Sie zum Arzt, wenn der Schmerz anhält." })).toEqual([]);
+    expect(validateTranslation(source, { a: "Am Noutfall bei en Dokter goen.", b: "Gitt bei en Dokter." })).toEqual([]);
+    expect(validateTranslation(source, { a: "Em caso de urgência, consulte um médico.", b: "Consulte um médico." })).toEqual([]);
     expect(validateTranslation({ a: "Suivi médical" }, { a: "Acompanhamento médico" })).toEqual([]); // adjectif portugais
+  });
+
+  it("règle 10 : refuse une traduction qui présente l'ostéopathe comme médecin", () => {
+    expect(validateTranslation({ a: "Votre ostéopathe" }, { a: "Your doctor" })).toEqual(["a : médecin ajouté (règle 10)"]);
+    expect(validateTranslation({ a: "Votre ostéopathe" }, { a: "Ären Dokter" })).toEqual(["a : médecin ajouté (règle 10)"]);
+    expect(validateTranslation({ a: "Au cabinet" }, { a: "In der Arztpraxis" })).toEqual(["a : médecin ajouté (règle 10)"]);
+    expect(validateTranslation({ a: "Votre ostéopathe" }, { a: "O seu médico" })).toEqual(["a : médecin ajouté (règle 10)"]);
+    // Un médecin cité dans le français n'autorise pas à en ajouter un second (l'ostéopathe).
+    expect(validateTranslation({ a: "Votre ostéopathe, ou un médecin" }, { a: "Your doctor, or a physician" })).toEqual(["a : médecin ajouté (règle 10)"]);
+  });
+
+  it("règle 10 : refuse un titre de docteur accolé au praticien, même si le français cite un médecin", () => {
+    const names = ["Patrice", "Tchikaya"];
+    expect(validateTranslation({ a: "Patrice Tchikaya vous reçoit. Consultez un médecin si fièvre." }, { a: "Dr Tchikaya will see you. If fever, see a physician." }, names))
+      .toEqual(["a : médecin ajouté (règle 10)", "a : titre de docteur accolé au praticien (règle 10)"]);
+    expect(validateTranslation({ a: "Le docteur Martin vous a orienté vers Patrice" }, { a: "Dr Martin referred you to Patrice" }, names)).toEqual([]);
   });
 });
 
@@ -52,11 +69,13 @@ describe("createClaudeTranslator", () => {
     const { client, calls } = fakeClient([{ text: JSON.stringify({ a: "Hello", b: "Bye" }) }]);
     expect(await createClaudeTranslator(client)({ a: "Bonjour", b: "Au revoir" }, "lb")).toEqual({ a: "Hello", b: "Bye" });
     const params = calls[0]!;
-    expect(params.model).toBe("claude-opus-5-5");
-    expect(params.system).toMatch(/never call him a doctor/);
+    expect(params.model).toBe("claude-fable-5-1");
+    expect(params).not.toHaveProperty("thinking"); // toujours actif sur ce modèle : le paramètre est refusé
+    expect(params.system).toMatch(/never present him or his practice as a doctor/);
+    expect(params.system).toMatch(/translate those mentions faithfully/);
     expect(JSON.stringify(params.messages)).toContain("Target language: Luxembourgish");
     expect(params.output_config).toEqual({
-      effort: "medium",
+      effort: "high",
       format: {
         type: "json_schema",
         schema: { type: "object", properties: { a: { type: "string" }, b: { type: "string" } }, required: ["a", "b"], additionalProperties: false },
@@ -76,9 +95,9 @@ describe("createClaudeTranslator", () => {
     expect(stream).not.toHaveBeenCalled();
   });
 
-  it("réponse invalide : redemandée, jusqu'à 3 essais", async () => {
-    const { client, stream } = fakeClient([{ text: "pas du json" }, { text: JSON.stringify({ a: "Your doctor" }) }, { text: JSON.stringify({ a: "Your osteopath" }) }]);
-    expect(await createClaudeTranslator(client)({ a: "Votre ostéopathe" }, "en")).toEqual({ a: "Your osteopath" });
+  it("réponse invalide : redemandée, jusqu'à 3 essais (noms du praticien transmis à la vérification)", async () => {
+    const { client, stream } = fakeClient([{ text: "pas du json" }, { text: JSON.stringify({ a: "Dr Tchikaya, osteopath" }) }, { text: JSON.stringify({ a: "Tchikaya, osteopath" }) }]);
+    expect(await createClaudeTranslator(client)({ a: "Tchikaya, ostéopathe" }, "en", ["Tchikaya"])).toEqual({ a: "Tchikaya, osteopath" });
     expect(stream).toHaveBeenCalledTimes(3);
   });
 

@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/config/i18n", async (orig) => ({ ...(await orig<typeof import("@/config/i18n")>()), ENABLED_LOCALES: ["fr", "en", "lb", "pt"] }));
+vi.mock("@/config/i18n", async (orig) => ({ ...(await orig<typeof import("@/config/i18n")>()), ENABLED_LOCALES: ["fr", "de", "en", "lb", "pt"] }));
 const { config, proxy } = await import("./proxy");
 
 const call = (path: string, headers: Record<string, string> = {}) => proxy(new NextRequest(`https://site.test${path}`, { headers }));

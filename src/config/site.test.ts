@@ -18,7 +18,7 @@ describe("RESERVED_SLUGS", () => {
   });
 
   it("contient les préfixes de langue (« /en » est une langue, jamais une page motif)", () => {
-    for (const locale of ["fr", "en", "lb", "pt"]) expect(RESERVED_SLUGS.has(locale), locale).toBe(true);
+    for (const locale of ["fr", "de", "en", "lb", "pt"]) expect(RESERVED_SLUGS.has(locale), locale).toBe(true);
   });
 });
 
