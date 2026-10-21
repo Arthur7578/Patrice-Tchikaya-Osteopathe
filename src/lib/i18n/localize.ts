@@ -40,6 +40,9 @@ function translateBatch(batch: TextBatch, locale: Locale, names: string[]): Prom
   return pending;
 }
 
+/** Lot de textes traduit (avec les mêmes caches) : sert aussi aux slugs (src/lib/i18n/slugs.ts). */
+export const translateTexts = (batch: TextBatch, locale: Locale) => translateBatch(batch, locale, []);
+
 /** Contenu traduit dans `locale` (tous les lots en parallèle). Une erreur de traduction est levée, comme une erreur Notion. */
 export async function localizeContent(content: SiteContent, locale: Locale): Promise<SiteContent> {
   const groups = collectTranslatable(content);

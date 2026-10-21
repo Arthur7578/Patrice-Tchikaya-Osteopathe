@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { FALLBACK_CONTENT as C } from "@/lib/content/fallback";
 import type { Booking, SiteContent } from "@/lib/content/types";
-import { applyTranslations, collectTranslatable, localizeBooking, type TranslationGroups } from "./localize-content";
+import { applySlugs, applyTranslations, collectTranslatable, localizeBooking, type TranslationGroups } from "./localize-content";
 
 /** « Traduction » repérable : chaque texte préfixé par [EN]. */
 const fakeTranslate = (groups: TranslationGroups): TranslationGroups =>
@@ -135,5 +135,35 @@ describe("localizeBooking", () => {
     expect(localizeBooking({ ...doctena(""), url: `https://doctena.be/en${id}` }, "fr").url).toBe(`https://doctena.be/fr${id}`);
     const lookalike = { ...doctena(""), url: `https://notdoctena.lu.evil.test/en${id}` };
     expect(localizeBooking(lookalike, "fr")).toBe(lookalike);
+  });
+});
+
+describe("applySlugs (slugs traduits figés)", () => {
+  const source = withPage();
+  const map = new Map([
+    ["guide", { slugs: { fr: "guide", de: "ratgeber", en: "guide-en", lb: "guide", pt: "guia" }, aliases: { fr: ["ancien-guide"], de: ["guide"], en: ["guide"], lb: [], pt: ["guide"] } }],
+    ["mal-de-dos", { slugs: { fr: "mal-de-dos", de: "ruckenschmerzen", en: "back-pain", lb: "mal-de-dos", pt: "dor-nas-costas" }, aliases: { fr: [], de: ["mal-de-dos"], en: ["mal-de-dos"], lb: [], pt: ["mal-de-dos"] } }],
+  ]);
+
+  it("contenu traduit : slug de la langue, liste des slugs, anciennes adresses ; page non publiée inchangée", () => {
+    const draft = { ...source.guides[0]!, slug: "brouillon", page: null };
+    const en = applySlugs(applyTranslations({ ...source, guides: [...source.guides, draft] }, "en", {}), map, "en");
+    expect(en.guides[0]).toMatchObject({ slug: "guide-en", slugs: map.get("guide")!.slugs, aliases: ["guide"] });
+    expect(en.guides[1]!.slug).toBe("brouillon");
+    expect(en.guides[1]!.slugs).toBeUndefined();
+  });
+
+  it("liens internes du corps des pages : vers le slug traduit de la page visée (ancre conservée)", () => {
+    const withAnchor = {
+      ...source,
+      guides: [{ ...source.guides[0]!, page: { ...source.guides[0]!.page!, blocks: [{ type: "paragraph" as const, text: [{ text: "x", href: "/mal-de-dos#faq" }, { text: "y", href: "/paiement" }] }] } }],
+    };
+    const de = applySlugs(applyTranslations(withAnchor, "de", {}), map, "de");
+    expect(de.guides[0]!.page!.blocks[0]).toEqual({ type: "paragraph", text: [{ text: "x", href: "/de/ruckenschmerzen#faq" }, { text: "y", href: "/de/paiement" }] });
+  });
+
+  it("français : slug français, liste des slugs (hreflang) et anciens slugs français", () => {
+    const fr = applySlugs(source, map, "fr");
+    expect(fr.guides[0]).toMatchObject({ slug: "guide", slugs: map.get("guide")!.slugs, aliases: ["ancien-guide"] });
   });
 });

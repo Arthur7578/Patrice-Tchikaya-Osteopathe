@@ -6,8 +6,11 @@ import { useSyncExternalStore } from "react";
 import { localePath, splitLocalePath, type Locale } from "@/config/i18n";
 
 type Option = { locale: Locale; label: string; htmlLang: string; hreflang: string };
-/** `dropdown` : bouton de l'en-tête (à partir de sm) ; `inline` : liste dans le menu mobile (l'en-tête est trop étroit). */
-type Props = { current: Locale; options: Option[]; label: string; variant?: "dropdown" | "inline" };
+/**
+ * `dropdown` : bouton de l'en-tête (à partir de sm) ; `inline` : liste dans le menu mobile (l'en-tête est trop étroit).
+ * `pages` : slugs de chaque page détaillée dans chaque langue (slugs traduits : « /de/sportosteopathie » ↔ « /osteopathie-du-sport »).
+ */
+type Props = { current: Locale; options: Option[]; label: string; pages?: Array<Partial<Record<Locale, string>>>; variant?: "dropdown" | "inline" };
 
 const noSubscribe = () => () => {};
 const browserPath = () => window.location.pathname;
@@ -19,14 +22,16 @@ const serverPath = () => null;
  * rendu serveur : le proxy réécrit les pages françaises (« / » → « /fr »), le serveur ne connaît pas l'adresse
  * affichée (docs Next : usePathname et réécritures).
  */
-export function LanguageSwitcher({ current, options, label, variant = "dropdown" }: Props) {
+export function LanguageSwitcher({ current, options, label, pages = [], variant = "dropdown" }: Props) {
   usePathname(); // nouveau rendu à chaque navigation interne
   const pathname = useSyncExternalStore(noSubscribe, browserPath, serverPath);
-  const target = pathname === null ? "/" : splitLocalePath(pathname).path;
+  const path = pathname === null ? "/" : splitLocalePath(pathname).path;
+  const page = pages.find((p) => `/${p[current]}` === path);
+  const pathIn = (locale: Locale) => (page?.[locale] ? `/${page[locale]}` : path);
   const active = options.find((o) => o.locale === current);
   const link = (option: Option, className: string) => (
     <a
-      href={localePath(option.locale, target)}
+      href={localePath(option.locale, pathIn(option.locale))}
       hrefLang={option.hreflang}
       lang={option.htmlLang}
       aria-current={option.locale === current ? "true" : undefined}

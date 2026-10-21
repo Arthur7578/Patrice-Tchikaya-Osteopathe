@@ -1,6 +1,7 @@
 import { LOCALE_META, localePath, type Locale } from "@/config/i18n";
 import type { Booking, ContentBlock, Motif, MotifPage, PaymentSection, RichText, SiteContent } from "@/lib/content/types";
 import { markupToRichText, richTextToMarkup } from "./rich-text";
+import type { SlugMap } from "./slugs";
 
 /**
  * Textes à traduire, rangés par lot : « general », « faq », « about », « payment », « cards » (titres et
@@ -196,4 +197,33 @@ export function localizeBooking(booking: Booking, locale: Locale): Booking {
   parts[1] = lang;
   url.pathname = parts.join("/");
   return { ...booking, url: url.toString() };
+}
+
+/**
+ * Slugs figés (src/lib/i18n/slugs.ts) appliqués à un contenu dans `locale` (français compris) : chaque page publiée
+ * prend son slug dans la langue, garde la liste de ses slugs (hreflang, sélecteur de langue) et ses anciennes adresses
+ * (redirections). Les liens internes du corps des pages vers une autre page suivent son slug traduit.
+ */
+export function applySlugs(c: SiteContent, map: SlugMap, locale: Locale): SiteContent {
+  const target = new Map<string, string>();
+  for (const [frSlug, { slugs }] of map) target.set(localePath(locale, `/${frSlug}`), localePath(locale, `/${slugs[locale]}`));
+  const relink = (t: RichText): RichText => {
+    if (!t.href?.startsWith("/")) return t;
+    const [path, hash] = t.href.split("#", 2);
+    const to = target.get(path!);
+    return to ? { ...t, href: hash === undefined ? to : `${to}#${hash}` } : t;
+  };
+  const withSlugs = (m: Motif): Motif => {
+    const entry = map.get(m.slug);
+    const page = m.page && {
+      ...m.page,
+      blocks: m.page.blocks.map((block): ContentBlock => {
+        if (block.type === "list") return { ...block, items: block.items.map((item) => item.map(relink)) };
+        if ("text" in block) return { ...block, text: block.text.map(relink) };
+        return block;
+      }),
+    };
+    return entry ? { ...m, page, slug: entry.slugs[locale], slugs: entry.slugs, aliases: entry.aliases[locale] } : { ...m, page };
+  };
+  return { ...c, motifs: c.motifs.map(withSlugs), guides: c.guides.map(withSlugs) };
 }

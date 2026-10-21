@@ -13,7 +13,13 @@ const unstableCache = vi.fn(<T>(fn: T, ...args: unknown[]) => {
 vi.mock("next/cache", () => ({ unstable_cache: unstableCache }));
 
 const localizeContent = vi.fn(async (content: object, locale: string) => ({ ...content, locale }));
-vi.mock("@/lib/i18n/localize", () => ({ localizeContent }));
+const translateTexts = vi.fn();
+vi.mock("@/lib/i18n/localize", () => ({ localizeContent, translateTexts }));
+// Slugs traduits : pas de stockage par défaut (dev, CI) ; un test en fournit un.
+const blobSlugStore = vi.fn((): unknown => null);
+vi.mock("@/lib/i18n/slug-store", () => ({ blobSlugStore }));
+const resolveSlugs = vi.fn();
+vi.mock("@/lib/i18n/slugs", () => ({ resolveSlugs }));
 // Langues publiées : fixées ici (elles dépendent de la clé API, lue à l'import de @/config/i18n).
 vi.mock("@/config/i18n", async (orig) => ({ ...(await orig<typeof import("@/config/i18n")>()), ENABLED_LOCALES: ["fr", "en"] }));
 
@@ -80,5 +86,31 @@ describe("getSiteContent", () => {
     const booking = { url: "https://www.doctena.lu/en/booking-form/calendar/abc", provider: "generic" as const, calLink: null, calOrigin: null };
     fetchSiteContent.mockResolvedValue({ content: { ...FALLBACK_CONTENT, booking }, warnings: [] });
     expect((await getSiteContent()).booking.url).toBe("https://www.doctena.lu/fr/booking-form/calendar/abc");
+  });
+
+  it("slugs traduits : avec un stockage, chaque langue reçoit les slugs figés (français compris, pour le hreflang)", async () => {
+    const store = { list: vi.fn(async () => []), create: vi.fn() };
+    blobSlugStore.mockReturnValue(store);
+    const published = FALLBACK_CONTENT.motifs.find((m) => m.page)!;
+    const slugs = { fr: published.slug, de: "de-slug", en: "en-slug", lb: published.slug, pt: published.slug };
+    resolveSlugs.mockResolvedValue(new Map([[published.slug, { slugs, aliases: { fr: [], de: [], en: [published.slug], lb: [], pt: [] } }]]));
+    const en = await getSiteContent("en");
+    expect(en.motifs.find((m) => m.slugs)).toMatchObject({ slug: "en-slug", aliases: [published.slug] });
+    const fr = await getSiteContent();
+    expect(fr.motifs.find((m) => m.slugs)).toMatchObject({ slug: published.slug, slugs });
+    const options = resolveSlugs.mock.calls[0]![0];
+    expect(options.locales).toEqual(["fr", "en"]);
+    expect(options.translate).toBe(translateTexts);
+    expect(options.pages).toContainEqual({ pageKey: `slug-${published.slug}`, frSlug: published.slug }); // pas d'id Notion dans le contenu de secours
+    // Lecture en cache, relecture directe avec `fresh` (avant toute création).
+    await options.store.list({ fresh: true });
+    expect(store.list).toHaveBeenCalled();
+    blobSlugStore.mockReturnValue(null);
+  });
+
+  it("sans stockage : aucun slug traduit (contenu de secours renvoyé tel quel)", async () => {
+    resolveSlugs.mockClear();
+    expect(await getSiteContent()).toBe(FALLBACK_CONTENT);
+    expect(resolveSlugs).not.toHaveBeenCalled();
   });
 });

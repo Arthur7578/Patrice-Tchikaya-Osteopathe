@@ -5,7 +5,9 @@
 Landing page SEO local : Next.js 16 (App Router) + TypeScript + Tailwind CSS v4, contenu Notion (lecture seule),
 prise de RDV Cal.com (compte UE `cal.eu`) ou Doctena, déploiement Vercel. Site en 5 langues : français (source, sans
 préfixe), `/de`, `/en`, `/lb`, `/pt`, traduites automatiquement depuis le français (`src/lib/i18n`, API Claude,
-`ANTHROPIC_API_KEY` ; sans elle, français seul). Voir `docs/DECISIONS.md` (21/10/2026).
+`ANTHROPIC_API_KEY` ; sans elle, français seul). Slugs des pages détaillées traduits une fois puis figés dans
+Vercel Blob (`src/lib/i18n/slugs.ts` ; anciennes adresses redirigées) ; sans store Blob (dev, CI), slugs français.
+Voir `docs/DECISIONS.md` (21/10/2026).
 
 **Source de vérité : `docs/PLAN.md`.** Relire la section de la phase en cours avant d'écrire du code.
 Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, décision, raison).
@@ -56,7 +58,8 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
    Liste vérifiée par `src/test/architecture.test.ts`.
 2. Aucun contenu éditorial en dur hors `fallback.ts` et `src/content/ui-copy*.ts` ; tout passe par
    `getSiteContent(locale)` et `getCopy(locale)`. Modifier `ui-copy.ts` = mettre à jour `ui-copy.de/en/lb/pt.ts` dans le
-   même commit (le typage et `ui-copy.test.ts` le vérifient). Liens internes via `localePath(locale, …)`.
+   même commit (le typage et `ui-copy.test.ts` le vérifient). Liens internes via `localePath(locale, …)` ; vers une page
+   détaillée, toujours `m.slug` du contenu de la langue (slug traduit), hreflang via `pagePaths(m)`.
    Vérifié sur le JSX par `src/test/architecture.test.ts` (exceptions listées : outil d'upload, icône).
 3. Images Notion : colonne `URL` uniquement, jamais les fichiers Notion ; toujours l'`alt` Notion ; placeholder
    si pas d'URL (composant `SiteImage`).

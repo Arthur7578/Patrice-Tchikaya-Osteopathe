@@ -40,6 +40,16 @@ describe("LanguageSwitcher", () => {
     });
   });
 
+  it("page détaillée aux slugs traduits : chaque langue mène au slug de sa langue", () => {
+    const pages = [{ fr: "osteopathie-du-sport", de: "sportosteopathie", en: "sports-osteopathy", lb: "osteopathie-du-sport", pt: "osteopatia-desportiva" }];
+    window.history.replaceState(null, "", "/de/sportosteopathie");
+    render(<LanguageSwitcher current="de" options={OPTIONS} label="Sprache" pages={pages} />);
+    expect(hrefs()).toEqual({
+      Français: "/osteopathie-du-sport", Deutsch: "/de/sportosteopathie", English: "/en/sports-osteopathy",
+      Lëtzebuergesch: "/lb/osteopathie-du-sport", Português: "/pt/osteopatia-desportiva",
+    });
+  });
+
   it("variante « inline » (menu mobile) : liste nommée, mêmes liens", () => {
     window.history.replaceState(null, "", "/pt/articles");
     render(<LanguageSwitcher current="pt" options={OPTIONS} label="Língua do site" variant="inline" />);

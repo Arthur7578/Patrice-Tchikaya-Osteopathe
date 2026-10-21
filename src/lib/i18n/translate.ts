@@ -30,6 +30,7 @@ Rules you must always follow:
 - Keep the inline tags <b>, </b>, <i>, </i>, <code>, </code>, <a n="…"> and </a> exactly as written (same tags, same n values, properly nested), moving them only as word order requires. Keep the escaped characters &lt; &gt; &amp; as they are. Do not add any markup of your own.
 - Keep line breaks inside a text where the French text has them.
 - Each value is translated on its own; keep consistent terminology across values.
+- Values whose id starts with "slug." are the words of a page address (URL): translate them into a short, natural phrase in the target language that people would search for, keeping place names such as "Dudelange", without punctuation.
 - Values whose id starts with "reviews." are patient reviews quoted on the site: translate them faithfully in the patient's own voice and register, without improving, shortening or correcting them. A review may be written in a language other than French: translate it into the target language too, and return it unchanged if it is already in the target language.
 
 The user message is a JSON object of id → French text. Reply with a JSON object with exactly the same ids, each mapped to its translation.`;

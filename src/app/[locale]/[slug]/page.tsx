@@ -1,14 +1,14 @@
 import { CalendarDays, ChevronRight, Phone } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { BackToHome } from "@/components/layout/back-to-home";
 import { BookingLink } from "@/components/booking/booking-link";
 import { ContentBlocks } from "@/components/content/content-blocks";
 import { PageCards } from "@/components/content/page-cards";
 import { JsonLd } from "@/components/seo/json-ld";
 import { buttonVariants } from "@/components/ui/button";
-import { localeAlternates, localePath, LOCALE_META, type Locale } from "@/config/i18n";
+import { DEFAULT_LOCALE, isLocale, localeAlternates, localePath, LOCALE_META, pagePaths, type Locale } from "@/config/i18n";
 import { RESERVED_SLUGS } from "@/config/site";
 import { getCopy } from "@/content/ui-copy";
 import { getSiteContent } from "@/lib/content/get-site-content";
@@ -32,8 +32,8 @@ export const dynamicParams = true;
  * Notion est rendu à sa première visite. Tant qu'une page n'est pas publiée, son adresse renvoie une 404
  * (notFound ci-dessous). Voir docs/DECISIONS.md.
  */
-export async function generateStaticParams() {
-  const { motifs, guides } = await getSiteContent();
+export async function generateStaticParams({ params }: { params: { locale: string } }) {
+  const { motifs, guides } = await getSiteContent(isLocale(params.locale) ? params.locale : DEFAULT_LOCALE);
   return [...motifs, ...guides].filter((m) => !RESERVED_SLUGS.has(m.slug)).map((m) => ({ slug: m.slug }));
 }
 
@@ -47,6 +47,16 @@ async function findMotifPage(locale: Locale, slug: string) {
   const guide = motif ? undefined : content.guides.find((g) => g.slug === slug);
   const entry = motif ?? guide;
   return entry?.page ? { content, motif: entry, page: entry.page, kind: motif ? ("motif" as const) : ("guide" as const) } : null;
+}
+
+/**
+ * Ancienne adresse d'une page publiée (slug français sous une autre langue, ancien slug traduit ou ancien slug
+ * français : voir src/lib/i18n/slugs.ts) : chemin actuel de la page, sinon null.
+ */
+async function currentPathOf(locale: Locale, slug: string): Promise<string | null> {
+  const content = await getSiteContent(locale);
+  const entry = [...content.motifs, ...content.guides].find((m) => m.page && m.aliases?.includes(slug));
+  return entry ? localePath(locale, `/${entry.slug}`) : null;
 }
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/[slug]">): Promise<Metadata> {
@@ -68,15 +78,21 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/[slug]">
   return {
     title: { absolute: title },
     description,
-    alternates: localeAlternates(content.locale, `/${motif.slug}`),
+    alternates: localeAlternates(content.locale, pagePaths(motif)),
     openGraph: { type: "article", locale: ogLocale, siteName, url: path, title, description, images: [image] },
     twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }
 
 export default async function MotifPage({ params }: PageProps<"/[locale]/[slug]">) {
-  const found = await findMotifPage(await routeLocale(params), (await params).slug);
-  if (!found) notFound();
+  const locale = await routeLocale(params);
+  const { slug } = await params;
+  const found = await findMotifPage(locale, slug);
+  if (!found) {
+    const moved = await currentPathOf(locale, slug);
+    if (moved) permanentRedirect(moved); // 308 : l'adresse a changé, les liens et le classement suivent
+    notFound();
+  }
   const { content, motif, page, kind } = found;
   const copy = getCopy(content.locale);
   const { contact, booking, consultation } = content;

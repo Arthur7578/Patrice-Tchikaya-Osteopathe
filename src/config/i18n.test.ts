@@ -73,4 +73,15 @@ describe("langues publiées et hreflang", () => {
       languages: { fr: "/paiement", de: "/de/paiement", en: "/en/paiement", lb: "/lb/paiement", pt: "/pt/paiement", "x-default": "/paiement" },
     });
   });
+
+  it("chemin propre à chaque langue (slugs traduits) : canonical et hreflang suivent chaque slug", async () => {
+    const m = await load({ ANTHROPIC_API_KEY: "cle" });
+    const paths = m.pagePaths({ slug: "mal-de-dos", slugs: { fr: "mal-de-dos", de: "ruckenschmerzen", en: "back-pain", lb: "mal-de-dos", pt: "dor-nas-costas" } });
+    expect(m.localeAlternates("de", paths)).toEqual({
+      canonical: "/de/ruckenschmerzen",
+      languages: { fr: "/mal-de-dos", de: "/de/ruckenschmerzen", en: "/en/back-pain", lb: "/lb/mal-de-dos", pt: "/pt/dor-nas-costas", "x-default": "/mal-de-dos" },
+    });
+    // Sans slugs traduits : le même slug partout.
+    expect(m.pagePaths({ slug: "mal-de-dos" })).toEqual({ fr: "/mal-de-dos", de: "/mal-de-dos", en: "/mal-de-dos", lb: "/mal-de-dos", pt: "/mal-de-dos" });
+  });
 });

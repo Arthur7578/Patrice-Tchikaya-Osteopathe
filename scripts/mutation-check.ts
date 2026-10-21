@@ -59,7 +59,7 @@ const MUTANTS: Mutant[] = [
   { name: "getSiteContent : repli servi en production", file: "src/lib/content/get-site-content.ts", find: 'process.env.VERCEL_ENV === "production"', replace: "false", tests: ["src/lib/content/get-site-content.test.ts"] },
   { name: "getGoogleRating : appel sans clé", file: "src/lib/google/get-google-rating.ts", find: "if (!apiKey || !placeId) return null;", replace: "", tests: ["src/lib/google/get-google-rating.test.ts"] },
   // --- Pages motifs ---
-  { name: "[slug] : motif sans page publiée rendu au lieu d'un 404", file: "src/app/[locale]/[slug]/page.tsx", find: "if (!found) notFound();", replace: "", tests: [PAGES] },
+  { name: "[slug] : motif sans page publiée rendu au lieu d'un 404", file: "src/app/[locale]/[slug]/page.tsx", find: "    notFound();\n  }\n  const { content, motif, page, kind } = found;", replace: "    return null;\n  }\n  const { content, motif, page, kind } = found;", tests: [PAGES] },
   { name: "[slug] : slugs réservés générés", file: "src/app/[locale]/[slug]/page.tsx", find: "!RESERVED_SLUGS.has(m.slug)", replace: "true", tests: [PAGES] },
   { name: "[slug] : lien tel: de l'en-tête cassé", file: "src/app/[locale]/[slug]/page.tsx", find: "{copy.cta.book}\n            </BookingLink>\n            <a href={`tel:", replace: "{copy.cta.book}\n            </BookingLink>\n            <a href={`tel-:", tests: [PAGES] },
   // --- Pages d'information (colonne Type de Motifs_Consultation) ---
@@ -128,7 +128,7 @@ const MUTANTS: Mutant[] = [
   { name: "langues : langue non publiée servie (français sous /en)", file: "src/lib/i18n/routing.ts", find: "if (!enabled.includes(locale)) return", replace: "if (false) return", tests: [ROUTING] },
   { name: "langues : cookie d'une langue non publiée suivi", file: "src/lib/i18n/routing.ts", find: "isLocale(req.cookie) && enabled.includes(req.cookie)", replace: "isLocale(req.cookie)", tests: [ROUTING] },
   { name: "langues : mode identity permis en production (faux anglais publié)", file: "src/config/i18n.ts", find: ' && env.VERCEL_ENV !== "production"', replace: "", tests: [I18N] },
-  { name: "langues : hreflang sans x-default", file: "src/config/i18n.ts", find: 'languages["x-default"] = localePath(DEFAULT_LOCALE, path);', replace: "", tests: [I18N] },
+  { name: "langues : hreflang sans x-default", file: "src/config/i18n.ts", find: 'languages["x-default"] = localePath(DEFAULT_LOCALE, pathIn(path, DEFAULT_LOCALE));', replace: "", tests: [I18N] },
   { name: "langues : traduction qui présente l'ostéopathe comme médecin acceptée (règle 10)", file: "src/lib/i18n/translate.ts", find: "if (added.length > 0) {", replace: "if (false) {", tests: [TRANSLATE] },
   { name: "langues : refus non expliqué au modèle lors du nouvel essai", file: "src/lib/i18n/translate.ts", find: "messages: [{ role: \"user\", content: request + feedback }]", replace: "messages: [{ role: \"user\", content: request }]", tests: [TRANSLATE] },
   { name: "langues : texte refusé 3 fois publié tel que traduit (au lieu du français)", file: "src/lib/i18n/translate.ts", find: "rejected.has(k) ? batch[k]! : best.parsed[k]!", replace: "best.parsed[k] ?? batch[k]!", tests: [TRANSLATE] },
@@ -141,11 +141,20 @@ const MUTANTS: Mutant[] = [
   { name: "langues : lien Doctena laissé dans la langue de Notion", file: "src/lib/i18n/localize-content.ts", find: "  parts[1] = lang;", replace: "", tests: [LOCALIZE] },
   { name: "langues : luxembourgeois envoyé vers une page Doctena inexistante", file: "src/config/i18n.ts", find: 'englishName: "Luxembourgish", bookingLang: "fr"', replace: 'englishName: "Luxembourgish", bookingLang: "lb"', tests: [LOCALIZE] },
   { name: "langues : liens internes du corps des pages restés en français", file: "src/lib/i18n/localize-content.ts", find: 'href: localePath(locale, t.href)', replace: "href: t.href", tests: [LOCALIZE] },
-  { name: "langues : langue non publiée servie avec le texte français", file: "src/lib/content/get-site-content.ts", find: "if (!ENABLED_LOCALES.includes(locale)) throw", replace: "if (false) throw", tests: ["src/lib/content/get-site-content.test.ts"] },
+  { name: "langues : langue non publiée servie avec le texte français", file: "src/lib/content/get-site-content.ts", find: "if (locale !== DEFAULT_LOCALE && !ENABLED_LOCALES.includes(locale)) {", replace: "if (false) {", tests: ["src/lib/content/get-site-content.test.ts"] },
   { name: "langues : lien des mentions légales resté en français", file: "src/components/layout/site-footer.tsx", find: '<Link href={localePath(locale, "/mentions-legales")}', replace: '<Link href="/mentions-legales"', tests: [LOCALIZED] },
   { name: "langues : pages juridiques sans la mention « la version française fait foi »", file: "src/app/[locale]/mentions-legales/page.tsx", find: "{t.translationNote && <p", replace: "{false && <p", tests: [PAGES] },
   { name: "langues : <html lang> figé en français", file: "src/app/[locale]/layout.tsx", find: "<html lang={LOCALE_META[c.locale].htmlLang}", replace: '<html lang="fr-LU"', tests: [LAYOUT_ROOT] },
   { name: "langues : slug « en » accepté (masqué par la langue)", file: "src/config/site.ts", find: "  ...LOCALES, // préfixes de langue", replace: "  // préfixes de langue", tests: ["src/config/site.test.ts"] },
+  // --- Slugs traduits figés (Vercel Blob) ---
+  { name: "slugs : le plus récent de deux enregistrements retenu (adresse instable)", file: "src/lib/i18n/slugs.ts", find: "a.createdAt - b.createdAt", replace: "b.createdAt - a.createdAt", tests: ["src/lib/i18n/slugs.test.ts"] },
+  { name: "slugs : deux pages avec le même slug traduit", file: "src/lib/i18n/slugs.ts", find: "        taken.add(slug);\n", replace: "", tests: ["src/lib/i18n/slugs.test.ts"] },
+  { name: "slugs : création sans relecture préalable sans cache (doublons possibles)", file: "src/lib/i18n/slugs.ts", find: "    records = await store.list({ fresh: true });\n    const todo", replace: "    const todo", tests: ["src/lib/i18n/slugs.test.ts"] },
+  { name: "slugs : ancienne adresse en 404 au lieu d'une redirection", file: "src/app/[locale]/[slug]/page.tsx", find: "if (moved) permanentRedirect(moved);", replace: "", tests: [PAGES] },
+  { name: "slugs : liens du corps des pages vers l'ancien slug", file: "src/lib/i18n/localize-content.ts", find: "const to = target.get(path!);", replace: "const to = undefined as string | undefined;", tests: [LOCALIZE] },
+  { name: "slugs : sélecteur de langue vers le slug de la langue courante", file: "src/components/layout/language-switcher.tsx", find: "(page?.[locale] ? `/${page[locale]}` : path)", replace: "path", tests: ["src/components/layout/language-switcher.test.tsx"] },
+  { name: "slugs : écriture en échec ignorée (slug non enregistré)", file: "src/lib/i18n/slug-store.ts", find: "if (!(await listAll()).some((r) => slugPath(r) === pathname)) throw error;", replace: "", tests: ["src/lib/i18n/slug-store.test.ts"] },
+  { name: "slugs : jamais appliqués même avec un stockage", file: "src/lib/content/get-site-content.ts", find: "if (!store || ENABLED_LOCALES.length < 2) return null;", replace: "return null;", tests: ["src/lib/content/get-site-content.test.ts"] },
 ];
 
 const filter = process.argv[2] ?? "";

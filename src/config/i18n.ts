@@ -73,15 +73,24 @@ export function splitLocalePath(pathname: string): { locale: Locale; path: strin
   return { locale: DEFAULT_LOCALE, path: pathname || "/" };
 }
 
+/** Chemin d'une page dans une langue : le même partout, ou propre à chaque langue (slugs traduits des pages motifs). */
+export type LocalizedPath = string | Partial<Record<Locale, string>>;
+const pathIn = (path: LocalizedPath, locale: Locale) =>
+  typeof path === "string" ? path : (path[locale] ?? path[DEFAULT_LOCALE] ?? "/");
+
 /**
  * `alternates` d'une page présente dans toutes les langues publiées : canonical + hreflang (dont x-default,
  * le français, servi aux langues non prévues). Une seule langue publiée : canonical seul.
  */
-export function localeAlternates(locale: Locale, path: string) {
-  const canonical = localePath(locale, path);
+export function localeAlternates(locale: Locale, path: LocalizedPath) {
+  const canonical = localePath(locale, pathIn(path, locale));
   if (ENABLED_LOCALES.length < 2) return { canonical };
   const languages: Record<string, string> = {};
-  for (const l of ENABLED_LOCALES) languages[LOCALE_META[l].hreflang] = localePath(l, path);
-  languages["x-default"] = localePath(DEFAULT_LOCALE, path);
+  for (const l of ENABLED_LOCALES) languages[LOCALE_META[l].hreflang] = localePath(l, pathIn(path, l));
+  languages["x-default"] = localePath(DEFAULT_LOCALE, pathIn(path, DEFAULT_LOCALE));
   return { canonical, languages };
 }
+
+/** Chemins d'une page motif dans chaque langue publiée (« /slug-traduit »), d'après ses slugs (ou son slug unique). */
+export const pagePaths = (page: { slug: string; slugs?: Partial<Record<Locale, string>> }): Record<Locale, string> =>
+  Object.fromEntries(LOCALES.map((l) => [l, `/${page.slugs?.[l] ?? page.slug}`])) as Record<Locale, string>;

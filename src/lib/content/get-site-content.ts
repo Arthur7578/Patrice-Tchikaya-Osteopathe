@@ -2,9 +2,12 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { DEFAULT_LOCALE, ENABLED_LOCALES, type Locale } from "@/config/i18n";
-import { SITE_CONTENT_TAG } from "@/config/site";
-import { localizeContent } from "@/lib/i18n/localize";
-import { localizeBooking } from "@/lib/i18n/localize-content";
+import { RESERVED_SLUGS, SITE_CONTENT_TAG } from "@/config/site";
+import { localizeContent, translateTexts } from "@/lib/i18n/localize";
+import { applySlugs, localizeBooking } from "@/lib/i18n/localize-content";
+import { blobSlugStore, type SlugStore } from "@/lib/i18n/slug-store";
+import { resolveSlugs, type SlugMap } from "@/lib/i18n/slugs";
+import { publishedPages } from "./published";
 import { createNotionClient } from "@/lib/notion/client";
 import { fetchSiteContent } from "@/lib/notion/fetch-content";
 import { FALLBACK_CONTENT } from "./fallback";
@@ -46,6 +49,27 @@ const getFrenchContent = cache(async (): Promise<SiteContent> => {
   return readNotionContent();
 });
 
+/** Stockage des slugs traduits, avec une lecture en cache (5 min) ; `fresh` relit sans cache avant toute création. */
+function cachedSlugStore(store: SlugStore): SlugStore {
+  const cachedList = unstable_cache(() => store.list(), ["translated-slugs"], { revalidate: 300, tags: [TRANSLATED_SLUGS_TAG] });
+  return { list: (options) => (options?.fresh ? store.list() : cachedList()), create: (record) => store.create(record) };
+}
+
+/** Étiquette de la lecture des slugs traduits. */
+export const TRANSLATED_SLUGS_TAG = "translated-slugs";
+
+/**
+ * Slugs traduits et figés des pages publiées (src/lib/i18n/slugs.ts), par rendu. null (slugs français dans toutes les
+ * langues) sans autre langue publiée ou sans stockage permanent (dev, CI) : un slug traduit non enregistré pourrait
+ * changer, et avec lui l'adresse de la page. Erreur du stockage : levée (comme Notion ; ISR garde la dernière page).
+ */
+const getSlugMap = cache(async (): Promise<SlugMap | null> => {
+  const store = blobSlugStore();
+  if (!store || ENABLED_LOCALES.length < 2) return null;
+  const pages = publishedPages(await getFrenchContent()).map((m) => ({ pageKey: m.notionPageId ?? `slug-${m.slug}`, frSlug: m.slug }));
+  return resolveSlugs({ pages, locales: ENABLED_LOCALES, store: cachedSlugStore(store), translate: translateTexts, reserved: RESERVED_SLUGS });
+});
+
 /**
  * Point d'entrée UNIQUE du contenu, dans la langue de la page (français par défaut), dédoublonné par rendu.
  * Les autres langues sont traduites automatiquement depuis le français (src/lib/i18n) : une modification dans
@@ -53,11 +77,16 @@ const getFrenchContent = cache(async (): Promise<SiteContent> => {
  */
 export const getSiteContent = cache(async (locale: Locale = DEFAULT_LOCALE): Promise<SiteContent> => {
   const content = await getFrenchContent();
+  if (locale !== DEFAULT_LOCALE && !ENABLED_LOCALES.includes(locale)) {
+    throw new Error(`Langue « ${locale} » non publiée (traduction non configurée).`);
+  }
+  const slugMap = await getSlugMap();
   if (locale === DEFAULT_LOCALE) {
     // Page de réservation en français même si l'URL collée dans Notion est celle d'une autre langue (Doctena « /en/… »).
     const booking = localizeBooking(content.booking, DEFAULT_LOCALE);
-    return booking === content.booking ? content : { ...content, booking };
+    const french = booking === content.booking ? content : { ...content, booking };
+    return slugMap ? applySlugs(french, slugMap, DEFAULT_LOCALE) : french;
   }
-  if (!ENABLED_LOCALES.includes(locale)) throw new Error(`Langue « ${locale} » non publiée (traduction non configurée).`);
-  return localizeContent(content, locale);
+  const localized = await localizeContent(content, locale);
+  return slugMap ? applySlugs(localized, slugMap, locale) : localized;
 });

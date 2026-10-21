@@ -110,6 +110,23 @@ describe("pages motifs ([slug])", () => {
     await expect(Motif(params(C.motifs[0]!.slug))).rejects.toEqual(notFoundError);
   });
 
+  it("slugs traduits : ancienne adresse redirigée (308) vers l'actuelle, page servie à son slug traduit, hreflang par langue", async () => {
+    const page = published[0]!;
+    const slugs = { fr: page.slug, de: "de-slug", en: "en-slug", lb: page.slug, pt: page.slug };
+    const de = { ...C, locale: "de" as const, motifs: C.motifs.map((m) => (m === page ? { ...m, slug: "de-slug", slugs, aliases: [page.slug, "altes-de-slug"] } : m)) };
+    getSiteContent.mockResolvedValue(de);
+    for (const old of [page.slug, "altes-de-slug"]) {
+      await expect(Motif(routeProps({ locale: "de", slug: old }))).rejects.toEqual(
+        expect.objectContaining({ digest: expect.stringMatching(/^NEXT_REDIRECT;replace;\/de\/de-slug;308;/) }),
+      );
+    }
+    const root = await renderPage(() => Motif(routeProps({ locale: "de", slug: "de-slug" })));
+    expect(root.querySelectorAll("h1")).toHaveLength(1);
+    const m = await motifMetadata(routeProps({ locale: "de", slug: "de-slug" }));
+    expect(m.alternates?.canonical).toBe("/de/de-slug");
+    expect(await generateStaticParams({ params: { locale: "de" } })).toContainEqual({ slug: "de-slug" });
+  });
+
   it("generateMetadata renvoie {} pour un slug sans page (pas de métadonnées inventées)", async () => {
     expect(await motifMetadata(params("inconnu"))).toEqual({});
   });
@@ -124,7 +141,7 @@ describe("pages motifs ([slug])", () => {
   it("generateStaticParams : tous les motifs, sauf les slugs réservés", async () => {
     const withReserved = { ...C, motifs: [...C.motifs, { ...C.motifs[0]!, slug: "paiement" }] };
     getSiteContent.mockResolvedValue(withReserved);
-    const slugs = (await generateStaticParams()).map((p) => p.slug);
+    const slugs = (await generateStaticParams({ params: { locale: "fr" } })).map((p) => p.slug);
     expect(slugs).toEqual(C.motifs.map((m) => m.slug));
     expect(slugs).not.toContain("paiement");
   });
@@ -182,7 +199,7 @@ describe("pages d'information ([slug], guides)", () => {
   it("guide sans page publiée : 404 ; generateStaticParams inclut les guides", async () => {
     getSiteContent.mockResolvedValue({ ...C, guides: [{ ...guide, page: null }] });
     await expect(Motif(params(guide.slug))).rejects.toEqual(expect.objectContaining({ digest: expect.stringMatching(/404/) }));
-    expect((await generateStaticParams()).map((p) => p.slug)).toContain(guide.slug);
+    expect((await generateStaticParams({ params: { locale: "fr" } })).map((p) => p.slug)).toContain(guide.slug);
   });
 
   it("accueil : pas de section « Bon à savoir » de liens vers les pages d'information", async () => {

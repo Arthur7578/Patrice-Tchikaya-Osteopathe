@@ -56,6 +56,14 @@ export type Motif = {
   notionPageId: string | null; // pour les pages motifs (phase 9)
   /** null = pas de page détaillée publiée (case non cochée, texte trop court ou slug réservé). */
   page: MotifPage | null;
+  /**
+   * Slug de la page dans chaque langue (slugs traduits figés, src/lib/i18n/slugs.ts) ; absent tant que les slugs ne
+   * sont pas traduits (pas de stockage configuré) : `slug` sert alors dans toutes les langues. Dans un contenu traduit,
+   * `slug` vaut déjà le slug de la langue.
+   */
+  slugs?: Record<Locale, string>;
+  /** Anciennes adresses de la page dans la langue du contenu, redirigées (308) vers `slug`. */
+  aliases?: string[];
 };
 
 export type Review = {

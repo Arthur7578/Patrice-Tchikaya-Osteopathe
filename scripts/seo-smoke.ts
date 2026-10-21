@@ -147,6 +147,14 @@ async function main() {
     check(!pageTypes.includes("Physician"), `${path} : pas de Physician`);
     const pageBooking = page.querySelectorAll("a").filter((a) => a.getAttribute("href") === content.booking.url);
     check(pageBooking.length >= 2, `${path} : liens RDV (${pageBooking.length})`);
+    // Versions dans les autres langues (slugs traduits) : chaque lien hreflang répond directement (200, sans redirection).
+    for (const link of page.querySelectorAll('link[rel="alternate"]')) {
+      if (link.getAttribute("hreflang") === "x-default") continue;
+      const other = new URL(link.getAttribute("href") ?? "").pathname;
+      if (other === path) continue;
+      const res = await fetch(`${base}${other}`, { redirect: "manual" });
+      check(res.status === 200, `${path} : version ${link.getAttribute("hreflang")} ${other} → ${res.status}`);
+    }
   }
   // Textes d'attente encore visibles (« [À COMPLÉTER …] ») sur chaque page du sitemap : critère de mise en ligne
   // du plan (§J). Signalés sans faire échouer : seules des données du cabinet peuvent les remplacer.

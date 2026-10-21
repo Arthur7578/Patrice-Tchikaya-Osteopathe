@@ -6,6 +6,7 @@ import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { MobileMenu } from "@/components/layout/mobile-menu";
 import { ENABLED_LOCALES, LOCALE_META, localePath } from "@/config/i18n";
 import { getCopy, homeLink, navLinks } from "@/content/ui-copy";
+import { publishedPages } from "@/lib/content/published";
 import type { SiteContent } from "@/lib/content/types";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,8 @@ export function SiteHeader({ content }: Props) {
   const home = homeLink(locale);
   const nav = navLinks(locale);
   const languages = ENABLED_LOCALES.map((l) => ({ locale: l, label: LOCALE_META[l].label, htmlLang: LOCALE_META[l].htmlLang, hreflang: LOCALE_META[l].hreflang }));
+  // Slugs traduits des pages détaillées : le sélecteur mène à la même page dans l'autre langue.
+  const pages = publishedPages(content).flatMap((m) => (m.slugs ? [m.slugs] : []));
   return (
     <header
       id="site-header"
@@ -58,10 +61,10 @@ export function SiteHeader({ content }: Props) {
           <BookingLink booking={booking} className={cn(buttonVariants({ size: "sm" }))}>
             {copy.cta.bookShort}
           </BookingLink>
-          {languages.length > 1 && <LanguageSwitcher current={locale} options={languages} label={copy.languages.label} />}
+          {languages.length > 1 && <LanguageSwitcher current={locale} options={languages} label={copy.languages.label} pages={pages} />}
           <MobileMenu home={home} links={nav} labels={copy.menu}>
             {languages.length > 1 && (
-              <LanguageSwitcher current={locale} options={languages} label={copy.languages.label} variant="inline" />
+              <LanguageSwitcher current={locale} options={languages} label={copy.languages.label} pages={pages} variant="inline" />
             )}
           </MobileMenu>
         </div>

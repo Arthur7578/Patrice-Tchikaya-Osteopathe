@@ -72,4 +72,22 @@ describe("sitemap.xml", () => {
     });
     vi.doUnmock("@/config/i18n");
   });
+
+  it("slugs traduits : chaque langue a l'adresse de sa langue, et les équivalents suivent", async () => {
+    vi.resetModules();
+    vi.doMock("@/config/i18n", async (orig) => ({ ...(await orig<typeof import("@/config/i18n")>()), ENABLED_LOCALES: ["fr", "en"] }));
+    const { default: multilingual } = await import("./sitemap");
+    const [page, ...others] = C.motifs;
+    const slugs = { fr: page!.slug, de: page!.slug, en: "en-slug", lb: page!.slug, pt: page!.slug };
+    getSiteContent.mockResolvedValue({
+      ...C,
+      motifs: [{ ...page!, page: { lastEdited: "2026-10-01T00:00:00.000Z" } as MotifPage, slugs }, ...others.map((m) => ({ ...m, page: null }))],
+      guides: [],
+    });
+    const entries = await multilingual();
+    const en = entries.find((e) => e.url === `${SITE_URL}/en/en-slug`)!;
+    expect(en.alternates).toEqual({ languages: { fr: `${SITE_URL}/${page!.slug}`, en: `${SITE_URL}/en/en-slug`, "x-default": `${SITE_URL}/${page!.slug}` } });
+    expect(entries.some((e) => e.url === `${SITE_URL}/en/${page!.slug}`)).toBe(false);
+    vi.doUnmock("@/config/i18n");
+  });
 });
