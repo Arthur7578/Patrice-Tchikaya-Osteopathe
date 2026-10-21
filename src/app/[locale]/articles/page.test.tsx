@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { COPY } from "@/content/ui-copy";
+import { COPY_FR as COPY } from "@/content/ui-copy";
 import { FALLBACK_CONTENT as C } from "@/lib/content/fallback";
 import type { SiteContent } from "@/lib/content/types";
-import { expectSiteRules, jsonLdNodes, renderPage } from "@/test/render";
+import { expectSiteRules, routeProps, jsonLdNodes, renderPage } from "@/test/render";
 
 const getSiteContent = vi.fn<() => Promise<SiteContent>>();
 vi.mock("@/lib/content/get-site-content", () => ({ getSiteContent }));
@@ -19,7 +19,7 @@ beforeEach(() => getSiteContent.mockReset().mockResolvedValue(withGuides(guide("
 
 describe("/articles", () => {
   it("canonical /articles (règle 9), titre et description dérivés de la ville", async () => {
-    const m = await generateMetadata();
+    const m = await generateMetadata(routeProps());
     expect(m.alternates?.canonical).toBe("/articles");
     expect(m.title).toBe(COPY.articles.metaTitle);
     expect(m.description).toBe(COPY.articles.metaDescription(C.contact.locality));
@@ -50,6 +50,6 @@ describe("/articles", () => {
 
   it("aucune page publiée : 404 (rien à lister)", async () => {
     getSiteContent.mockResolvedValue({ ...C, motifs: C.motifs.map((m) => ({ ...m, page: null })), guides: [] });
-    await expect(Articles()).rejects.toEqual(expect.objectContaining({ digest: expect.stringMatching(/404/) }));
+    await expect(Articles(routeProps())).rejects.toEqual(expect.objectContaining({ digest: expect.stringMatching(/404/) }));
   });
 });

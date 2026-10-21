@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { E2E_ADMIN_UPLOAD_SECRET } from "./constants";
-import { axeViolations, blockExternal, bookingCtas, recordExternalRequests, sitemapPaths } from "./helpers";
+import { axeViolations, blockExternal, bookingCtas, frenchPathsAndHomes, recordExternalRequests, sitemapPaths } from "./helpers";
 
 /**
  * e2e sur le build de production servi par `next start`, avec le contenu de secours (fallback.ts, sans NOTION_TOKEN).
@@ -42,7 +42,8 @@ test.describe("toutes les pages du sitemap", () => {
   test("aucun débordement horizontal, de 320 à 1440 px (largeurs de la checklist du plan, §15.3)", async ({ page, request, isMobile }) => {
     test.skip(isMobile, "les largeurs sont imposées ici : projet desktop");
     test.setTimeout(120_000);
-    const paths = await sitemapPaths(request);
+    // Pages traduites : même mise en page que le français ; seul l'accueil de chaque langue (en-tête, libellés) est mesuré.
+    const paths = frenchPathsAndHomes(await sitemapPaths(request));
     for (const width of [320, 360, 390, 768, 1024, 1280, 1440]) {
       await page.setViewportSize({ width, height: 800 });
       for (const path of paths) {

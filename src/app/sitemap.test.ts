@@ -55,4 +55,18 @@ describe("sitemap.xml", () => {
     getSiteContent.mockResolvedValue({ ...C, motifs: C.motifs.map((m) => ({ ...m, page: null })), guides: [] });
     expect((await sitemap()).map((e) => e.url)).not.toContain(`${SITE_URL}/articles`);
   });
+
+  it("plusieurs langues publiées : chaque page dans chaque langue, avec ses équivalents ; pages juridiques en français seulement", async () => {
+    vi.resetModules();
+    vi.doMock("@/config/i18n", async (orig) => ({ ...(await orig<typeof import("@/config/i18n")>()), ENABLED_LOCALES: ["fr", "en"] }));
+    const { default: multilingual } = await import("./sitemap");
+    getSiteContent.mockResolvedValue({ ...C, motifs: C.motifs.map((m) => ({ ...m, page: null })), guides: [] });
+    const entries = await multilingual();
+    expect(entries.map((e) => e.url)).toEqual([
+      `${SITE_URL}/`, `${SITE_URL}/en`, `${SITE_URL}/paiement`, `${SITE_URL}/en/paiement`, `${SITE_URL}/mentions-legales`, `${SITE_URL}/confidentialite`,
+    ]);
+    expect(entries[1]!.alternates).toEqual({ languages: { fr: `${SITE_URL}/`, en: `${SITE_URL}/en`, "x-default": `${SITE_URL}/` } });
+    expect(entries.at(-1)!.alternates).toBeUndefined();
+    vi.doUnmock("@/config/i18n");
+  });
 });

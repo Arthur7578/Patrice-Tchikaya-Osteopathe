@@ -3,7 +3,7 @@
 import Script from "next/script";
 import { useSyncExternalStore } from "react";
 import { buttonVariants } from "@/components/ui/button";
-import { COPY } from "@/content/ui-copy";
+import type { UiCopy } from "@/content/ui-copy";
 import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "cookie-consent";
@@ -48,7 +48,7 @@ const setConsentValue = (value: "accepted" | "refused") => {
  * Ne rend rien si `NEXT_PUBLIC_GTM_ID` n'est pas configuré : fonctionnalité désactivée par défaut.
  * Réouverture possible via un lien `#cookies` (voir SiteFooter, « Gérer les cookies »).
  */
-export function CookieConsent() {
+export function CookieConsent({ copy }: { copy: UiCopy["cookies"] }) {
   const consent = useSyncExternalStore(subscribeConsent, getConsentSnapshot, getConsentServerSnapshot);
   const hash = useSyncExternalStore(subscribeHash, getHashSnapshot, getHashServerSnapshot);
 
@@ -67,25 +67,25 @@ export function CookieConsent() {
         <div
           role="dialog"
           aria-modal="false"
-          aria-label={COPY.cookies.label}
+          aria-label={copy.label}
           className="fixed inset-x-0 bottom-[5rem] z-50 border-t border-sage-700/20 bg-white px-4 py-4 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] sm:px-6 md:bottom-0 lg:px-8"
         >
           <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm leading-relaxed text-slate-600">{COPY.cookies.text}</p>
+            <p className="text-sm leading-relaxed text-slate-600">{copy.text}</p>
             <div className="flex shrink-0 gap-3">
               <button
                 type="button"
                 onClick={() => setConsentValue("refused")}
                 className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}
               >
-                {COPY.cookies.refuse}
+                {copy.refuse}
               </button>
               <button
                 type="button"
                 onClick={() => setConsentValue("accepted")}
                 className={cn(buttonVariants({ size: "sm" }))}
               >
-                {COPY.cookies.accept}
+                {copy.accept}
               </button>
             </div>
           </div>

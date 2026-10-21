@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { COPY } from "@/content/ui-copy";
+import { COPY_FR as COPY } from "@/content/ui-copy";
 import { FALLBACK_CONTENT as C } from "@/lib/content/fallback";
 import type { PaymentPage, SiteContent } from "@/lib/content/types";
-import { expectSiteRules, renderPage, visibleText } from "@/test/render";
+import { expectSiteRules, routeProps, renderPage, visibleText } from "@/test/render";
 
 const getSiteContent = vi.fn<() => Promise<SiteContent>>();
 vi.mock("@/lib/content/get-site-content", () => ({ getSiteContent }));
@@ -24,18 +24,18 @@ beforeEach(() => getSiteContent.mockReset().mockResolvedValue(C));
 
 describe("/paiement : métadonnées", () => {
   it("canonical /paiement (règle 9)", async () => {
-    expect((await generateMetadata()).alternates?.canonical).toBe("/paiement");
+    expect((await generateMetadata(routeProps())).alternates?.canonical).toBe("/paiement");
   });
 
   it("titre et description par défaut (dérivés de la ville) sans surcharge Notion", async () => {
-    const m = await generateMetadata();
+    const m = await generateMetadata(routeProps());
     expect(m.title).toBe(COPY.payment.metaTitle);
     expect(m.description).toBe(COPY.payment.metaDescription(C.contact.locality));
   });
 
   it("Meta_Title et Meta_Description de Notion l'emportent", async () => {
     getSiteContent.mockResolvedValue(withPayment({}, { metaTitle: "Titre Notion", metaDescription: "Description Notion" }));
-    expect(await generateMetadata()).toMatchObject({ title: "Titre Notion", description: "Description Notion" });
+    expect(await generateMetadata(routeProps())).toMatchObject({ title: "Titre Notion", description: "Description Notion" });
   });
 });
 

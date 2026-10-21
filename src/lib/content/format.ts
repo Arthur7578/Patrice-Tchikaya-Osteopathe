@@ -1,18 +1,17 @@
+import { DEFAULT_LOCALE, LOCALE_META, type Locale } from "@/config/i18n";
 import type { OpeningHoursRange } from "./types";
 
-const LOCALE = "fr-LU";
-
-/** 5 -> "5,0" */
-export const formatRating = (value: number) =>
-  value.toLocaleString(LOCALE, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+/** 5 -> "5,0" (« 5.0 » en anglais) */
+export const formatRating = (value: number, locale: Locale = DEFAULT_LOCALE) =>
+  value.toLocaleString(LOCALE_META[locale].intl, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
 /** "2026-09-21" -> "septembre 2026" (date absolue : une page statique ne doit pas dire « il y a 3 jours »). */
-export function formatReviewDate(iso: string | null): string | null {
+export function formatReviewDate(iso: string | null, locale: Locale = DEFAULT_LOCALE): string | null {
   if (!iso) return null;
   const d = new Date(`${iso.slice(0, 10)}T12:00:00Z`);
   return Number.isNaN(d.getTime())
     ? null
-    : new Intl.DateTimeFormat(LOCALE, { month: "long", year: "numeric", timeZone: "UTC" }).format(d);
+    : new Intl.DateTimeFormat(LOCALE_META[locale].intl, { month: "long", year: "numeric", timeZone: "UTC" }).format(d);
 }
 
 const DAY_FR: Record<OpeningHoursRange["days"][number], string> = {
@@ -47,3 +46,10 @@ export function frenchNbsp(text: string): string {
     .replace(/ +»/g, "\u00a0»")
     .replace(/ +([:;!?])/g, "\u00a0$1");
 }
+
+/** Mise en forme typographique d'un texte selon la langue : espaces insécables en français, rien ailleurs. */
+export const typography = (locale: Locale): ((text: string) => string) =>
+  locale === "fr" ? frenchNbsp : (text) => text;
+
+/** « Libellé : » en français (espace avant les deux-points), « Label: » dans les autres langues du site. */
+export const withColon = (label: string, locale: Locale) => (locale === "fr" ? `${label} :` : `${label}:`);

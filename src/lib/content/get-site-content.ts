@@ -1,7 +1,10 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
+import { DEFAULT_LOCALE, ENABLED_LOCALES, type Locale } from "@/config/i18n";
 import { SITE_CONTENT_TAG } from "@/config/site";
+import { localizeContent } from "@/lib/i18n/localize";
+import { localizeBooking } from "@/lib/i18n/localize-content";
 import { createNotionClient } from "@/lib/notion/client";
 import { fetchSiteContent } from "@/lib/notion/fetch-content";
 import { FALLBACK_CONTENT } from "./fallback";
@@ -26,12 +29,12 @@ const readNotionContent = unstable_cache(
 );
 
 /**
- * Point d'entrée UNIQUE du contenu, dédoublonné par rendu (React cache).
+ * Contenu français (source), dédoublonné par rendu (React cache).
  * - Pas de NOTION_TOKEN : snapshot (dev/CI) ; interdit en production Vercel.
  * - Erreur API Notion : on LÈVE l'erreur. En ISR, Next conserve la dernière page valide ;
  *   au build, l'échec est visible. Jamais de retour silencieux au snapshot en prod.
  */
-export const getSiteContent = cache(async (): Promise<SiteContent> => {
+const getFrenchContent = cache(async (): Promise<SiteContent> => {
   const token = process.env.NOTION_TOKEN;
   if (!token) {
     if (process.env.VERCEL_ENV === "production") {
@@ -41,4 +44,20 @@ export const getSiteContent = cache(async (): Promise<SiteContent> => {
     return FALLBACK_CONTENT;
   }
   return readNotionContent();
+});
+
+/**
+ * Point d'entrée UNIQUE du contenu, dans la langue de la page (français par défaut), dédoublonné par rendu.
+ * Les autres langues sont traduites automatiquement depuis le français (src/lib/i18n) : une modification dans
+ * Notion se propage à toutes les langues à la régénération suivante. Erreur de traduction : levée (comme Notion).
+ */
+export const getSiteContent = cache(async (locale: Locale = DEFAULT_LOCALE): Promise<SiteContent> => {
+  const content = await getFrenchContent();
+  if (locale === DEFAULT_LOCALE) {
+    // Page de réservation en français même si l'URL collée dans Notion est celle d'une autre langue (Doctena « /en/… »).
+    const booking = localizeBooking(content.booking, DEFAULT_LOCALE);
+    return booking === content.booking ? content : { ...content, booking };
+  }
+  if (!ENABLED_LOCALES.includes(locale)) throw new Error(`Langue « ${locale} » non publiée (traduction non configurée).`);
+  return localizeContent(content, locale);
 });

@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { BackToHome } from "@/components/layout/back-to-home";
+import { DEFAULT_LOCALE } from "@/config/i18n";
 import { getSiteContent } from "@/lib/content/get-site-content";
+import { frenchOnly } from "@/lib/i18n/route-locale";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/[locale]/confidentialite">): Promise<Metadata> {
+  await frenchOnly(params);
   const c = await getSiteContent();
   return {
     title: "Confidentialité",
@@ -11,7 +14,9 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function ConfidentialitePage() {
+/** Texte juridique en français seulement : /en/confidentialite et les autres langues renvoient une 404. */
+export default async function ConfidentialitePage({ params }: PageProps<"/[locale]/confidentialite">) {
+  await frenchOnly(params);
   const c = await getSiteContent();
   const gtmEnabled = /^GTM-[A-Z0-9]+$/.test(process.env.NEXT_PUBLIC_GTM_ID ?? "");
 
@@ -75,7 +80,7 @@ export default async function ConfidentialitePage() {
             </p>
           </section>
         </div>
-        <BackToHome className="mt-12" />
+        <BackToHome locale={DEFAULT_LOCALE} className="mt-12" />
       </div>
     </main>
   );

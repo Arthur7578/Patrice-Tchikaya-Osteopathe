@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { BackToHome } from "@/components/layout/back-to-home";
+import { DEFAULT_LOCALE } from "@/config/i18n";
 import { getSiteContent } from "@/lib/content/get-site-content";
+import { frenchOnly } from "@/lib/i18n/route-locale";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/[locale]/mentions-legales">): Promise<Metadata> {
+  await frenchOnly(params);
   const c = await getSiteContent();
   return {
     title: "Mentions légales",
@@ -11,7 +14,9 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function MentionsLegalesPage() {
+/** Texte juridique en français seulement : /en/mentions-legales et les autres langues renvoient une 404. */
+export default async function MentionsLegalesPage({ params }: PageProps<"/[locale]/mentions-legales">) {
+  await frenchOnly(params);
   const c = await getSiteContent();
 
   return (
@@ -81,7 +86,7 @@ export default async function MentionsLegalesPage() {
             </p>
           </section>
         </div>
-        <BackToHome className="mt-12" />
+        <BackToHome locale={DEFAULT_LOCALE} className="mt-12" />
       </div>
     </main>
   );

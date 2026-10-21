@@ -3,9 +3,11 @@ import type { LucideIcon } from "lucide-react";
 import { Building2, Fingerprint, Info, Landmark, Lock, Phone, Receipt, Smartphone, UserCheck } from "lucide-react";
 import { BackToHome } from "@/components/layout/back-to-home";
 import { Eyebrow } from "@/components/ui/eyebrow";
-import { COPY } from "@/content/ui-copy";
-import { frenchNbsp as t } from "@/lib/content/format";
+import { localeAlternates } from "@/config/i18n";
+import { getCopy } from "@/content/ui-copy";
+import { typography, withColon } from "@/lib/content/format";
 import { getSiteContent } from "@/lib/content/get-site-content";
+import { routeLocale } from "@/lib/i18n/route-locale";
 import { cn } from "@/lib/utils";
 
 const REASSURANCE_ICONS: LucideIcon[] = [Landmark, Lock, Fingerprint, UserCheck];
@@ -24,12 +26,13 @@ const paragraphs = (text: string) =>
 
 // Pas d'`openGraph` ici : la page hérite de celui du layout (image OG, site_name, locale), utile
 // quand le lien est partagé aux patients par SMS ou e-mail (fusion superficielle de Next).
-export async function generateMetadata(): Promise<Metadata> {
-  const { contact, payment } = await getSiteContent();
+export async function generateMetadata({ params }: PageProps<"/[locale]/paiement">): Promise<Metadata> {
+  const { contact, payment, locale } = await getSiteContent(await routeLocale(params));
+  const copy = getCopy(locale);
   return {
-    title: payment.page.metaTitle ?? COPY.payment.metaTitle,
-    description: payment.page.metaDescription ?? COPY.payment.metaDescription(contact.locality),
-    alternates: { canonical: "/paiement" },
+    title: payment.page.metaTitle ?? copy.payment.metaTitle,
+    description: payment.page.metaDescription ?? copy.payment.metaDescription(contact.locality),
+    alternates: localeAlternates(locale, "/paiement"),
   };
 }
 
@@ -39,8 +42,10 @@ export async function generateMetadata(): Promise<Metadata> {
  * aide, encart) et base Informations_generales (phrase « Règlement », coordonnées Wero, autres moyens).
  * Ce qui n'est pas renseigné n'est pas affiché ; une section sans ligne dans Notion est masquée.
  */
-export default async function PaiementPage() {
-  const { payment, consultation, contact } = await getSiteContent();
+export default async function PaiementPage({ params }: PageProps<"/[locale]/paiement">) {
+  const { payment, consultation, contact, locale } = await getSiteContent(await routeLocale(params));
+  const copy = getCopy(locale);
+  const t = typography(locale);
   const { wero, page } = payment;
 
   return (
@@ -97,7 +102,7 @@ export default async function PaiementPage() {
                     {i + 1}
                   </span>
                   <h3 className="mt-4 text-lg font-semibold text-ink">
-                    <span className="sr-only">{COPY.payment.step(i + 1)}</span>
+                    <span className="sr-only">{copy.payment.step(i + 1)}</span>
                     {t(card.title)}
                   </h3>
                   <div className="mt-2 space-y-2 leading-relaxed text-slate-600 wrap-anywhere">
@@ -120,7 +125,7 @@ export default async function PaiementPage() {
           >
             <Info aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-sage-700" />
             <span>
-              <strong className="font-semibold text-ink">{t(`${page.labels.caution} :`)}</strong>{" "}
+              <strong className="font-semibold text-ink">{t(withColon(page.labels.caution, locale))}</strong>{" "}
               {t(page.caution)}
             </span>
           </p>
@@ -192,7 +197,7 @@ export default async function PaiementPage() {
           </h2>
           {payment.otherMethods && (
             <p className="mt-4 text-slate-600">
-              <strong className="font-semibold text-ink">{t(`${page.labels.otherMethods} :`)}</strong>{" "}
+              <strong className="font-semibold text-ink">{t(withColon(page.labels.otherMethods, locale))}</strong>{" "}
               {t(payment.otherMethods)}
             </p>
           )}
@@ -210,7 +215,7 @@ export default async function PaiementPage() {
           </p>
         </section>
 
-        <BackToHome className="mt-12" />
+        <BackToHome locale={locale} className="mt-12" />
       </div>
     </main>
   );

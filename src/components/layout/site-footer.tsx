@@ -1,12 +1,14 @@
 import Link from "next/link";
-import { COPY, NAV } from "@/content/ui-copy";
+import { localePath } from "@/config/i18n";
+import { getCopy, navLinks } from "@/content/ui-copy";
 import { publishedPages } from "@/lib/content/published";
 import type { SiteContent } from "@/lib/content/types";
 
 type Props = { content: SiteContent };
 
 export function SiteFooter({ content }: Props) {
-  const { practitioner, contact, about, openingHoursLines, googleBusinessUrl } = content;
+  const copy = getCopy(content.locale);
+  const { practitioner, contact, about, openingHoursLines, googleBusinessUrl, locale } = content;
   const hasArticles = publishedPages(content).length > 0;
   const year = new Date().getFullYear();
   const gtmEnabled = /^GTM-[A-Z0-9]+$/.test(process.env.NEXT_PUBLIC_GTM_ID ?? "");
@@ -20,20 +22,20 @@ export function SiteFooter({ content }: Props) {
             <p className="mt-4 text-sm leading-relaxed text-sage-100/80">{about.shortBio}</p>
           </div>
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-white">{COPY.footer.cabinet}</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-white">{copy.footer.cabinet}</h3>
             <address className="mt-4 not-italic text-sm leading-relaxed text-sage-100/80">
               {contact.street}
               <br />
               {contact.postalCode} {contact.locality}, {contact.countryName}
               <br />
-              {COPY.infos.labels.phoneOffice}{" "}
+              {copy.infos.labels.phoneOffice}{" "}
               <a href={`tel:${contact.phoneE164}`} className="whitespace-nowrap hover:underline">
                 {contact.phoneDisplay}
               </a>
               {contact.mobilePhone && (
                 <>
                   <br />
-                  {COPY.infos.labels.phoneMobile}{" "}
+                  {copy.infos.labels.phoneMobile}{" "}
                   <a href={`tel:${contact.mobilePhone.e164}`} className="whitespace-nowrap hover:underline">
                     {contact.mobilePhone.display}
                   </a>
@@ -49,9 +51,9 @@ export function SiteFooter({ content }: Props) {
             )}
           </div>
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-white">{COPY.footer.links}</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-white">{copy.footer.links}</h3>
             <ul className="mt-4 space-y-2 text-sm">
-              {NAV.map((item) => (
+              {navLinks(locale).map((item) => (
                 <li key={item.href}>
                   <a href={item.href} className="text-sage-100/80 hover:text-white hover:underline">
                     {item.label}
@@ -60,8 +62,8 @@ export function SiteFooter({ content }: Props) {
               ))}
               {hasArticles && (
                 <li>
-                  <Link href="/articles" className="text-sage-100/80 hover:text-white hover:underline">
-                    {COPY.footer.articles}
+                  <Link href={localePath(locale, "/articles")} className="text-sage-100/80 hover:text-white hover:underline">
+                    {copy.footer.articles}
                   </Link>
                 </li>
               )}
@@ -73,29 +75,32 @@ export function SiteFooter({ content }: Props) {
                     rel="noopener"
                     className="text-sage-100/80 hover:text-white hover:underline"
                   >
-                    {COPY.footer.googleProfile} <span className="sr-only">{COPY.newTab}</span>
+                    {copy.footer.googleProfile} <span className="sr-only">{copy.newTab}</span>
                   </a>
                 </li>
               )}
               <li>
-                <Link href="/paiement" className="text-sage-100/80 hover:text-white hover:underline">
-                  {COPY.footer.payment}
+                <Link href={localePath(locale, "/paiement")} className="text-sage-100/80 hover:text-white hover:underline">
+                  {copy.footer.payment}
                 </Link>
               </li>
               <li>
-                <Link href="/mentions-legales" className="text-sage-100/80 hover:text-white hover:underline">
-                  {COPY.footer.legal}
+                {/* Pages juridiques en français seulement (texte propre à la page, non traduit) : signalé dans les autres langues. */}
+                <Link href="/mentions-legales" hrefLang="fr" className="text-sage-100/80 hover:text-white hover:underline">
+                  {copy.footer.legal}
+                  {copy.languages.frenchOnly && ` ${copy.languages.frenchOnly}`}
                 </Link>
               </li>
               <li>
-                <Link href="/confidentialite" className="text-sage-100/80 hover:text-white hover:underline">
-                  {COPY.footer.privacy}
+                <Link href="/confidentialite" hrefLang="fr" className="text-sage-100/80 hover:text-white hover:underline">
+                  {copy.footer.privacy}
+                  {copy.languages.frenchOnly && ` ${copy.languages.frenchOnly}`}
                 </Link>
               </li>
               {gtmEnabled && (
                 <li>
                   <a href="#cookies" className="text-sage-100/80 hover:text-white hover:underline">
-                    {COPY.footer.cookies}
+                    {copy.footer.cookies}
                   </a>
                 </li>
               )}
@@ -104,6 +109,13 @@ export function SiteFooter({ content }: Props) {
         </div>
         <p className="mt-12 border-t border-white/10 pt-6 text-xs text-sage-100/60">
           © {year} {practitioner.name} – {practitioner.title}
+          {/* Pages traduites automatiquement : on le dit (le texte de référence reste le français). */}
+          {copy.languages.machineTranslated && (
+            <>
+              <br />
+              {copy.languages.machineTranslated}
+            </>
+          )}
         </p>
       </div>
     </footer>

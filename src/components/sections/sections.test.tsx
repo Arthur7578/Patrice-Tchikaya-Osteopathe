@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COPY } from "@/content/ui-copy";
+import { COPY_FR as COPY } from "@/content/ui-copy";
 import { FALLBACK_CONTENT as C } from "@/lib/content/fallback";
 import type { SiteContent } from "@/lib/content/types";
 import { bookingAnchors, expectSiteRules, render, visibleText } from "@/test/render";

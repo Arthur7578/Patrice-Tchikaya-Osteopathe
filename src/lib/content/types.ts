@@ -1,3 +1,4 @@
+import type { Locale } from "@/config/i18n";
 import type { AccessRowId, HeroPointId, InfoRowId } from "./rows";
 
 export type ImageSlot = "hero" | "portrait" | "cabinet";
@@ -139,6 +140,8 @@ export type Payment = {
 };
 
 export type SiteContent = {
+  /** Langue des textes : « fr » pour Notion et fallback.ts, une autre langue après traduction (src/lib/i18n). */
+  locale: Locale;
   practitioner: { name: string; title: string };
   seo: { h1: string; heroSubtitle: string; metaTitle: string | null; metaDescription: string | null };
   contact: {

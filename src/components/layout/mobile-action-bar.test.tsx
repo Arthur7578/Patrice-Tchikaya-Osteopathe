@@ -12,6 +12,8 @@ vi.mock("@/components/booking/booking-link", () => ({
   ),
 }));
 
+import { COPY_FR as COPY } from "@/content/ui-copy";
+
 const { MobileActionBar } = await import("./mobile-action-bar");
 
 /** Éléments que la barre surveille, posés dans la page avant le rendu (comme dans le vrai layout). */
@@ -24,7 +26,7 @@ function page(html: string) {
 }
 
 const renderBar = () =>
-  render(<MobileActionBar booking={C.booking} phoneE164={C.contact.phoneE164} phoneDisplay={C.contact.phoneDisplay} />, {
+  render(<MobileActionBar booking={C.booking} phoneE164={C.contact.phoneE164} bookLabel={COPY.cta.bookMobile} callLabel={COPY.cta.callCabinet(C.contact.phoneDisplay)} />, {
     container: document.body.appendChild(document.createElement("div")),
   });
 

@@ -3,7 +3,9 @@
  * Usage : npm run build && npm start   puis   npm run seo:smoke [-- http://localhost:3000]
  */
 import { parse } from "node-html-parser";
+import { LOCALE_META, isLocale } from "@/config/i18n";
 import { FALLBACK_CONTENT } from "@/lib/content/fallback";
+import { localizeBooking } from "@/lib/i18n/localize-content";
 import { createNotionClient } from "@/lib/notion/client";
 import { fetchSiteContent } from "@/lib/notion/fetch-content";
 
@@ -22,8 +24,14 @@ async function loadContent() {
   return content;
 }
 
-async function main() {
+/** Comme getSiteContent : lien de réservation dans la langue de la page (Doctena « /fr/… »). */
+async function loadFrenchContent() {
   const content = await loadContent();
+  return { ...content, booking: localizeBooking(content.booking, "fr") };
+}
+
+async function main() {
+  const content = await loadFrenchContent();
 
   const res = await fetch(`${base}/`);
   check(res.status === 200, `GET / → ${res.status}`);
@@ -160,6 +168,29 @@ async function main() {
       check(list.querySelectorAll(`main a[href="/${entry.slug}"]`).length === 1, `/articles : lien vers /${entry.slug}`);
     }
   }
+  // Langues traduites, annoncées par hreflang sur l'accueil : chaque version répond, dans sa langue, avec sa propre
+  // canonical et un contenu réellement traduit (le <h1> diffère du français ; sauf TRANSLATION_MODE=identity, en CI).
+  const alternates = root
+    .querySelectorAll('link[rel="alternate"]')
+    .map((l) => ({ lang: l.getAttribute("hreflang") ?? "", href: l.getAttribute("href") ?? "" }))
+    .filter((a) => isLocale(a.lang) && a.lang !== "fr");
+  console.log(`ℹ langues traduites annoncées : ${alternates.map((a) => a.lang).join(", ") || "aucune"}`);
+  for (const { lang, href } of alternates) {
+    const path = new URL(href).pathname;
+    const r = await fetch(`${base}${path}`);
+    check(r.status === 200, `GET ${path} → ${r.status}`);
+    const page = parse(await r.text());
+    check(page.querySelector("html")?.getAttribute("lang") === LOCALE_META[lang as keyof typeof LOCALE_META].htmlLang, `${path} : <html lang> de la langue`);
+    const pageH1 = page.querySelectorAll("h1");
+    check(pageH1.length === 1, `${path} : un seul <h1>`);
+    if (process.env.TRANSLATION_MODE !== "identity") {
+      check(pageH1[0]?.text.trim() !== h1s[0]?.text.trim(), `${path} : <h1> traduit (« ${pageH1[0]?.text.trim()} »)`);
+    }
+    check((page.querySelector('link[rel="canonical"]')?.getAttribute("href") ?? "").endsWith(path), `${path} : canonical propre`);
+    check(page.querySelectorAll('link[rel="alternate"]').length === alternates.length + 2, `${path} : hreflang vers toutes les langues (+ x-default)`);
+    check(sitemap.includes(`${path}</loc>`), `sitemap : ${path}`);
+  }
+
   const unknown = await fetch(`${base}/page-qui-n-existe-pas`);
   check(unknown.status === 404, `slug inconnu → ${unknown.status} (404 attendu)`);
 

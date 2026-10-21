@@ -38,6 +38,12 @@ export async function sitemapPaths(request: APIRequestContext): Promise<string[]
   return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]!).pathname);
 }
 
+/** Pages françaises (sans préfixe de langue) d'une liste de chemins, plus l'accueil de chaque autre langue. */
+export function frenchPathsAndHomes(paths: string[]): string[] {
+  const translated = /^\/(en|lb|pt)(\/|$)/;
+  return paths.filter((p) => !translated.test(p) || /^\/(en|lb|pt)$/.test(p));
+}
+
 /** CTA de prise de rendez-vous : tout lien dont le texte parle de rendez-vous (hors ancres internes). */
 export const bookingCtas = (page: Page) =>
   page.locator('a:not([href^="#"]):not([href^="/"])').filter({ hasText: /rendez-vous|RDV|agenda/i });

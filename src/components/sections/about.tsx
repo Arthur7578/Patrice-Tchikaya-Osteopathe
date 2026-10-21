@@ -4,11 +4,12 @@ import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
 import { SiteImage } from "@/components/ui/site-image";
 import { Eyebrow } from "@/components/ui/eyebrow";
-import { COPY } from "@/content/ui-copy";
+import { getCopy } from "@/content/ui-copy";
 import { MOTIF_ICONS, type MotifIconName } from "@/lib/icons";
 import type { SiteContent } from "@/lib/content/types";
 
 export function About({ content }: { content: SiteContent }) {
+  const copy = getCopy(content.locale);
   const { about, images } = content;
   const longBioParagraphs = about.longBio.split(/\n{2,}/).filter(Boolean);
 
@@ -16,7 +17,7 @@ export function About({ content }: { content: SiteContent }) {
     <Section id="a-propos" labelledBy="about-title">
       <div className="grid gap-6 lg:grid-cols-12">
         <div className="flex flex-col justify-center rounded-3xl bg-sage-700 p-8 text-white md:p-12 lg:order-2 lg:col-span-7">
-          <Eyebrow className="text-sage-100">{COPY.about.eyebrow}</Eyebrow>
+          <Eyebrow className="text-sage-100">{copy.about.eyebrow}</Eyebrow>
           <h2 id="about-title" className="mt-3 text-3xl font-bold tracking-tight text-balance md:text-4xl">
             {about.title}
           </h2>
@@ -28,7 +29,7 @@ export function About({ content }: { content: SiteContent }) {
           </div>
           {(about.education || about.continuingEducation.length > 0) && (
             <div className="mt-6 border-t border-white/15 pt-5">
-              <h3 className="font-semibold text-white">{COPY.about.training}</h3>
+              <h3 className="font-semibold text-white">{copy.about.training}</h3>
               <ul className="mt-3 space-y-2 text-sage-100">
                 {about.education && (
                   <li className="flex gap-2 text-white">

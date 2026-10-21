@@ -1,3 +1,5 @@
+import { LOCALES } from "./i18n";
+
 /**
  * Configuration technique (non éditoriale). Le contenu éditorial vient de Notion.
  */
@@ -42,5 +44,6 @@ export const PAGE_TYPE_PROPERTY = "Type";
  * peuvent pas entrer en collision : un slug normalisé ne contient jamais de point.
  */
 export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
+  ...LOCALES, // préfixes de langue (« /en », « /fr »…)
   "admin", "api", "apple-icon", "articles", "confidentialite", "mentions-legales", "opengraph-image", "paiement",
 ]);

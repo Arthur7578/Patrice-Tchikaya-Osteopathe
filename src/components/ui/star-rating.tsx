@@ -1,13 +1,16 @@
 import { Star } from "lucide-react";
-import { COPY } from "@/content/ui-copy";
+import type { Locale } from "@/config/i18n";
+import { getCopy } from "@/content/ui-copy";
 import { formatRating } from "@/lib/content/format";
 import { cn } from "@/lib/utils";
 
 export function StarRating({
+  locale,
   value,
   showValue,
   className,
 }: {
+  locale: Locale;
   value: number;
   showValue?: boolean;
   className?: string;
@@ -29,7 +32,7 @@ export function StarRating({
           {full}/5
         </span>
       )}
-      <span className="sr-only">{COPY.starRating(formatRating(value))}</span>
+      <span className="sr-only">{getCopy(locale).starRating(formatRating(value, locale))}</span>
     </span>
   );
 }

@@ -4,7 +4,7 @@ import { SITE_URL } from "@/config/site";
 import { FALLBACK_CONTENT as C } from "@/lib/content/fallback";
 import type { SiteContent } from "@/lib/content/types";
 import { homeMeta } from "@/lib/seo/metadata";
-import { jsonLdNodes, render } from "@/test/render";
+import { jsonLdNodes, render, routeProps } from "@/test/render";
 
 const getSiteContent = vi.fn<() => Promise<SiteContent>>();
 vi.mock("@/lib/content/get-site-content", () => ({ getSiteContent }));
@@ -31,7 +31,7 @@ afterEach(() => vi.unstubAllEnvs());
 describe("layout racine : métadonnées", () => {
   it("valeurs communes à tout le site (titre, description, Open Graph, pas de détection auto des numéros)", async () => {
     const { generateMetadata, revalidate, viewport } = await loadLayout();
-    const meta = await generateMetadata();
+    const meta = await generateMetadata(routeProps() as never);
     const { title, description } = homeMeta(C);
     expect(meta.metadataBase?.toString()).toBe(`${SITE_URL}/`);
     expect(meta.title).toEqual({
@@ -49,25 +49,25 @@ describe("layout racine : métadonnées", () => {
   });
 
   it("hors production : noindex, nofollow", async () => {
-    expect((await (await loadLayout()).generateMetadata()).robots).toEqual({ index: false, follow: false });
+    expect((await (await loadLayout()).generateMetadata(routeProps() as never)).robots).toEqual({ index: false, follow: false });
   });
 
   it("production Vercel : indexable", async () => {
     vi.stubEnv("VERCEL_ENV", "production");
-    expect((await (await loadLayout()).generateMetadata()).robots).toEqual({ index: true, follow: true });
+    expect((await (await loadLayout()).generateMetadata(routeProps() as never)).robots).toEqual({ index: true, follow: true });
   });
 
   it("vérification Google Search Console seulement si la variable est définie", async () => {
-    expect((await (await loadLayout()).generateMetadata()).verification).toBeUndefined();
+    expect((await (await loadLayout()).generateMetadata(routeProps() as never)).verification).toBeUndefined();
     vi.stubEnv("GOOGLE_SITE_VERIFICATION", "jeton");
-    expect((await (await loadLayout()).generateMetadata()).verification).toEqual({ google: "jeton" });
+    expect((await (await loadLayout()).generateMetadata(routeProps() as never)).verification).toEqual({ google: "jeton" });
   });
 });
 
 describe("layout racine : rendu", () => {
   async function renderLayout() {
     const { default: RootLayout } = await loadLayout();
-    const element = (await RootLayout({ children: <main id="contenu">Contenu</main> } as never)) as ReactElement;
+    const element = (await RootLayout({ children: <main id="contenu">Contenu</main>, ...routeProps() } as never)) as ReactElement;
     return render(element);
   }
 
@@ -76,6 +76,19 @@ describe("layout racine : rendu", () => {
     expect(root.querySelector("html")?.getAttribute("lang")).toBe("fr-LU");
     const types = jsonLdNodes(root.querySelector("head")!).flatMap((n) => [n["@type"]].flat());
     expect(types).toEqual(expect.arrayContaining(["WebSite", "MedicalBusiness", "Person"]));
+  });
+
+  it("autre langue : <html lang>, og:locale et libellés de la langue (contenu traduit fourni par getSiteContent)", async () => {
+    getSiteContent.mockResolvedValue({ ...C, locale: "pt" });
+    const { default: RootLayout, generateMetadata } = await loadLayout();
+    const element = (await RootLayout({ children: <main id="contenu">Conteúdo</main>, ...routeProps({ locale: "pt" }) } as never)) as ReactElement;
+    const root = render(element);
+    expect(root.querySelector("html")?.getAttribute("lang")).toBe("pt-PT");
+    expect(root.querySelector("a")?.text).toBe("Ir para o conteúdo"); // lien d'évitement
+    expect(getSiteContent).toHaveBeenCalledWith("pt");
+    const meta = await generateMetadata(routeProps({ locale: "pt" }) as never);
+    expect(meta.openGraph).toMatchObject({ locale: "pt_PT" });
+    expect(meta.title).toMatchObject({ template: `%s | ${C.practitioner.name}, osteopata em ${C.contact.locality}` });
   });
 
   it("sans JavaScript, les sections animées restent visibles (<noscript>)", async () => {

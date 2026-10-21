@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FALLBACK_CONTENT as C } from "@/lib/content/fallback";
 import type { SiteContent } from "@/lib/content/types";
-import { bookingAnchors, expectSiteRules, jsonLdNodes, renderPage, visibleText } from "@/test/render";
+import { bookingAnchors, expectSiteRules, jsonLdNodes, renderPage, routeProps, visibleText } from "@/test/render";
 
 const getSiteContent = vi.fn<() => Promise<SiteContent>>();
 const getGoogleRating = vi.fn();
@@ -15,6 +15,8 @@ const { default: Home, generateMetadata: homeMetadata } = await import("./page")
 const { default: Motif, generateMetadata: motifMetadata, generateStaticParams } = await import("./[slug]/page");
 const { default: Mentions, generateMetadata: mentionsMetadata } = await import("./mentions-legales/page");
 const { default: Confidentialite, generateMetadata: confidentialiteMetadata } = await import("./confidentialite/page");
+// La 404 lit la langue avec next/root-params (runtime Next uniquement).
+vi.mock("next/root-params", () => ({ locale: async () => "fr" }));
 const { default: NotFound } = await import("./not-found");
 const { generateMetadata: layoutMetadata } = await import("./layout");
 
@@ -27,15 +29,15 @@ const canonical = async (metadata: Promise<Metadata>) => (await metadata).altern
 
 describe("règle 9 : canonical défini par page, jamais dans le layout racine", () => {
   it("le layout n'en définit pas", async () => {
-    expect((await layoutMetadata()).alternates).toBeUndefined();
+    expect((await layoutMetadata(routeProps() as never)).alternates).toBeUndefined();
   });
 
   it("chaque page définit le sien", async () => {
     const motif = C.motifs.find((m) => m.page)!;
-    expect(await canonical(homeMetadata())).toBe("/");
-    expect(await canonical(mentionsMetadata())).toBe("/mentions-legales");
-    expect(await canonical(confidentialiteMetadata())).toBe("/confidentialite");
-    expect(await canonical(motifMetadata({ params: Promise.resolve({ slug: motif.slug }) } as never))).toBe(`/${motif.slug}`);
+    expect(await canonical(homeMetadata(routeProps()))).toBe("/");
+    expect(await canonical(mentionsMetadata(routeProps()))).toBe("/mentions-legales");
+    expect(await canonical(confidentialiteMetadata(routeProps()))).toBe("/confidentialite");
+    expect(await canonical(motifMetadata(routeProps({ locale: "fr", slug: motif.slug })))).toBe(`/${motif.slug}`);
   });
 });
 
@@ -63,7 +65,7 @@ describe("pages légales", () => {
     ["mentions légales", Mentions],
     ["confidentialité", Confidentialite],
   ])("%s : un seul <h1>, règles du site, retour à l'accueil", async (_n, Page) => {
-    const root = await renderPage(Page);
+    const root = await renderPage(() => Page(routeProps()));
     expect(root.querySelectorAll("h1")).toHaveLength(1);
     expect(root.querySelector('a[href="/"]')).not.toBeNull();
     expectSiteRules(root);
@@ -72,7 +74,7 @@ describe("pages légales", () => {
 
 describe("page introuvable", () => {
   it("un seul <h1>, retour à l'accueil et RDV en vrai lien", async () => {
-    const root = await renderPage(NotFound);
+    const root = await renderPage(() => NotFound());
     expect(root.querySelectorAll("h1")).toHaveLength(1);
     expect(root.querySelector('a[href="/"]')).not.toBeNull();
     expect(bookingAnchors(root, C.booking.url)).toHaveLength(1);
@@ -81,7 +83,7 @@ describe("page introuvable", () => {
 
 describe("pages motifs ([slug])", () => {
   const published = C.motifs.filter((m) => m.page);
-  const params = (slug: string) => ({ params: Promise.resolve({ slug }) }) as never;
+  const params = (slug: string) => routeProps({ locale: "fr", slug });
 
   it("le contenu de secours publie au moins une page motif", () => {
     expect(published.length).toBeGreaterThan(0);
@@ -129,7 +131,7 @@ describe("pages motifs ([slug])", () => {
 });
 
 describe("pages d'information ([slug], guides)", () => {
-  const params = (slug: string) => ({ params: Promise.resolve({ slug }) }) as never;
+  const params = (slug: string) => routeProps({ locale: "fr", slug });
   const sample = C.motifs.find((m) => m.page)!;
   const guide = { ...sample, title: "Ostéopathe ou kiné : quelle différence ?", slug: "osteopathe-kinesitherapeute-difference" };
   const withGuide: SiteContent = { ...C, guides: [guide] };
@@ -184,7 +186,7 @@ describe("pages d'information ([slug], guides)", () => {
   });
 
   it("accueil : pas de section « Bon à savoir » de liens vers les pages d'information", async () => {
-    const root = await renderPage(() => Home());
+    const root = await renderPage(Home);
     // Aucun lien vers une page d'information sur l'accueil (elles sont listées sur /articles).
     expect(root.querySelectorAll(`a[href="/${guide.slug}"]`)).toHaveLength(0);
     // Limité aux motifs : « Bon à savoir » est aussi le titre d'un bloc replié des infos pratiques (sans rapport).
@@ -214,7 +216,7 @@ describe("mentions légales : contenu", () => {
   };
 
   it("métadonnées : titre et description avec le praticien et la ville", async () => {
-    expect(await mentionsMetadata()).toMatchObject({
+    expect(await mentionsMetadata(routeProps())).toMatchObject({
       title: "Mentions légales",
       description: `Mentions légales du site de ${C.practitioner.name}, ${C.practitioner.title} à ${C.contact.locality}.`,
     });
@@ -257,14 +259,14 @@ describe("mentions légales : contenu", () => {
 
 describe("confidentialité et accueil : métadonnées", () => {
   it("confidentialité : titre et description avec le praticien et la ville", async () => {
-    expect(await confidentialiteMetadata()).toMatchObject({
+    expect(await confidentialiteMetadata(routeProps())).toMatchObject({
       title: "Confidentialité",
       description: `Politique de confidentialité du site de ${C.practitioner.name}, ${C.practitioner.title} à ${C.contact.locality}.`,
     });
   });
 
   it("accueil : titre absolu, partage (Open Graph et X) avec la grande image", async () => {
-    const m = await homeMetadata();
+    const m = await homeMetadata(routeProps());
     expect(m.title).toEqual({ absolute: expect.any(String) });
     expect(m.openGraph).toMatchObject({ url: "/", title: (m.title as { absolute: string }).absolute, description: m.description });
     expect(m.twitter).toEqual({

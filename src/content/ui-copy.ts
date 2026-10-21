@@ -1,18 +1,20 @@
-/** Lien « Accueil » du header et du menu mobile (absent du footer, qui réutilise `NAV`). */
-export const HOME_LINK = { href: "/", label: "Accueil" } as const;
-
-export const NAV = [
-  { href: "/#a-propos", label: "À propos" },
-  { href: "/#motifs", label: "Motifs" },
-  { href: "/#faq", label: "FAQ" },
-  { href: "/#infos", label: "Accès & tarifs" },
-] as const;
+import { localePath, type Locale } from "@/config/i18n";
+import { COPY_EN } from "./ui-copy.en";
+import { COPY_LB } from "./ui-copy.lb";
+import { COPY_PT } from "./ui-copy.pt";
 
 /** Libellé du lien de pied de page qui rouvre la bannière cookies, cité aussi dans la bannière. */
 const MANAGE_COOKIES = "Gérer les cookies";
 
-export const COPY = {
+/**
+ * Textes d'interface en français (langue source). Les autres langues : ui-copy.en.ts, ui-copy.lb.ts, ui-copy.pt.ts,
+ * typées sur celui-ci (une clé ajoutée ici sans traduction ne compile pas). Les traductions sont faites avec le code,
+ * pas à l'exécution : modifier un texte ici = mettre à jour les trois autres fichiers dans le même commit.
+ */
+export const COPY_FR = {
   skipLink: "Aller au contenu",
+  home: "Accueil", // lien « Accueil » du header et du menu mobile (absent du footer)
+  nav: { about: "À propos", motifs: "Motifs", faq: "FAQ", infos: "Accès & tarifs" },
   navLabel: "Navigation principale",
   ratingOn: "sur", // « 5,0/5 sur Google Maps » (hero), « 12 avis sur Google Maps » (avis)
   googleMaps: "Google Maps", // nom de marque, jamais traduit (translate="no")
@@ -153,4 +155,42 @@ export const COPY = {
     home: "Page d'accueil",
   },
   newTab: "(nouvel onglet)",
-} as const;
+  // Sélecteur de langue (header) et mentions propres aux pages traduites.
+  languages: {
+    label: "Langue du site",
+    machineTranslated: "", // vide en français : texte source
+    frenchOnly: "", // pages juridiques, uniquement en français
+  },
+  // Métadonnées et données structurées (le contenu vient de Notion ; ici, les formulations par défaut).
+  meta: {
+    homeTitle: (city: string, name: string) => `Ostéopathe à ${city} – ${name}, D.O.`,
+    homeDescription: (city: string, duration: string) =>
+      `Cabinet d'ostéopathie à ${city} (Luxembourg) : dos, cou, articulations, sport et TMS. Séance de ${duration}. Prise de rendez-vous en ligne.`,
+    titleTemplate: (name: string, city: string) => `%s | ${name}, ostéopathe à ${city}`,
+    motifLocal: (city: string) => `Ostéopathe à ${city}, sans ordonnance.`,
+    imageAlt: (name: string, title: string, city: string) => `${name}, ${title} à ${city}`,
+    websiteName: (name: string, city: string) => `${name} – Ostéopathe à ${city}`,
+    knowsAbout: { osteopathy: "Ostéopathie", msd: "Troubles musculo-squelettiques", handball: "Handball" },
+  },
+};
+
+export type UiCopy = typeof COPY_FR;
+
+const COPIES: Record<Locale, UiCopy> = { fr: COPY_FR, en: COPY_EN, lb: COPY_LB, pt: COPY_PT };
+
+/** Textes d'interface d'une langue. */
+export const getCopy = (locale: Locale): UiCopy => COPIES[locale];
+
+/** Lien « Accueil » du header et du menu mobile. */
+export const homeLink = (locale: Locale) => ({ href: localePath(locale, "/"), label: getCopy(locale).home });
+
+/** Ancres de la page d'accueil (header, menu mobile, pied de page). */
+export function navLinks(locale: Locale) {
+  const { nav } = getCopy(locale);
+  return [
+    { href: localePath(locale, "/#a-propos"), label: nav.about },
+    { href: localePath(locale, "/#motifs"), label: nav.motifs },
+    { href: localePath(locale, "/#faq"), label: nav.faq },
+    { href: localePath(locale, "/#infos"), label: nav.infos },
+  ];
+}

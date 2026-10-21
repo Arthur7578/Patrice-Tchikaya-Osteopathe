@@ -12,6 +12,11 @@ const unstableCache = vi.fn(<T>(fn: T, ...args: unknown[]) => {
 });
 vi.mock("next/cache", () => ({ unstable_cache: unstableCache }));
 
+const localizeContent = vi.fn(async (content: object, locale: string) => ({ ...content, locale }));
+vi.mock("@/lib/i18n/localize", () => ({ localizeContent }));
+// Langues publiées : fixées ici (elles dépendent de la clé API, lue à l'import de @/config/i18n).
+vi.mock("@/config/i18n", async (orig) => ({ ...(await orig<typeof import("@/config/i18n")>()), ENABLED_LOCALES: ["fr", "en"] }));
+
 const fetchSiteContent = vi.fn();
 vi.mock("@/lib/notion/fetch-content", () => ({ fetchSiteContent }));
 vi.mock("@/lib/notion/client", () => ({ createNotionClient: vi.fn(() => ({})) }));
@@ -58,5 +63,22 @@ describe("getSiteContent", () => {
     vi.stubEnv("NOTION_TOKEN", "tok");
     fetchSiteContent.mockRejectedValue(new Error("Notion 500"));
     await expect(getSiteContent()).rejects.toThrow("Notion 500");
+  });
+
+  it("autre langue publiée : contenu français traduit (src/lib/i18n)", async () => {
+    const content = await getSiteContent("en");
+    expect(localizeContent).toHaveBeenCalledWith(FALLBACK_CONTENT, "en");
+    expect(content.locale).toBe("en");
+  });
+
+  it("langue non publiée (traduction non configurée) : erreur, jamais de français sous une autre langue", async () => {
+    await expect(getSiteContent("pt")).rejects.toThrow(/non publiée/);
+  });
+
+  it("français : page de réservation Doctena en français, même si l'URL collée dans Notion est en anglais", async () => {
+    vi.stubEnv("NOTION_TOKEN", "tok");
+    const booking = { url: "https://www.doctena.lu/en/booking-form/calendar/abc", provider: "generic" as const, calLink: null, calOrigin: null };
+    fetchSiteContent.mockResolvedValue({ content: { ...FALLBACK_CONTENT, booking }, warnings: [] });
+    expect((await getSiteContent()).booking.url).toBe("https://www.doctena.lu/fr/booking-form/calendar/abc");
   });
 });

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FALLBACK_CONTENT as C } from "@/lib/content/fallback";
 import type { SiteContent } from "@/lib/content/types";
 import { buildLlmsTxt } from "@/lib/seo/llms-txt";
-import { FORBIDDEN_TITLES, render, visibleText } from "@/test/render";
+import { FORBIDDEN_TITLES, render, routeProps, visibleText } from "@/test/render";
 
 const getSiteContent = vi.fn<() => Promise<SiteContent>>();
 vi.mock("@/lib/content/get-site-content", () => ({ getSiteContent }));
@@ -68,12 +68,12 @@ describe("manifest", () => {
 
 describe("images générées", () => {
   it("image de partage (Open Graph) : 1200×630, nom, titre et ville, sans « médecin » ni « Dr »", async () => {
-    const og = await import("./opengraph-image");
+    const og = await import("./[locale]/opengraph-image");
     expect(og.size).toEqual({ width: 1200, height: 630 });
     expect(og.contentType).toBe("image/png");
     expect(og.alt).not.toMatch(FORBIDDEN_TITLES);
     expect(og.alt).toBe(`${C.practitioner.name}, ostéopathe D.O. à ${C.contact.locality}`); // statique : suit le contenu de secours
-    const image = (await og.default()) as unknown as FakeImage;
+    const image = (await og.default(routeProps())) as unknown as FakeImage;
     expect(image.options).toEqual(og.size);
     const text = visibleText(render(image.element));
     expect(text).toContain(C.practitioner.name);
@@ -94,13 +94,13 @@ describe("images générées", () => {
 
 describe("/admin/photos (outil temporaire d'upload)", () => {
   const page = async (searchParams: Record<string, string | string[]>) => {
-    const { default: AdminPhotosPage } = await import("./admin/photos/page");
+    const { default: AdminPhotosPage } = await import("./(admin)/admin/photos/page");
     return AdminPhotosPage({ searchParams: Promise.resolve(searchParams) } as never);
   };
   const notFound = expect.objectContaining({ digest: expect.stringMatching(/404/) });
 
   it("jamais indexée", async () => {
-    const { metadata } = await import("./admin/photos/page");
+    const { metadata } = await import("./(admin)/admin/photos/page");
     expect(metadata.robots).toEqual({ index: false, follow: false });
   });
 

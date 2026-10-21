@@ -1,0 +1,108 @@
+import Anthropic from "@anthropic-ai/sdk";
+import { LOCALE_META, type Locale } from "@/config/i18n";
+import { FORBIDDEN_TITLES, FRENCH_FORBIDDEN_TITLES } from "./rules";
+
+/** Lot de textes : clé → texte. Le traducteur renvoie les mêmes clés. */
+export type TextBatch = Record<string, string>;
+export type Translator = (batch: TextBatch, locale: Locale) => Promise<TextBatch>;
+
+/** Modèle de traduction (surchargeable par TRANSLATION_MODEL, ex. un modèle moins cher). */
+export const TRANSLATION_MODEL = process.env.TRANSLATION_MODEL || "claude-opus-5-5";
+
+/**
+ * Version des consignes : à incrémenter quand SYSTEM_PROMPT change, pour que tout soit retraduit
+ * (elle fait partie de la clé de cache, comme le modèle).
+ */
+export const PROMPT_VERSION = 1;
+
+const SYSTEM_PROMPT = `You translate the website of an osteopath's practice in Dudelange, Luxembourg, from French into the target language given by the user. Patients read these pages to decide whether to book a session, so the translation must be accurate, natural and warm, as a native professional copywriter in that language would write it. Address the reader formally (polite form) where the language distinguishes it.
+
+Rules you must always follow:
+- Translate the meaning faithfully. Never add, remove or soften medical claims, conditions, prices, durations or promises. Do not add any information.
+- The practitioner is an osteopath (ostéopathe D.O.). Osteopathy is a health profession distinct from medicine: never call him a doctor or a physician, and never use a title such as "Dr" (in English avoid "doctor"/"physician"; in Luxembourgish avoid "Dokter"/"Doktor"; in Portuguese never call him "médico" or "doutor"). Translate "ostéopathe" as the usual word for osteopath in the target language. Only mention a doctor where the French text itself mentions one (médecin).
+- Keep unchanged: personal names, the city name "Dudelange" and other place names, street addresses, brand and product names (Wero, Doctena, Cal.com, Google, Google Maps, CNS, Payconiq, Visa, Mastercard…), e-mail addresses, URLs, phone numbers, numbers, prices and currency symbols, and the title "D.O.".
+- Keep the inline tags <b>, </b>, <i>, </i>, <code>, </code>, <a n="…"> and </a> exactly as written (same tags, same n values, properly nested), moving them only as word order requires. Keep the escaped characters &lt; &gt; &amp; as they are. Do not add any markup of your own.
+- Keep line breaks inside a text where the French text has them.
+- Each value is translated on its own; keep consistent terminology across values.
+
+The user message is a JSON object of id → French text. Reply with a JSON object with exactly the same ids, each mapped to its translation.`;
+
+/** Erreur de validation d'une traduction (la réponse est rejetée et redemandée). */
+export class TranslationError extends Error {}
+
+/** Balises d'une chaîne, dans l'ordre (pour vérifier que la traduction les conserve). */
+const tagsOf = (text: string) => (text.match(/<\/?(?:a|b|i|code)(?: n="\d+")?>/g) ?? []).sort();
+
+/**
+ * Vérifie une traduction avant de l'accepter (et donc de la mettre en cache) : mêmes clés, aucun texte vide,
+ * balises conservées, et règle 10 (jamais « médecin » ni « Dr ») dans la langue cible — sauf si le texte français
+ * cite lui-même un médecin. Renvoie la liste des problèmes (vide = traduction acceptée).
+ */
+export function validateTranslation(source: TextBatch, translated: unknown): string[] {
+  if (!translated || typeof translated !== "object") return ["réponse non JSON"];
+  const out = translated as Record<string, unknown>;
+  const problems: string[] = [];
+  for (const [key, text] of Object.entries(source)) {
+    const value = out[key];
+    if (typeof value !== "string" || !value.trim()) {
+      problems.push(`${key} : traduction absente`);
+      continue;
+    }
+    if (tagsOf(value).join() !== tagsOf(text).join()) problems.push(`${key} : balises modifiées`);
+    if (FORBIDDEN_TITLES.test(value) && !FRENCH_FORBIDDEN_TITLES.test(text)) problems.push(`${key} : titre interdit (règle 10)`);
+  }
+  return problems;
+}
+
+/** Traducteur Claude : un appel par lot, réponse JSON contrainte par schéma, validée, redemandée 2 fois au plus. */
+export function createClaudeTranslator(client: Anthropic = new Anthropic()): Translator {
+  return async (batch, locale) => {
+    const keys = Object.keys(batch);
+    if (keys.length === 0) return {};
+    const schema = {
+      type: "object",
+      properties: Object.fromEntries(keys.map((k) => [k, { type: "string" }])),
+      required: keys,
+      additionalProperties: false,
+    };
+    let problems: string[] = [];
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const message = await client.beta.messages
+        .stream({
+          model: TRANSLATION_MODEL,
+          max_tokens: 64000,
+          output_config: { effort: "medium", format: { type: "json_schema", schema } },
+          // Si le modèle refusait le texte (faux positif des filtres), l'API relance la requête sur un autre modèle.
+          betas: ["server-side-fallback-2026-07-01"],
+          fallbacks: "default",
+          system: SYSTEM_PROMPT,
+          messages: [
+            {
+              role: "user",
+              content: `Target language: ${LOCALE_META[locale].englishName}.\n\n${JSON.stringify(batch, null, 2)}`,
+            },
+          ],
+        })
+        .finalMessage();
+      if (message.stop_reason === "refusal") throw new TranslationError(`traduction refusée (${locale})`);
+      if (message.stop_reason === "max_tokens") throw new TranslationError(`traduction tronquée (${locale})`);
+      const text = message.content.flatMap((block) => (block.type === "text" ? [block.text] : [])).join("");
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        parsed = null;
+      }
+      problems = validateTranslation(batch, parsed);
+      if (problems.length === 0) {
+        const out = parsed as TextBatch;
+        return Object.fromEntries(keys.map((k) => [k, out[k]!]));
+      }
+      console.warn(`[i18n] traduction ${locale} rejetée (essai ${attempt}/3) : ${problems.join(" ; ")}`);
+    }
+    throw new TranslationError(`traduction ${locale} invalide : ${problems.join(" ; ")}`);
+  };
+}
+
+/** Traducteur « identity » (CI, tests) : renvoie le français. Ne sert jamais en production (voir translationMode). */
+export const identityTranslator: Translator = async (batch) => ({ ...batch });

@@ -2,14 +2,18 @@
 
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useId, useRef, useState } from "react";
-import { COPY, HOME_LINK, NAV } from "@/content/ui-copy";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import type { UiCopy } from "@/content/ui-copy";
+
+type NavLink = { href: string; label: string };
+/** `children` : bloc ajouté sous les liens (sélecteur de langue, trop large pour l'en-tête sur mobile). */
+type Props = { home: NavLink; links: NavLink[]; labels: UiCopy["menu"]; children?: ReactNode };
 
 const ITEM_LINK =
   "block rounded-lg px-3 py-3 text-base font-medium text-slate-700 hover:bg-sage-50 hover:text-sage-700";
 
 /** Menu déroulant du header sous lg (au-dessus, la navigation horizontale prend le relais). */
-export function MobileMenu() {
+export function MobileMenu({ home, links, labels, children }: Props) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -45,7 +49,7 @@ export function MobileMenu() {
         type="button"
         aria-expanded={open}
         aria-controls={panelId}
-        aria-label={open ? COPY.menu.close : COPY.menu.open}
+        aria-label={open ? labels.close : labels.open}
         onClick={() => setOpen((v) => !v)}
         className="grid size-10 place-items-center rounded-full text-ink hover:bg-sage-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage-700"
       >
@@ -53,18 +57,18 @@ export function MobileMenu() {
       </button>
       <nav
         id={panelId}
-        aria-label={COPY.menu.label}
+        aria-label={labels.label}
         hidden={!open}
         className="absolute inset-x-0 top-full border-b border-slate-100 bg-white shadow-md"
       >
         <ul className="mx-auto max-w-6xl px-4 py-2 sm:px-6">
           <li>
-            <Link href={HOME_LINK.href} onClick={() => setOpen(false)} className={ITEM_LINK}>
-              {HOME_LINK.label}
+            <Link href={home.href} onClick={() => setOpen(false)} className={ITEM_LINK}>
+              {home.label}
             </Link>
           </li>
           {/* Ancres en <a> natif, pas <Link> : avec l'ancre déjà dans l'URL, <Link> ramène en haut de page au lieu de la section. */}
-          {NAV.map((item) => (
+          {links.map((item) => (
             <li key={item.href}>
               <a href={item.href} onClick={() => setOpen(false)} className={ITEM_LINK}>
                 {item.label}
@@ -72,6 +76,7 @@ export function MobileMenu() {
             </li>
           ))}
         </ul>
+        {children && <div className="mx-auto max-w-6xl border-t border-slate-100 px-4 sm:px-6">{children}</div>}
       </nav>
     </div>
   );
