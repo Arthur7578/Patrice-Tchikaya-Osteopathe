@@ -2510,6 +2510,8 @@ export function BookingInline({ booking }: { booking: SiteContent["booking"] }) 
   Zoufftgen) : seulement dans des phrases vraies (ex. accès), jamais en liste de mots-clés.
 - Allemand/anglais (« Osteopath Düdelingen », « osteopath Dudelange ») : public réel au Luxembourg → version
   DE/EN recommandée plus tard (hors périmètre).
+  **Mis à jour le 21/10/2026** : versions EN, LB et PT traduites automatiquement (voir `docs/DECISIONS.md`) ;
+  l'allemand n'est pas encore proposé (une ligne dans `src/config/i18n.ts` + `ui-copy.de.ts`).
 
 ### 10.2 Métadonnées
 
@@ -2765,7 +2767,8 @@ Sans `ALLOW_INDEXING=true`, l'audit SEO « page indexable » échoue (noindex vo
 
 1. Vercel → Add New → Project → importer `arthur7578/patrice-tchikaya-osteopathe` (framework détecté : Next.js).
 2. Variables d'environnement (Production **et** Preview) : `NOTION_TOKEN`, `REVALIDATE_SECRET` (chaîne aléatoire
-   longue) ; Production seulement : `NEXT_PUBLIC_SITE_URL=https://osteopathe-tchikaya.lu`.
+   longue), `ANTHROPIC_API_KEY` (traduction automatique ; sans elle, français seul) ; Production seulement :
+   `NEXT_PUBLIC_SITE_URL=https://osteopathe-tchikaya.lu`.
 3. Node.js 22.x (cohérent avec `engines`).
 4. Domaine : acheter/configurer `osteopathe-tchikaya.lu`, l'ajouter dans Vercel avec `www` ; domaine principal =
    apex, `www` → redirection 308.

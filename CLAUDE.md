@@ -3,7 +3,9 @@
 # Site Patrice Tchikaya — Ostéopathe D.O. à Dudelange
 
 Landing page SEO local : Next.js 16 (App Router) + TypeScript + Tailwind CSS v4, contenu Notion (lecture seule),
-prise de RDV Cal.com (compte UE `cal.eu`), déploiement Vercel.
+prise de RDV Cal.com (compte UE `cal.eu`) ou Doctena, déploiement Vercel. Site en 4 langues : français (source, sans
+préfixe), `/en`, `/lb`, `/pt`, traduites automatiquement depuis le français (`src/lib/i18n`, API Claude,
+`ANTHROPIC_API_KEY` ; sans elle, français seul). Voir `docs/DECISIONS.md` (21/10/2026).
 
 **Source de vérité : `docs/PLAN.md`.** Relire la section de la phase en cours avant d'écrire du code.
 Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, décision, raison).
@@ -15,12 +17,14 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
 - `npm run lint` · `npm run typecheck` · `npm test` · `npm run build` : **tous verts avant chaque commit**
 - `npm run notion:check` : diagnostic Notion (nécessite `NOTION_TOKEN` dans `.env.local`) ; signale aussi, en avertissement,
   les écarts entre Notion et `fallback.ts` (à recopier à la main : le contenu de secours ne se met pas à jour tout seul)
-- `npm run seo:smoke` : contrôles SEO sur un serveur lancé (`npm run build && npm start`) ; signale aussi les textes
+- `npm run seo:smoke` : contrôles SEO sur un serveur lancé (`npm run build && npm start`), y compris chaque langue
+  annoncée en hreflang (`<h1>` réellement traduit, sauf `TRANSLATION_MODE=identity`) ; signale aussi les textes
   d'attente « [À COMPLÉTER …] » visibles (avertissement). Avec `SMOKE_CHECK_BOOKING=1` (production seulement),
   vérifie que le lien de RDV répond chez le prestataire (404 ou 410 : échec ; autre réponse hors 2xx : avertissement)
 - `npm run test:coverage` : couverture v8 (rapport HTML dans `coverage/`, seuils dans `vitest.config.mts`)
-- `npm run test:e2e` : Playwright + axe sur le build (`npm run build` d'abord ; en cloud,
-  `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux*/chrome`). Parcourt chaque URL du sitemap.
+- `npm run test:e2e` : Playwright + axe sur le build (`TRANSLATION_MODE=identity npm run build` d'abord, pour publier
+  les 4 langues sans appel API ; en cloud, `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux*/chrome`).
+  Parcourt chaque URL du sitemap ; `e2e/i18n.spec.ts` est ignoré si seules les pages françaises sont publiées.
 - `npm run test:mutants` : casse volontairement ~50 règles critiques, au moins un test doit échouer à chaque fois
   (`scripts/mutation-check.ts` ; ajouter une entrée quand on ajoute une règle ; fichiers commités requis ; ~3 min)
 - `npm run test:mutation [-- <groupe>]` : Stryker (runner `command` + `vitest related`), groupes dans
@@ -36,7 +40,8 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
 
 - Bloqués par la politique réseau : `api.notion.com`, `cal.eu`, `app.cal.eu`, `app.cal.com`, `ui.shadcn.com`.
   Sans `NOTION_TOKEN`, le build utilise `src/lib/content/fallback.ts` : c'est normal. Tester Notion et Cal.com
-  sur la preview Vercel.
+  sur la preview Vercel. `www.doctena.lu` est aussi bloqué. `api.anthropic.com` répond, mais aucune clé n'est fournie :
+  `TRANSLATION_MODE=identity` (textes français sous chaque langue) pour tester les routes en local.
 - `*.vercel.app` et `osteopathe-tchikaya.lu` sont aussi bloqués (proxy, 403). Le connecteur Vercel
   (`web_fetch_vercel_url`) lit la production, mais pas les previews protégées par l'authentification Vercel.
 - Pas de CLI shadcn : écrire les composants à la main (PLAN §6.14 et §7.6).
@@ -45,9 +50,12 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
 ## Règles non négociables (détail : PLAN §2.3)
 
 1. Server Components par défaut ; `"use client"` seulement pour `BookingLink`, `BookingInline`,
-   `MobileActionBar`, `MobileMenu`, `Reveal`, et `CookieConsent` (écart GTM du 27/09, `docs/DECISIONS.md`).
+   `MobileActionBar`, `MobileMenu`, `Reveal`, `CookieConsent` (écart GTM du 27/09, `docs/DECISIONS.md`) et
+   `LanguageSwitcher` (21/10). Un composant client reçoit des chaînes déjà traduites (jamais `getCopy`, ni fonctions).
    Liste vérifiée par `src/test/architecture.test.ts`.
-2. Aucun contenu éditorial en dur hors `fallback.ts` et `src/content/ui-copy.ts` ; tout passe par `getSiteContent()`.
+2. Aucun contenu éditorial en dur hors `fallback.ts` et `src/content/ui-copy*.ts` ; tout passe par
+   `getSiteContent(locale)` et `getCopy(locale)`. Modifier `ui-copy.ts` = mettre à jour `ui-copy.en/lb/pt.ts` dans le
+   même commit (le typage et `ui-copy.test.ts` le vérifient). Liens internes via `localePath(locale, …)`.
    Vérifié sur le JSX par `src/test/architecture.test.ts` (exceptions listées : pages juridiques, outil d'upload, icône).
 3. Images Notion : colonne `URL` uniquement, jamais les fichiers Notion ; toujours l'`alt` Notion ; placeholder
    si pas d'URL (composant `SiteImage`).
@@ -56,8 +64,10 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
 6. Tout CTA de RDV est un vrai `<a href="https://cal.eu/…">` (fonctionne sans JS).
 7. JSON-LD : jamais `Physician`, jamais `AggregateRating`/`Review`.
 8. Un seul `<h1>` par page.
-9. `alternates.canonical` défini dans chaque page, jamais dans le layout racine.
-10. Ne jamais écrire « médecin » ni « Dr » : l'ostéopathie est une profession de santé distincte.
+9. `alternates` défini dans chaque page avec `localeAlternates(locale, chemin)` (canonical + hreflang), jamais dans le
+   layout racine (`src/app/[locale]/layout.tsx`).
+10. Ne jamais écrire « médecin » ni « Dr » (ni « doctor », « Dokter »… : `src/lib/i18n/rules.ts`) : l'ostéopathie est
+    une profession de santé distincte. Les traductions automatiques sont vérifiées avant mise en cache.
 
 ## Pièges Next.js 16 (vérifiés sur 16.3.6)
 
@@ -66,7 +76,11 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
   `LayoutProps<"/">`, générés dans `.next/types` : sur un clone neuf, lancer `npx next typegen` avant `tsc`
   (c'est ce que fait `npm run typecheck`).
 - `revalidateTag(tag, profile)` exige 2 arguments ; ici on utilise `revalidatePath("/", "layout")`.
-- `middleware.ts` est devenu `proxy.ts` (non utilisé). `next lint` n'existe plus : `npm run lint` lance ESLint.
+- `middleware.ts` est devenu `proxy.ts` : `src/proxy.ts` fait le routage par langue (logique testée dans
+  `src/lib/i18n/routing.ts`). `next lint` n'existe plus : `npm run lint` lance ESLint.
+- Layout racine sous `[locale]` : une page ne doit pas exporter autre chose que les noms prévus par Next ; la langue
+  vient de `params` (`routeLocale`) ou, dans `not-found.tsx`, de `next/root-params`. Pas de `dynamicParams = false`
+  dans le layout (il s'appliquerait aux pages motifs). Une 404 est rendue à l'hydratation (DECISIONS 21/10).
 - Notion SDK v5 : `notion.dataSources.query` (il n'y a plus de `databases.query`).
 - Cal.com UE : `calOrigin="https://app.cal.eu"` ; namespaces distincts popup / inline (PLAN §9).
 
