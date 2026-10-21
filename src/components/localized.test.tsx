@@ -26,13 +26,13 @@ describe("composants dans une autre langue", () => {
     expect(text).toContain("Access & fees");
     expect(text).not.toContain("Accueil");
     expect(hrefs(root)).toEqual(expect.arrayContaining(["/en", "/en#a-propos", "/en#infos"]));
-    expect(root.querySelector("summary")?.getAttribute("aria-label")).toBe("Site language");
+    expect(root.querySelector("summary")?.text).toMatch(/^Site language, ?en$/);
     expect(root.querySelectorAll("details a").map((a) => a.text)).toEqual(["Français", "Deutsch", "English", "Lëtzebuergesch", "Português"]);
     expectSiteRules(root);
   });
 
   it("en-tête en français : sélecteur présent, libellé français", () => {
-    expect(render(<SiteHeader content={C} />).querySelector("summary")?.getAttribute("aria-label")).toBe("Langue du site");
+    expect(render(<SiteHeader content={C} />).querySelector("summary")?.text).toMatch(/^Langue du site, ?fr$/);
   });
 
   it("pied de page : liens vers les pages de la langue (juridiques comprises), aucune mention de traduction", () => {
