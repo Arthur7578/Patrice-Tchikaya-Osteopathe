@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { COPY_FR } from "@/content/ui-copy";
 import type { Booking } from "@/lib/content/types";
 import { FakeIntersectionObserver } from "@/test/intersection-observer";
 
@@ -44,14 +45,14 @@ describe("BookingInline", () => {
   });
 
   it("prestataire générique : lien direct vers l'agenda, jamais d'iframe ni d'observateur (règle 6)", () => {
-    render(<BookingInline booking={GENERIC} />);
+    render(<BookingInline booking={GENERIC} copy={COPY_FR.bookingInline} />);
     expect(fallbackLink()).toHaveAttribute("href", GENERIC.url);
     expect(embed()).toBeNull();
     expect(observers).toHaveLength(0);
   });
 
   it("Cal.com, hors écran : rien n'est chargé (aucun coût au chargement initial)", () => {
-    render(<BookingInline booking={CAL} />);
+    render(<BookingInline booking={CAL} copy={COPY_FR.bookingInline} />);
     expect(loading()).toBeInTheDocument();
     expect(embed()).toBeNull();
     expect(waitForCalScript).not.toHaveBeenCalled();
@@ -59,7 +60,7 @@ describe("BookingInline", () => {
   });
 
   it("une entrée « non visible » ne déclenche rien", async () => {
-    render(<BookingInline booking={CAL} />);
+    render(<BookingInline booking={CAL} copy={COPY_FR.bookingInline} />);
     await enterViewport(false);
     expect(embed()).toBeNull();
     expect(waitForCalScript).not.toHaveBeenCalled();
@@ -69,7 +70,7 @@ describe("BookingInline", () => {
   it("à l'approche : monte l'embed (namespace inline, origine UE), puis retire le chargement quand le script est prêt", async () => {
     let ready!: () => void;
     waitForCalScript.mockReturnValue(new Promise<void>((resolve) => (ready = resolve)));
-    render(<BookingInline booking={CAL} />);
+    render(<BookingInline booking={CAL} copy={COPY_FR.bookingInline} />);
     await enterViewport();
 
     expect(observers[0]!.disconnected).toBe(true);
@@ -90,7 +91,7 @@ describe("BookingInline", () => {
 
   it("script Cal.com indisponible (bloqueur, réseau) : l'embed est retiré et le lien direct affiché", async () => {
     waitForCalScript.mockRejectedValue(new Error("Cal.com embed indisponible"));
-    render(<BookingInline booking={CAL} />);
+    render(<BookingInline booking={CAL} copy={COPY_FR.bookingInline} />);
     await enterViewport();
     expect(embed()).toBeNull();
     expect(fallbackLink()).toHaveAttribute("href", CAL.url);
@@ -98,7 +99,7 @@ describe("BookingInline", () => {
   });
 
   it("démontage : l'observateur est déconnecté", () => {
-    const { unmount } = render(<BookingInline booking={CAL} />);
+    const { unmount } = render(<BookingInline booking={CAL} copy={COPY_FR.bookingInline} />);
     unmount();
     expect(observers[0]!.disconnected).toBe(true);
   });

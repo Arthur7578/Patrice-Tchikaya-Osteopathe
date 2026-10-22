@@ -1,3 +1,4 @@
+import type { Locale } from "@/config/i18n";
 import type { AccessRowId, HeroPointId, InfoRowId } from "./rows";
 
 export type ImageSlot = "hero" | "portrait" | "cabinet";
@@ -55,6 +56,14 @@ export type Motif = {
   notionPageId: string | null; // pour les pages motifs (phase 9)
   /** null = pas de page détaillée publiée (case non cochée, texte trop court ou slug réservé). */
   page: MotifPage | null;
+  /**
+   * Slug de la page dans chaque langue (slugs traduits figés, src/lib/i18n/slugs.ts) ; absent tant que les slugs ne
+   * sont pas traduits (pas de stockage configuré) : `slug` sert alors dans toutes les langues. Dans un contenu traduit,
+   * `slug` vaut déjà le slug de la langue.
+   */
+  slugs?: Record<Locale, string>;
+  /** Anciennes adresses de la page dans la langue du contenu, redirigées (308) vers `slug`. */
+  aliases?: string[];
 };
 
 export type Review = {
@@ -62,6 +71,8 @@ export type Review = {
   rating: number | null; // 0..5
   text: string;
   date: string | null; // ISO "2026-09-21"
+  /** Texte traduit dans la langue de la page (mention « Traduit » affichée sous l'avis). */
+  translated?: true;
 };
 
 export type FaqItem = { question: string; answer: string };
@@ -139,6 +150,8 @@ export type Payment = {
 };
 
 export type SiteContent = {
+  /** Langue des textes : « fr » pour Notion et fallback.ts, une autre langue après traduction (src/lib/i18n). */
+  locale: Locale;
   practitioner: { name: string; title: string };
   seo: { h1: string; heroSubtitle: string; metaTitle: string | null; metaDescription: string | null };
   contact: {

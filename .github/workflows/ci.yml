@@ -28,8 +28,14 @@ jobs:
       # Tests unitaires et de composants + couverture ; échoue si les seuils de vitest.config.mts ne sont plus tenus.
       - run: npm run test:coverage
       # Sans NOTION_TOKEN, le build utilise fallback.ts (voir CLAUDE.md) : suffisant pour l'e2e.
+      # TRANSLATION_MODE=identity : les 4 langues sont publiées avec le texte français (sans appel à l'API de
+      # traduction), pour vérifier routes, hreflang, sélecteur de langue et redirections.
       - run: npm run build
+        env:
+          TRANSLATION_MODE: identity
       - name: Contrôles SEO (seo:smoke) sur le build
+        env:
+          TRANSLATION_MODE: identity
         run: |
           npx next start -p 3200 > /tmp/next-smoke.log 2>&1 &
           for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:3200/ && break; sleep 1; done
@@ -39,6 +45,7 @@ jobs:
       - run: npm run test:e2e
         env:
           CI: "true"
+          TRANSLATION_MODE: identity
       - uses: actions/upload-artifact@v7
         if: always()
         with:

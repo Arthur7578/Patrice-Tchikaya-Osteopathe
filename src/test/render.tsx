@@ -8,9 +8,17 @@ export function render(element: ReactElement): HTMLElement {
   return parse(renderToStaticMarkup(element));
 }
 
-/** Rend une page async (Server Component) : on l'appelle comme une fonction, puis on rend son résultat. */
-export async function renderPage(page: () => Promise<ReactElement>): Promise<HTMLElement> {
-  return render(await page());
+/** Props d'une page ou d'un layout de route (`params` et `searchParams` sont des Promises), en français par défaut. */
+export function routeProps<P extends Record<string, string> = { locale: string }>(
+  params: P = { locale: "fr" } as unknown as P,
+  searchParams: Record<string, string> = {},
+) {
+  return { params: Promise.resolve(params), searchParams: Promise.resolve(searchParams) };
+}
+
+/** Rend une page async (Server Component) : on l'appelle comme une fonction (props de route en français par défaut), puis on rend son résultat. */
+export async function renderPage<P>(page: (props: P) => Promise<ReactElement>, props?: P): Promise<HTMLElement> {
+  return render(await page(props ?? (routeProps() as P)));
 }
 
 /** Texte visible, espaces normalisés, sans le contenu des <script> (JSON-LD) ni des <style>. Ne modifie pas `root`. */
@@ -27,8 +35,9 @@ export function jsonLdNodes(root: HTMLElement): Array<Record<string, unknown>> {
     .flatMap((s) => (JSON.parse(s.textContent) as { "@graph"?: Array<Record<string, unknown>> })["@graph"] ?? []);
 }
 
-/** Règle 10 : l'ostéopathe n'est ni « médecin » ni « Dr ». */
-export const FORBIDDEN_TITLES = /médecin|\bDr\b/i;
+/** Règle 10 : l'ostéopathe n'est ni « médecin » ni « Dr » (ni leurs équivalents dans les autres langues du site). */
+export { FORBIDDEN_TITLES } from "@/lib/i18n/rules";
+import { FORBIDDEN_TITLES } from "@/lib/i18n/rules";
 
 /** Attributs lus par les utilisateurs (lecteurs d'écran, infobulles) ou les moteurs : soumis aux mêmes règles que le texte. */
 const TEXT_ATTRIBUTES = ["alt", "title", "aria-label", "content", "placeholder", "value"];

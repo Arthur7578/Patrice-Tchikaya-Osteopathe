@@ -4,14 +4,14 @@ import { CalendarDays, Phone } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BookingLink } from "@/components/booking/booking-link";
 import { buttonVariants } from "@/components/ui/button";
-import { COPY } from "@/content/ui-copy";
 import type { Booking } from "@/lib/content/types";
 import { cn } from "@/lib/utils";
 
-type Props = { booking: Booking; phoneE164: string; phoneDisplay: string };
+/** Libellés déjà dans la langue de la page (un composant client ne reçoit que des chaînes, pas de fonctions). */
+type Props = { booking: Booking; phoneE164: string; bookLabel: string; callLabel: string };
 
 /** Barre fixe mobile (< md) : visible quand le déclencheur (CTA hero / h1) ET l'agenda inline sont hors écran. */
-export function MobileActionBar({ booking, phoneE164, phoneDisplay }: Props) {
+export function MobileActionBar({ booking, phoneE164, bookLabel, callLabel }: Props) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -39,11 +39,11 @@ export function MobileActionBar({ booking, phoneE164, phoneDisplay }: Props) {
     >
       <div className="flex gap-3">
         <BookingLink booking={booking} placement="mobile-bar" className={cn(buttonVariants({ size: "lg" }), "flex-1")}>
-          <CalendarDays aria-hidden="true" /> {COPY.cta.bookMobile}
+          <CalendarDays aria-hidden="true" /> {bookLabel}
         </BookingLink>
         <a
           href={`tel:${phoneE164}`}
-          aria-label={COPY.cta.callCabinet(phoneDisplay)}
+          aria-label={callLabel}
           className={cn(buttonVariants({ variant: "secondary", size: "lg" }), "w-13 px-0")}
         >
           <Phone aria-hidden="true" />

@@ -20,6 +20,8 @@ export default defineConfig({
   reporter: [["list"]],
   use: {
     baseURL: `http://localhost:${PORT}`,
+    // Navigateur en français : sinon (en-US par défaut) le proxy redirigerait chaque entrée vers /en.
+    locale: "fr-FR",
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"], ...chromium } },
@@ -33,6 +35,7 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
     // Active l'outil d'upload (/admin/photos) pour le tester ; sans BLOB_READ_WRITE_TOKEN, aucun envoi réel.
-    env: { ADMIN_UPLOAD_SECRET: E2E_ADMIN_UPLOAD_SECRET },
+    // TRANSLATION_MODE=identity : langues publiées sans appel à l'API de traduction (le build doit l'avoir aussi).
+    env: { ADMIN_UPLOAD_SECRET: E2E_ADMIN_UPLOAD_SECRET, TRANSLATION_MODE: "identity" },
   },
 });

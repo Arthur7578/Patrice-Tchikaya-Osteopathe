@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { NAV } from "@/content/ui-copy";
+import { COPY_FR as COPY, navLinks } from "@/content/ui-copy";
+
+const NAV = navLinks("fr");
 import { FALLBACK_CONTENT as C } from "@/lib/content/fallback";
 import type { SiteContent } from "@/lib/content/types";
 import { bookingAnchors, expectSiteRules, render, visibleText } from "@/test/render";
@@ -71,7 +73,7 @@ describe("SiteFooter", () => {
 });
 
 describe("MobileActionBar", () => {
-  const root = render(<MobileActionBar booking={C.booking} phoneE164={C.contact.phoneE164} phoneDisplay={C.contact.phoneDisplay} />);
+  const root = render(<MobileActionBar booking={C.booking} phoneE164={C.contact.phoneE164} bookLabel={COPY.cta.bookMobile} callLabel={COPY.cta.callCabinet(C.contact.phoneDisplay)} />);
 
   it("contient un appel (tel:) et un RDV en vrais liens <a href>", () => {
     expect(root.querySelector(`a[href="tel:${C.contact.phoneE164}"]`)).not.toBeNull();
@@ -81,11 +83,11 @@ describe("MobileActionBar", () => {
 
 describe("SkipLink et BackToHome", () => {
   it("le lien d'évitement pointe vers #contenu", () => {
-    expect(render(<SkipLink />).querySelector("a")?.getAttribute("href")).toBe("#contenu");
+    expect(render(<SkipLink locale="fr" />).querySelector("a")?.getAttribute("href")).toBe("#contenu");
   });
 
   it("BackToHome renvoie vers l'accueil", () => {
-    expect(render(<BackToHome />).querySelector("a")?.getAttribute("href")).toBe("/");
+    expect(render(<BackToHome locale="fr" />).querySelector("a")?.getAttribute("href")).toBe("/");
   });
 });
 

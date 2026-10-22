@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { COPY } from "@/content/ui-copy";
+import { COPY_FR as COPY } from "@/content/ui-copy";
 import type { ContentBlock, RichText } from "@/lib/content/types";
 import { expectSiteRules, render } from "@/test/render";
 import { ContentBlocks } from "./content-blocks";
 
 const t = (text: string, marks: Omit<RichText, "text"> = {}): RichText => ({ text, ...marks });
-const html = (blocks: ContentBlock[]) => render(<>{ContentBlocks({ blocks })}</>);
+const html = (blocks: ContentBlock[]) => render(<>{ContentBlocks({ locale: "fr", blocks })}</>);
 
 describe("ContentBlocks : corps des pages motifs", () => {
   it("rend chaque type de bloc avec la bonne balise", () => {

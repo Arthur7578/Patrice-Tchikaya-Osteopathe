@@ -1,7 +1,7 @@
 import { globSync, readFileSync } from "node:fs";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
-import { FORBIDDEN_TITLES } from "./render";
+import { FORBIDDEN_TITLES } from "@/lib/i18n/rules";
 
 /** Code applicatif (hors tests). */
 const sources = globSync("src/**/*.{ts,tsx}")
@@ -16,6 +16,7 @@ const isClient = (code: string) => /^(?:\s*\/\/[^\n]*\n|\s*\/\*[\s\S]*?\*\/)*\s*
 const CLIENT_COMPONENTS = [
   "src/components/booking/booking-inline.tsx",
   "src/components/booking/booking-link.tsx",
+  "src/components/layout/language-switcher.tsx", // liens vers la même page dans les autres langues (chemin lu dans le navigateur)
   "src/components/layout/mobile-action-bar.tsx",
   "src/components/layout/mobile-menu.tsx",
   "src/components/ui/reveal.tsx",
@@ -29,10 +30,8 @@ const USER_FACING_ATTRIBUTES = new Set(["aria-label", "aria-description", "title
 const CODE_ELEMENTS = new Set(["style", "script", "Script"]);
 /** Règle 2 : fichiers autorisés à contenir du texte en dur, avec la raison. */
 const HARDCODED_TEXT_ALLOWED = [
-  "src/app/admin/photos/page.tsx", // outil interne temporaire, jamais vu des patients
+  "src/app/(admin)/admin/photos/page.tsx", // outil interne temporaire, jamais vu des patients
   "src/app/apple-icon.tsx", // monogramme « PT » de l'icône, comme icon.svg
-  "src/app/confidentialite/page.tsx", // texte juridique propre à la page (PLAN §J), données du cabinet via Notion
-  "src/app/mentions-legales/page.tsx", // idem
 ];
 
 const hasWords = (text: string) => /\p{L}{2,}/u.test(text);
@@ -119,8 +118,9 @@ describe("architecture (règles non négociables vérifiables sur le code)", () 
     for (const file of HARDCODED_TEXT_ALLOWED) expect(hardcodedTexts(file).length, file).toBeGreaterThan(0);
   });
 
-  it("règle 10 : ni « médecin » ni « Dr » dans les textes du site (ui-copy.ts, fallback.ts)", () => {
-    for (const file of ["src/content/ui-copy.ts", "src/lib/content/fallback.ts"]) {
+  it("règle 10 : ni « médecin » ni « Dr » (ni leurs équivalents traduits) dans les textes du site", () => {
+    const files = ["src/content/ui-copy.ts", "src/content/ui-copy.en.ts", "src/content/ui-copy.lb.ts", "src/content/ui-copy.pt.ts", "src/lib/content/fallback.ts"];
+    for (const file of files) {
       const lines = read(file)
         .split("\n")
         .map((line, i) => `${file}:${i + 1} ${line.trim()}`)

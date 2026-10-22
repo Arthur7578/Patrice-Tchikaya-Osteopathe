@@ -50,3 +50,13 @@ describe("motifMeta", () => {
     expect(motifMeta(C, motif(long)).description).toBe(long);
   });
 });
+
+describe("métadonnées dans une autre langue", () => {
+  it("titre et description par défaut traduits, chemins préfixés", () => {
+    const pt = { ...C, locale: "pt" as const, seo: { ...C.seo, metaTitle: null, metaDescription: null } };
+    expect(homeMeta(pt).title).toBe(`Osteopata em ${pt.contact.locality} – ${pt.practitioner.name}, D.O.`);
+    const motif = pt.motifs[0]!;
+    expect(motifMeta(pt, motif).path).toBe(`/pt/${motif.slug}`);
+    expect(motifMeta(pt, motif).title).toBe(`${motif.title} em ${pt.contact.locality} | ${pt.practitioner.name}`);
+  });
+});

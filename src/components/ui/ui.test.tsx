@@ -7,7 +7,7 @@ import { StarRating } from "./star-rating";
 
 describe("StarRating", () => {
   const stars = (value: number) =>
-    render(<StarRating value={value} />)
+    render(<StarRating locale="fr" value={value} />)
       .querySelectorAll("svg")
       .map((svg) => (svg.getAttribute("class")?.includes("fill-amber-400") ? "★" : "☆"))
       .join("");
@@ -20,14 +20,14 @@ describe("StarRating", () => {
   });
 
   it("étoiles décoratives ; valeur exacte annoncée aux lecteurs d'écran", () => {
-    const root = render(<StarRating value={4.7} />);
+    const root = render(<StarRating locale="fr" value={4.7} />);
     expect(root.querySelectorAll('svg[aria-hidden="true"]')).toHaveLength(5);
     expect(root.querySelector(".sr-only")?.text).toBe("Note : 4,7 sur 5");
     expect(root.text).not.toContain("/5");
   });
 
   it("showValue : affiche « N/5 » (masqué aux lecteurs d'écran, qui ont déjà la note)", () => {
-    const value = render(<StarRating value={4} showValue />).querySelector('span[aria-hidden="true"]');
+    const value = render(<StarRating locale="fr" value={4} showValue />).querySelector('span[aria-hidden="true"]');
     expect(value?.text).toBe("4/5");
   });
 });

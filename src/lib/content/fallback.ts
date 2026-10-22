@@ -159,6 +159,7 @@ Vos examens ou comptes rendus récents s'il y en a, la liste de vos traitements 
  * OBLIGATOIRE est vide dans Notion. Ne jamais l'utiliser pour masquer une panne Notion en prod.
  */
 export const FALLBACK_CONTENT: SiteContent = {
+  locale: "fr",
   practitioner: { name: "Patrice Tchikaya", title: "Ostéopathe D.O." },
   seo: {
     h1: "Ostéopathe à Dudelange – Patrice Tchikaya",

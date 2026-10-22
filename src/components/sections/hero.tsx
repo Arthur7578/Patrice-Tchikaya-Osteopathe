@@ -4,13 +4,14 @@ import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { GoogleMapsAttribution } from "@/components/ui/google-maps-attribution";
 import { SiteImage } from "@/components/ui/site-image";
 import { buttonVariants } from "@/components/ui/button";
-import { COPY } from "@/content/ui-copy";
+import { getCopy, type UiCopy } from "@/content/ui-copy";
 import { formatRating } from "@/lib/content/format";
 import type { HeroPointId } from "@/lib/content/rows";
 import type { SiteContent } from "@/lib/content/types";
 import { cn } from "@/lib/utils";
 
 export function Hero({ content }: { content: SiteContent }) {
+  const copy = getCopy(content.locale);
   const { seo, contact, consultation, booking, rating, images, rowOrder } = content;
   const heroImage = images.hero.src ? images.hero : images.portrait;
 
@@ -25,11 +26,11 @@ export function Hero({ content }: { content: SiteContent }) {
             {rating && (
               <>
                 <Star aria-hidden="true" className="size-4 fill-amber-400 text-amber-400" />
-                {formatRating(rating.value)}/5 {COPY.ratingOn} <GoogleMapsAttribution />
+                {formatRating(rating.value, content.locale)}/5 {copy.ratingOn} <GoogleMapsAttribution />
                 <span aria-hidden="true">•</span>
               </>
             )}
-            {COPY.hero.location(contact.locality)}
+            {copy.hero.location(contact.locality)}
           </a>
 
           <h1
@@ -43,17 +44,17 @@ export function Hero({ content }: { content: SiteContent }) {
           <div id="hero-cta" className="mt-8 flex flex-col gap-3 sm:flex-row">
             <BookingLink booking={booking} placement="hero" className={cn(buttonVariants({ size: "lg" }), "max-sm:whitespace-normal max-sm:text-center")}>
               <CalendarDays aria-hidden="true" />
-              {COPY.cta.book}
+              {copy.cta.book}
             </BookingLink>
             <a href={`tel:${contact.phoneE164}`} className={buttonVariants({ variant: "secondary", size: "lg" })}>
               <Phone aria-hidden="true" />
-              {COPY.cta.call(contact.phoneDisplay)}
+              {copy.cta.call(contact.phoneDisplay)}
             </a>
           </div>
 
           <ul className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600">
             {rowOrder.hero.map((id) => {
-              const text = heroPoint(id, consultation);
+              const text = heroPoint(id, consultation, copy);
               if (!text) return null;
               return (
                 <li key={id} className="flex items-center gap-1.5">
@@ -84,8 +85,8 @@ export function Hero({ content }: { content: SiteContent }) {
                 <Clock aria-hidden="true" className="size-5" />
               </span>
               <div>
-                <p className="text-sm font-semibold text-ink">{COPY.hero.cardTitle(consultation.durationMinutes)}</p>
-                <p className="text-xs text-slate-500">{COPY.hero.cardSubtitle}</p>
+                <p className="text-sm font-semibold text-ink">{copy.hero.cardTitle(consultation.durationMinutes)}</p>
+                <p className="text-xs text-slate-500">{copy.hero.cardSubtitle}</p>
               </div>
             </div>
           )}
@@ -96,8 +97,8 @@ export function Hero({ content }: { content: SiteContent }) {
 }
 
 /** Texte d'un point du hero ; null = masqué (tarif non renseigné dans Notion). */
-function heroPoint(id: HeroPointId, consultation: SiteContent["consultation"]): string | null {
-  const { points } = COPY.hero;
+function heroPoint(id: HeroPointId, consultation: SiteContent["consultation"], copy: UiCopy): string | null {
+  const { points } = copy.hero;
   switch (id) {
     case "duree":
       return points.duree(consultation.durationLabel);

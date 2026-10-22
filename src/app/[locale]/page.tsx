@@ -1,0 +1,48 @@
+import type { Metadata } from "next";
+import { About } from "@/components/sections/about";
+import { Faq } from "@/components/sections/faq";
+import { Hero } from "@/components/sections/hero";
+import { Motifs } from "@/components/sections/motifs";
+import { PracticalInfo } from "@/components/sections/practical-info";
+import { Reviews } from "@/components/sections/reviews";
+import { JsonLd } from "@/components/seo/json-ld";
+import { localeAlternates, localePath } from "@/config/i18n";
+import { getSiteContent } from "@/lib/content/get-site-content";
+import { getGoogleRating } from "@/lib/google/get-google-rating";
+import { routeLocale } from "@/lib/i18n/route-locale";
+import { buildHomeGraph } from "@/lib/seo/json-ld";
+import { homeMeta } from "@/lib/seo/metadata";
+
+export async function generateMetadata({ params }: PageProps<"/[locale]">): Promise<Metadata> {
+  const c = await getSiteContent(await routeLocale(params));
+  const { title, description } = homeMeta(c);
+  return {
+    title: { absolute: title },
+    description,
+    alternates: localeAlternates(c.locale, "/"),
+    openGraph: { url: localePath(c.locale, "/"), title, description },
+    // twitter remplace celui du layout en entier : `card` doit être redonné, sinon X retombe sur « summary ».
+    twitter: { card: "summary_large_image", title, description, images: [localePath(c.locale, "/opengraph-image")] },
+  };
+}
+
+export default async function Home({ params }: PageProps<"/[locale]">) {
+  const locale = await routeLocale(params);
+  // Note Google en direct (si configurée) prioritaire sur Note_Google (Notion). Appelée ici seulement :
+  // l'accueil est la seule page qui affiche la note, et chaque appel à l'API Google est facturable.
+  const [notionContent, googleRating] = await Promise.all([getSiteContent(locale), getGoogleRating()]);
+  const content = googleRating ? { ...notionContent, rating: googleRating } : notionContent;
+  const meta = homeMeta(content);
+
+  return (
+    <main id="contenu">
+      <JsonLd data={buildHomeGraph(content, meta)} />
+      <Hero content={content} />
+      <About content={content} />
+      <Motifs content={content} />
+      <Reviews content={content} />
+      <Faq content={content} />
+      <PracticalInfo content={content} />
+    </main>
+  );
+}

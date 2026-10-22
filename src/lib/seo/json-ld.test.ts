@@ -284,3 +284,31 @@ describe("JSON-LD : structure exacte (contrat des données structurées)", () =>
     });
   });
 });
+
+describe("JSON-LD dans une autre langue", () => {
+  const EN: SiteContent = { ...FALLBACK_CONTENT, locale: "en" };
+
+  it("mêmes entités (@id) qu'en français, libellés et langue de la page, URL des pages préfixées", () => {
+    const [site, home] = [buildSiteGraph(EN), buildHomeGraph(EN, META)];
+    const website = nodesOf(site).find((n) => n["@type"] === "WebSite")!;
+    expect(website["@id"]).toBe(`${SITE_URL}/#website`);
+    expect(website.inLanguage).toBe("en");
+    expect(website.name).toBe(`${EN.practitioner.name} – Osteopath in ${EN.contact.locality}`);
+    const org = nodesOf(site).find((n) => [n["@type"]].flat().includes("MedicalBusiness"))!;
+    expect(org["@id"]).toBe(`${SITE_URL}/#organization`);
+    expect((org.potentialAction as Node).name).toBe("Book an appointment online");
+    const offers = ((org.hasOfferCatalog as Node).itemListElement as Node[]).map((o) => (o.itemOffered as Node).url).filter(Boolean);
+    expect(offers.every((url) => String(url).startsWith(`${SITE_URL}/en/`))).toBe(true);
+    const webpage = nodesOf(home).find((n) => n["@type"] === "WebPage")!;
+    expect(webpage).toMatchObject({ "@id": `${SITE_URL}/en#webpage`, url: `${SITE_URL}/en`, inLanguage: "en" });
+    expect(nodesOf(home).find((n) => n["@type"] === "FAQPage")!["@id"]).toBe(`${SITE_URL}/en#faq`);
+  });
+
+  it("fil d'Ariane d'une page motif : accueil de la langue", () => {
+    const motif = EN.motifs[0]!;
+    const graph = buildMotifGraph(EN, motif, { lastEdited: "2026-09-01T10:00:00.000Z" } as MotifPage, { path: `/en/${motif.slug}`, ...META });
+    const crumbs = (nodesOf(graph).find((n) => n["@type"] === "BreadcrumbList")!.itemListElement as Node[]);
+    expect(crumbs[0]).toMatchObject({ name: "Home", item: `${SITE_URL}/en` });
+    expect(crumbs[1]).toMatchObject({ item: `${SITE_URL}/en/${motif.slug}` });
+  });
+});

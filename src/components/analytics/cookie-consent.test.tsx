@@ -2,6 +2,7 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { COPY_FR } from "@/content/ui-copy";
 
 // next/script ne s'exécute pas hors de Next : on rend un marqueur inerte qui expose l'id et le code.
 vi.mock("next/script", () => ({
@@ -40,20 +41,20 @@ describe("CookieConsent", () => {
     ["précédé d'autre chose", "xGTM-ABC123"],
   ])("identifiant GTM %s : rien n'est rendu (ni bannière, ni script)", async (_label, id) => {
     const CookieConsent = await loadWithGtmId(id);
-    const { container } = render(<CookieConsent />);
+    const { container } = render(<CookieConsent copy={COPY_FR.cookies} />);
     expect(container).toBeEmptyDOMElement();
   });
 
   it("sans choix enregistré : bannière affichée, GTM NON chargé (règle 5)", async () => {
     const CookieConsent = await loadWithGtmId("GTM-ABC123");
-    render(<CookieConsent />);
+    render(<CookieConsent copy={COPY_FR.cookies} />);
     expect(banner()).toBeInTheDocument();
     expect(gtmScript()).toBeNull();
   });
 
   it("« Accepter » : choix mémorisé, bannière fermée, GTM chargé avec cet identifiant", async () => {
     const CookieConsent = await loadWithGtmId("GTM-ABC123");
-    render(<CookieConsent />);
+    render(<CookieConsent copy={COPY_FR.cookies} />);
     fireEvent.click(screen.getByRole("button", { name: "Accepter" }));
     expect(window.localStorage.getItem("cookie-consent")).toBe("accepted");
     expect(banner()).toBeNull();
@@ -65,7 +66,7 @@ describe("CookieConsent", () => {
 
   it("« Refuser » : choix mémorisé, bannière fermée, GTM jamais chargé", async () => {
     const CookieConsent = await loadWithGtmId("GTM-ABC123");
-    render(<CookieConsent />);
+    render(<CookieConsent copy={COPY_FR.cookies} />);
     fireEvent.click(screen.getByRole("button", { name: "Refuser" }));
     expect(window.localStorage.getItem("cookie-consent")).toBe("refused");
     expect(banner()).toBeNull();
@@ -75,13 +76,13 @@ describe("CookieConsent", () => {
   it("choix déjà enregistré : pas de bannière ; GTM seulement si accepté", async () => {
     const CookieConsent = await loadWithGtmId("GTM-ABC123");
     window.localStorage.setItem("cookie-consent", "refused");
-    const refused = render(<CookieConsent />);
+    const refused = render(<CookieConsent copy={COPY_FR.cookies} />);
     expect(banner()).toBeNull();
     expect(gtmScript()).toBeNull();
     refused.unmount();
 
     window.localStorage.setItem("cookie-consent", "accepted");
-    render(<CookieConsent />);
+    render(<CookieConsent copy={COPY_FR.cookies} />);
     expect(banner()).toBeNull();
     expect(gtmScript()).not.toBeNull();
   });
@@ -89,7 +90,7 @@ describe("CookieConsent", () => {
   it("valeur inconnue en stockage : traitée comme « pas encore choisi »", async () => {
     const CookieConsent = await loadWithGtmId("GTM-ABC123");
     window.localStorage.setItem("cookie-consent", "peut-être");
-    render(<CookieConsent />);
+    render(<CookieConsent copy={COPY_FR.cookies} />);
     expect(banner()).toBeInTheDocument();
     expect(gtmScript()).toBeNull();
   });
@@ -98,7 +99,7 @@ describe("CookieConsent", () => {
     const CookieConsent = await loadWithGtmId("GTM-ABC123");
     window.localStorage.setItem("cookie-consent", "accepted");
     window.history.replaceState(null, "", "/confidentialite?x=1");
-    render(<CookieConsent />);
+    render(<CookieConsent copy={COPY_FR.cookies} />);
     expect(banner()).toBeNull();
 
     act(() => {
@@ -115,7 +116,7 @@ describe("CookieConsent", () => {
 
   it("choix fait dans un autre onglet (événement storage) : pris en compte sans recharger", async () => {
     const CookieConsent = await loadWithGtmId("GTM-ABC123");
-    render(<CookieConsent />);
+    render(<CookieConsent copy={COPY_FR.cookies} />);
     expect(banner()).toBeInTheDocument();
     act(() => {
       window.localStorage.setItem("cookie-consent", "accepted");
@@ -128,13 +129,13 @@ describe("CookieConsent", () => {
   it("rendu serveur : bannière présente tant qu'aucun choix n'est connu", async () => {
     const CookieConsent = await loadWithGtmId("GTM-ABC123");
     const { renderToStaticMarkup } = await import("react-dom/server");
-    expect(renderToStaticMarkup(<CookieConsent />)).toContain('role="dialog"');
+    expect(renderToStaticMarkup(<CookieConsent copy={COPY_FR.cookies} />)).toContain('role="dialog"');
   });
 
   it("un choix ne touche pas à une autre ancre de l'URL (seul « #cookies » est retiré)", async () => {
     const CookieConsent = await loadWithGtmId("GTM-ABC123");
     window.history.replaceState(null, "", "/#faq");
-    render(<CookieConsent />);
+    render(<CookieConsent copy={COPY_FR.cookies} />);
     fireEvent.click(screen.getByRole("button", { name: "Accepter" }));
     expect(window.location.hash).toBe("#faq");
   });
@@ -142,7 +143,7 @@ describe("CookieConsent", () => {
   it("démonté : ses écouteurs (stockage, ancre) sont retirés", async () => {
     const CookieConsent = await loadWithGtmId("GTM-ABC123");
     const remove = vi.spyOn(window, "removeEventListener");
-    const { unmount } = render(<CookieConsent />);
+    const { unmount } = render(<CookieConsent copy={COPY_FR.cookies} />);
     unmount();
     expect(remove).toHaveBeenCalledWith("storage", expect.any(Function));
     expect(remove).toHaveBeenCalledWith("hashchange", expect.any(Function));

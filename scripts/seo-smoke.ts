@@ -3,7 +3,9 @@
  * Usage : npm run build && npm start   puis   npm run seo:smoke [-- http://localhost:3000]
  */
 import { parse } from "node-html-parser";
+import { LOCALE_META, isLocale, splitLocalePath } from "@/config/i18n";
 import { FALLBACK_CONTENT } from "@/lib/content/fallback";
+import { localizeBooking } from "@/lib/i18n/localize-content";
 import { createNotionClient } from "@/lib/notion/client";
 import { fetchSiteContent } from "@/lib/notion/fetch-content";
 
@@ -22,8 +24,37 @@ async function loadContent() {
   return content;
 }
 
-async function main() {
+/** Comme getSiteContent : lien de réservation dans la langue de la page (Doctena « /fr/… »). */
+async function loadFrenchContent() {
   const content = await loadContent();
+  return { ...content, booking: localizeBooking(content.booking, "fr") };
+}
+
+/**
+ * Le lien de RDV répond-il chez le prestataire (évènement renommé ou supprimé, faute dans Url_Booking, langue absente
+ * chez Doctena) ? Seulement avec SMOKE_CHECK_BOOKING (contrôle quotidien de la production) : la CI ne dépend d'aucun
+ * service tiers. 404 ou 410 : échec. Autre réponse inattendue (blocage anti-robots, panne, réseau) : simple
+ * avertissement, car elle ne prouve pas que le lien est cassé.
+ */
+async function checkBookingUrl(url: string) {
+  const status = await fetch(url, { signal: AbortSignal.timeout(20_000) }).then(
+    async (r) => {
+      await r.body?.cancel();
+      return r.status;
+    },
+    () => 0,
+  );
+  const label = `lien RDV ${url} chez le prestataire → ${status || "aucune réponse"}`;
+  if (status === 404 || status === 410) check(false, label);
+  else if (status >= 200 && status < 300) check(true, label);
+  else {
+    console.log(`⚠ ${label} : à vérifier à la main`);
+    if (process.env.GITHUB_ACTIONS) console.log(`::warning title=Lien de rendez-vous::${label} : à vérifier à la main`);
+  }
+}
+
+async function main() {
+  const content = await loadFrenchContent();
 
   const res = await fetch(`${base}/`);
   check(res.status === 200, `GET / → ${res.status}`);
@@ -62,26 +93,7 @@ async function main() {
   // configurée dans Notion (Url_Booking), quel que soit le prestataire (Cal.com, Doctena…).
   const bookingLinks = root.querySelectorAll("a").filter((a) => a.getAttribute("href") === content.booking.url);
   check(bookingLinks.length >= 2, `liens RDV vers ${content.booking.url} présents dans le HTML (${bookingLinks.length})`);
-  // Le lien répond-il chez le prestataire (évènement Cal.com renommé ou supprimé, faute dans Url_Booking) ?
-  // Seulement avec SMOKE_CHECK_BOOKING (contrôle quotidien de la production) : la CI ne dépend d'aucun service tiers.
-  // 404 ou 410 : échec. Autre réponse inattendue (blocage anti-robots, panne, réseau) : simple avertissement,
-  // car elle ne prouve pas que le lien est cassé.
-  if (process.env.SMOKE_CHECK_BOOKING) {
-    const status = await fetch(content.booking.url, { signal: AbortSignal.timeout(20_000) }).then(
-      async (r) => {
-        await r.body?.cancel();
-        return r.status;
-      },
-      () => 0,
-    );
-    const label = `lien RDV ${content.booking.url} chez le prestataire → ${status || "aucune réponse"}`;
-    if (status === 404 || status === 410) check(false, label);
-    else if (status >= 200 && status < 300) check(true, label);
-    else {
-      console.log(`⚠ ${label} : à vérifier à la main`);
-      if (process.env.GITHUB_ACTIONS) console.log(`::warning title=Lien de rendez-vous::${label} : à vérifier à la main`);
-    }
-  }
+  if (process.env.SMOKE_CHECK_BOOKING) await checkBookingUrl(content.booking.url);
   check(root.querySelectorAll(`a[href^="tel:${content.contact.phoneE164}"]`).length >= 1, `lien tel:${content.contact.phoneE164} présent`);
   const mobile = content.contact.mobilePhone;
   if (mobile) check(root.querySelectorAll(`a[href="tel:${mobile.e164}"]`).length >= 1, `lien tel:${mobile.e164} (mobile) présent`);
@@ -135,10 +147,21 @@ async function main() {
     check(!pageTypes.includes("Physician"), `${path} : pas de Physician`);
     const pageBooking = page.querySelectorAll("a").filter((a) => a.getAttribute("href") === content.booking.url);
     check(pageBooking.length >= 2, `${path} : liens RDV (${pageBooking.length})`);
+    // Versions dans les autres langues (slugs traduits) : chaque lien hreflang répond directement (200, sans redirection).
+    for (const link of page.querySelectorAll('link[rel="alternate"]')) {
+      if (link.getAttribute("hreflang") === "x-default") continue;
+      const other = new URL(link.getAttribute("href") ?? "").pathname;
+      if (other === path) continue;
+      const res = await fetch(`${base}${other}`, { redirect: "manual" });
+      check(res.status === 200, `${path} : version ${link.getAttribute("hreflang")} ${other} → ${res.status}`);
+    }
   }
   // Textes d'attente encore visibles (« [À COMPLÉTER …] ») sur chaque page du sitemap : critère de mise en ligne
   // du plan (§J). Signalés sans faire échouer : seules des données du cabinet peuvent les remplacer.
-  const sitemapPaths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
+  // Pages françaises seulement : les textes d'attente sont les mêmes (en français) dans toutes les langues.
+  const sitemapPaths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)]
+    .map((m) => new URL(m[1]).pathname)
+    .filter((path) => splitLocalePath(path).locale === "fr");
   for (const path of sitemapPaths) {
     const text = parse(await (await fetch(`${base}${path}`)).text()).querySelector("main")?.text ?? "";
     for (const placeholder of text.match(/\[[^\]]*(?:à compléter|à valider|mettre le)[^\]]*\]/gi) ?? []) {
@@ -160,6 +183,33 @@ async function main() {
       check(list.querySelectorAll(`main a[href="/${entry.slug}"]`).length === 1, `/articles : lien vers /${entry.slug}`);
     }
   }
+  // Langues traduites, annoncées par hreflang sur l'accueil : chaque version répond, dans sa langue, avec sa propre
+  // canonical et un contenu réellement traduit (le <h1> diffère du français ; sauf TRANSLATION_MODE=identity, en CI).
+  const alternates = root
+    .querySelectorAll('link[rel="alternate"]')
+    .map((l) => ({ lang: l.getAttribute("hreflang") ?? "", href: l.getAttribute("href") ?? "" }))
+    .filter((a) => isLocale(a.lang) && a.lang !== "fr");
+  console.log(`ℹ langues traduites annoncées : ${alternates.map((a) => a.lang).join(", ") || "aucune"}`);
+  for (const { lang, href } of alternates) {
+    const path = new URL(href).pathname;
+    const r = await fetch(`${base}${path}`);
+    check(r.status === 200, `GET ${path} → ${r.status}`);
+    const page = parse(await r.text());
+    check(page.querySelector("html")?.getAttribute("lang") === LOCALE_META[lang as keyof typeof LOCALE_META].htmlLang, `${path} : <html lang> de la langue`);
+    const pageH1 = page.querySelectorAll("h1");
+    check(pageH1.length === 1, `${path} : un seul <h1>`);
+    if (process.env.TRANSLATION_MODE !== "identity") {
+      check(pageH1[0]?.text.trim() !== h1s[0]?.text.trim(), `${path} : <h1> traduit (« ${pageH1[0]?.text.trim()} »)`);
+    }
+    check((page.querySelector('link[rel="canonical"]')?.getAttribute("href") ?? "").endsWith(path), `${path} : canonical propre`);
+    check(page.querySelectorAll('link[rel="alternate"]').length === alternates.length + 2, `${path} : hreflang vers toutes les langues (+ x-default)`);
+    check(sitemap.includes(`${path}</loc>`), `sitemap : ${path}`);
+    // Lien de RDV dans la langue de la page (Doctena « /de/… », « /pt/… ») : présent, et existant chez le prestataire.
+    const localBooking = localizeBooking(content.booking, lang as keyof typeof LOCALE_META).url;
+    check(page.querySelectorAll("a").some((a) => a.getAttribute("href") === localBooking), `${path} : liens RDV vers ${localBooking}`);
+    if (process.env.SMOKE_CHECK_BOOKING && localBooking !== content.booking.url) await checkBookingUrl(localBooking);
+  }
+
   const unknown = await fetch(`${base}/page-qui-n-existe-pas`);
   check(unknown.status === 404, `slug inconnu → ${unknown.status} (404 attendu)`);
 

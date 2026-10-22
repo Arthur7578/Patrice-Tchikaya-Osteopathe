@@ -22,15 +22,20 @@ type Mutant = { name: string; file: string; find: string; replace: string; tests
 const JSONLD = "src/lib/seo/json-ld.test.ts";
 const UPLOAD = "src/app/api/admin/upload/route.test.ts";
 const REVALIDATE = "src/app/api/revalidate/route.test.ts";
-const PAGES = "src/app/pages.test.tsx";
-const PAIEMENT = "src/app/paiement/page.test.tsx";
+const PAGES = "src/app/[locale]/pages.test.tsx";
+const PAIEMENT = "src/app/[locale]/paiement/page.test.tsx";
 const BOOKING = "src/components/booking/booking-link.test.tsx";
 const TRACK = "src/components/booking/track.test.ts";
 const MENU = "src/components/layout/mobile-menu.test.tsx";
 const SECTIONS = "src/components/sections/sections.test.tsx";
 const LAYOUT = "src/components/layout/layout-components.test.tsx";
-const LAYOUT_ROOT = "src/app/layout.test.tsx";
+const LAYOUT_ROOT = "src/app/[locale]/layout.test.tsx";
 const COOKIES = "src/components/analytics/cookie-consent.test.tsx";
+const ROUTING = "src/lib/i18n/routing.test.ts";
+const TRANSLATE = "src/lib/i18n/translate.test.ts";
+const LOCALIZE = "src/lib/i18n/localize-content.test.ts";
+const I18N = "src/config/i18n.test.ts";
+const LOCALIZED = "src/components/localized.test.tsx";
 
 const MUTANTS: Mutant[] = [
   // --- JSON-LD (règles 7 et 10) ---
@@ -42,7 +47,7 @@ const MUTANTS: Mutant[] = [
   { name: "metadata : rappel local ajouté même au-delà de 160 car.", file: "src/lib/seo/metadata.ts", find: "withLocal.length <= 160 ? withLocal : base", replace: "withLocal", tests: ["src/lib/seo/metadata.test.ts"] },
   { name: "robots : indexation inversée", file: "src/app/robots.ts", find: "if (!ALLOW_INDEXING)", replace: "if (ALLOW_INDEXING)", tests: ["src/app/robots.test.ts"] },
   { name: "sitemap : motifs non publiés listés", file: "src/lib/content/published.ts", find: ".filter((entry) => entry.page)", replace: "", tests: ["src/app/sitemap.test.ts"] },
-  { name: "layout : canonical défini dans le layout racine (règle 9)", file: "src/app/layout.tsx", find: "    metadataBase: new URL(SITE_URL),", replace: '    metadataBase: new URL(SITE_URL),\n    alternates: { canonical: "/" },', tests: [PAGES] },
+  { name: "layout : canonical défini dans le layout racine (règle 9)", file: "src/app/[locale]/layout.tsx", find: "    metadataBase: new URL(SITE_URL),", replace: '    metadataBase: new URL(SITE_URL),\n    alternates: { canonical: "/" },', tests: [PAGES] },
   // --- Routes à secret ---
   { name: "revalidate : garde « secret non configuré » retirée", file: "src/app/api/revalidate/route.ts", find: "!process.env.REVALIDATE_SECRET || ", replace: "", tests: [REVALIDATE] },
   { name: "revalidate : comparaison du secret retirée", file: "src/app/api/revalidate/route.ts", find: "secret !== process.env.REVALIDATE_SECRET", replace: "false", tests: [REVALIDATE] },
@@ -55,33 +60,33 @@ const MUTANTS: Mutant[] = [
   { name: "getSiteContent : repli servi en production", file: "src/lib/content/get-site-content.ts", find: 'process.env.VERCEL_ENV === "production"', replace: "false", tests: ["src/lib/content/get-site-content.test.ts"] },
   { name: "getGoogleRating : appel sans clé", file: "src/lib/google/get-google-rating.ts", find: "if (!apiKey || !placeId) return null;", replace: "", tests: ["src/lib/google/get-google-rating.test.ts"] },
   // --- Pages motifs ---
-  { name: "[slug] : motif sans page publiée rendu au lieu d'un 404", file: "src/app/[slug]/page.tsx", find: "if (!found) notFound();", replace: "", tests: [PAGES] },
-  { name: "[slug] : slugs réservés générés", file: "src/app/[slug]/page.tsx", find: "!RESERVED_SLUGS.has(m.slug)", replace: "true", tests: [PAGES] },
-  { name: "[slug] : lien tel: de l'en-tête cassé", file: "src/app/[slug]/page.tsx", find: "{COPY.cta.book}\n            </BookingLink>\n            <a href={`tel:", replace: "{COPY.cta.book}\n            </BookingLink>\n            <a href={`tel-:", tests: [PAGES] },
+  { name: "[slug] : motif sans page publiée rendu au lieu d'un 404", file: "src/app/[locale]/[slug]/page.tsx", find: "    notFound();\n  }\n  const { content, motif, page, kind } = found;", replace: "    return null;\n  }\n  const { content, motif, page, kind } = found;", tests: [PAGES] },
+  { name: "[slug] : slugs réservés générés", file: "src/app/[locale]/[slug]/page.tsx", find: "!RESERVED_SLUGS.has(m.slug)", replace: "true", tests: [PAGES] },
+  { name: "[slug] : lien tel: de l'en-tête cassé", file: "src/app/[locale]/[slug]/page.tsx", find: "{copy.cta.book}\n            </BookingLink>\n            <a href={`tel:", replace: "{copy.cta.book}\n            </BookingLink>\n            <a href={`tel-:", tests: [PAGES] },
   // --- Pages d'information (colonne Type de Motifs_Consultation) ---
-  { name: "[slug] : pages d'information absentes de generateStaticParams", file: "src/app/[slug]/page.tsx", find: "[...motifs, ...guides].filter", replace: "[...motifs].filter", tests: [PAGES] },
-  { name: "[slug] : guide rendu comme un motif (h1 + JSON-LD)", file: "src/app/[slug]/page.tsx", find: 'kind: motif ? ("motif" as const)', replace: 'kind: true ? ("motif" as const)', tests: [PAGES] },
+  { name: "[slug] : pages d'information absentes de generateStaticParams", file: "src/app/[locale]/[slug]/page.tsx", find: "[...motifs, ...guides].filter", replace: "[...motifs].filter", tests: [PAGES] },
+  { name: "[slug] : guide rendu comme un motif (h1 + JSON-LD)", file: "src/app/[locale]/[slug]/page.tsx", find: 'kind: motif ? ("motif" as const)', replace: 'kind: true ? ("motif" as const)', tests: [PAGES] },
   { name: "sitemap : pages d'information non listées", file: "src/lib/content/published.ts", find: "[...content.motifs, ...content.guides]", replace: "[...content.motifs]", tests: ["src/app/sitemap.test.ts"] },
   { name: "[slug] : pages d'information absentes des liens « À lire aussi »", file: "src/lib/content/published.ts", find: "[...content.motifs, ...content.guides]", replace: "[...content.motifs]", tests: [PAGES] },
-  { name: "[slug] : page courante listée dans « À lire aussi »", file: "src/app/[slug]/page.tsx", find: "(entry) => entry.slug !== motif.slug", replace: "() => true", tests: [PAGES] },
+  { name: "[slug] : page courante listée dans « À lire aussi »", file: "src/app/[locale]/[slug]/page.tsx", find: "(entry) => entry.slug !== motif.slug", replace: "() => true", tests: [PAGES] },
   { name: "Notion : page d'information rangée parmi les motifs", file: "src/lib/notion/fetch-content.ts", find: '(item.kind === "motif" ? motifs : guides).push', replace: "motifs.push", tests: ["src/lib/notion/fetch-content.test.ts"] },
   { name: "Notion : deux pages publiées pour le même slug", file: "src/lib/notion/fetch-content.ts", find: "item.entry.page && takenSlugs.has(item.entry.slug)", replace: "false", tests: ["src/lib/notion/fetch-content.test.ts"] },
   { name: "parsePageKind : valeur vide traitée comme page d'information", file: "src/lib/content/parse.ts", find: 'if (v === "" || v === "motif")', replace: 'if (v === "motif")', tests: ["src/lib/content/parse.test.ts", "src/lib/notion/fetch-content.test.ts"] },
-  { name: "/articles : pages non publiées listées", file: "src/lib/content/published.ts", find: ".filter((entry) => entry.page)", replace: "", tests: ["src/app/articles/page.test.tsx", PAGES] },
-  { name: "/articles : rendue même sans page publiée", file: "src/app/articles/page.tsx", find: "if (pages.length === 0) notFound();", replace: "", tests: ["src/app/articles/page.test.tsx"] },
+  { name: "/articles : pages non publiées listées", file: "src/lib/content/published.ts", find: ".filter((entry) => entry.page)", replace: "", tests: ["src/app/[locale]/articles/page.test.tsx", PAGES] },
+  { name: "/articles : rendue même sans page publiée", file: "src/app/[locale]/articles/page.tsx", find: "if (pages.length === 0) notFound();", replace: "", tests: ["src/app/[locale]/articles/page.test.tsx"] },
   { name: "sitemap : /articles daté de la plus ancienne page", file: "src/app/sitemap.ts", find: "Math.max(...edited", replace: "Math.min(...edited", tests: ["src/app/sitemap.test.ts"] },
   { name: "pied de page : lien /articles affiché sans page publiée", file: "src/components/layout/site-footer.tsx", find: "publishedPages(content).length > 0", replace: "true", tests: [LAYOUT] },
   // --- Cache du contenu Notion ---
   { name: "getSiteContent : cache sans étiquette (revalidate ne purge plus)", file: "src/lib/content/get-site-content.ts", find: "{ revalidate: 60, tags: [SITE_CONTENT_TAG] }", replace: "{ revalidate: 60 }", tests: ["src/lib/content/get-site-content.test.ts"] },
   { name: "/api/revalidate : cache du contenu non purgé", file: "src/app/api/revalidate/route.ts", find: "revalidateTag(SITE_CONTENT_TAG, { expire: 0 });", replace: "", tests: [REVALIDATE] },
   // --- Page /paiement ---
-  { name: "paiement : encart affiché même vide", file: "src/app/paiement/page.tsx", find: "{page.caution && (", replace: "{true && (", tests: [PAIEMENT] },
-  { name: "paiement : étapes affichées même sans ligne Notion", file: "src/app/paiement/page.tsx", find: "{page.steps && (", replace: "{true && (", tests: [PAIEMENT] },
-  { name: "paiement : sécurité affichée même sans ligne Notion", file: "src/app/paiement/page.tsx", find: "{page.reassurance && (", replace: "{true && (", tests: [PAIEMENT] },
-  { name: "paiement : tarif affiché même vide", file: "src/app/paiement/page.tsx", find: "{consultation.price && (", replace: "{true && (", tests: [PAIEMENT] },
-  { name: "paiement : « autres moyens » affichés même vides", file: "src/app/paiement/page.tsx", find: "{payment.otherMethods && (", replace: "{true && (", tests: [PAIEMENT] },
-  { name: "paiement : canonical supprimé (règle 9)", file: "src/app/paiement/page.tsx", find: 'alternates: { canonical: "/paiement" },', replace: "", tests: [PAIEMENT, PAGES] },
-  { name: "paiement : libellé e-mail/numéro inversé", file: "src/app/paiement/page.tsx", find: '{wero.recipient.kind === "email" ? page.labels.email : page.labels.phone}', replace: '{wero.recipient.kind === "email" ? page.labels.phone : page.labels.email}', tests: [PAIEMENT] },
+  { name: "paiement : encart affiché même vide", file: "src/app/[locale]/paiement/page.tsx", find: "{page.caution && (", replace: "{true && (", tests: [PAIEMENT] },
+  { name: "paiement : étapes affichées même sans ligne Notion", file: "src/app/[locale]/paiement/page.tsx", find: "{page.steps && (", replace: "{true && (", tests: [PAIEMENT] },
+  { name: "paiement : sécurité affichée même sans ligne Notion", file: "src/app/[locale]/paiement/page.tsx", find: "{page.reassurance && (", replace: "{true && (", tests: [PAIEMENT] },
+  { name: "paiement : tarif affiché même vide", file: "src/app/[locale]/paiement/page.tsx", find: "{consultation.price && (", replace: "{true && (", tests: [PAIEMENT] },
+  { name: "paiement : « autres moyens » affichés même vides", file: "src/app/[locale]/paiement/page.tsx", find: "{payment.otherMethods && (", replace: "{true && (", tests: [PAIEMENT] },
+  { name: "paiement : canonical supprimé (règle 9)", file: "src/app/[locale]/paiement/page.tsx", find: 'alternates: localeAlternates(locale, "/paiement"),', replace: "", tests: [PAIEMENT, PAGES] },
+  { name: "paiement : libellé e-mail/numéro inversé", file: "src/app/[locale]/paiement/page.tsx", find: '{wero.recipient.kind === "email" ? page.labels.email : page.labels.phone}', replace: '{wero.recipient.kind === "email" ? page.labels.phone : page.labels.email}', tests: [PAIEMENT] },
   { name: "paiement : slug retiré des slugs réservés", file: "src/config/site.ts", find: '"opengraph-image", "paiement",', replace: '"opengraph-image",', tests: ["src/config/site.test.ts"] },
   // --- Composants ---
   { name: "BookingLink : Ctrl+clic intercepté", file: "src/components/booking/booking-link.tsx", find: "event.ctrlKey || ", replace: "", tests: [BOOKING] },
@@ -92,7 +97,7 @@ const MUTANTS: Mutant[] = [
   { name: "trackBookingClick : une erreur de mesure bloque le RDV", file: "src/components/booking/track.ts", find: "    // mesure perdue, RDV intact", replace: '    throw new Error("mesure");', tests: [TRACK] },
   { name: "trackBookingClick : dataLayer GTM utilisé sans consentement", file: "src/components/booking/track.ts", find: "if (Array.isArray(dataLayer)) {", replace: "if (true) {", tests: [TRACK] },
   { name: "PracticalInfo : agenda intégré (et son message d'échec) pour un prestataire autre que Cal.com", file: "src/components/sections/practical-info.tsx", find: '{booking.provider === "cal" ? (', replace: "{true ? (", tests: [SECTIONS] },
-  { name: "confidentialité : texte Cal.com pour tout prestataire", file: "src/app/confidentialite/page.tsx", find: '{c.booking.provider === "cal" ? (', replace: "{true ? (", tests: [PAGES] },
+  { name: "confidentialité : texte Cal.com pour tout prestataire", file: "src/app/[locale]/confidentialite/page.tsx", find: 'c.booking.provider === "cal" ? t.bookingText', replace: "true ? t.bookingText", tests: [PAGES] },
   { name: "MobileMenu : Échap sans effet", file: "src/components/layout/mobile-menu.tsx", find: 'e.key === "Escape"', replace: 'e.key === "F13"', tests: [MENU] },
   { name: "MobileMenu : focus non rendu au bouton", file: "src/components/layout/mobile-menu.tsx", find: "buttonRef.current?.focus();", replace: "", tests: [MENU] },
   { name: "MobileMenu : clic extérieur sans effet", file: "src/components/layout/mobile-menu.tsx", find: "!rootRef.current.contains(e.target as Node)", replace: "false", tests: [MENU] },
@@ -108,7 +113,7 @@ const MUTANTS: Mutant[] = [
   { name: "cookies : GTM chargé sans consentement", file: "src/components/analytics/cookie-consent.tsx", find: '{consent === "accepted" && (', replace: "{true && (", tests: [COOKIES] },
   { name: "cookies : identifiant GTM non filtré (injection dans le script)", file: "src/components/analytics/cookie-consent.tsx", find: "/^GTM-[A-Z0-9]+$/.test(id)", replace: "true", tests: [COOKIES] },
   // --- Sans JavaScript ---
-  { name: "layout : <noscript> des animations retiré", file: "src/app/layout.tsx", find: "{`[data-reveal]{opacity:1!important;transform:none!important}`}", replace: '{""}', tests: [LAYOUT_ROOT] },
+  { name: "layout : <noscript> des animations retiré", file: "src/app/[locale]/layout.tsx", find: "{`[data-reveal]{opacity:1!important;transform:none!important}`}", replace: '{""}', tests: [LAYOUT_ROOT] },
   { name: "BookingInline : pas de repli si Cal.com est indisponible", file: "src/components/booking/booking-inline.tsx", find: '() => setStatus("failed"),', replace: '() => setStatus("loading"),', tests: ["src/components/booking/booking-inline.test.tsx"] },
   // --- Contenu Notion ---
   { name: "parseList : texte d'attente publié par morceaux (filtrage ligne par ligne)", file: "src/lib/content/parse.ts", find: "if (isPlaceholder(value)) return [];\n  return value!\n    .split(/[\\n;]+/)", replace: "if (!value) return [];\n  return value!\n    .split(/[\\n;]+/)", tests: ["src/lib/content/parse.test.ts"] },
@@ -118,10 +123,47 @@ const MUTANTS: Mutant[] = [
   { name: "FAQ : question publiée avec une variable inconnue ou sans valeur (« {tarif} » affiché)", file: "src/lib/content/variables.ts", find: "return complete ? filled : null;", replace: "return filled;", tests: ["src/lib/content/variables.test.ts", "src/lib/notion/fetch-content.general.test.ts"] },
   { name: "safeHref : domaine Notion nu accepté comme lien", file: "src/lib/notion/blocks.ts", find: "/(^|\\.)notion\\.(so|site|com)$/", replace: "/\\.notion\\.(so|site|com)$/", tests: ["src/lib/notion/blocks.test.ts"] },
   // --- Règle 2 (textes en dur) ---
-  { name: "règle 2 : libellé écrit en dur dans un composant", file: "src/components/layout/site-footer.tsx", find: "{COPY.footer.links}", replace: "Liens", tests: ["src/test/architecture.test.ts"] },
-  { name: "règle 2 : texte en dur dans une branche conditionnelle", file: "src/components/sections/reviews.tsx", find: "COPY.reviews.ratingCount(rating.count)", replace: "`${rating.count} avis`", tests: ["src/test/architecture.test.ts"] },
+  { name: "règle 2 : libellé écrit en dur dans un composant", file: "src/components/layout/site-footer.tsx", find: "{copy.footer.links}", replace: "Liens", tests: ["src/test/architecture.test.ts"] },
+  { name: "règle 2 : texte en dur dans une branche conditionnelle", file: "src/components/sections/reviews.tsx", find: "copy.reviews.ratingCount(rating.count)", replace: "`${rating.count} avis`", tests: ["src/test/architecture.test.ts"] },
   // --- Server Components ---
-  { name: "admin : gestionnaire d'événement dans un Server Component (erreur 500)", file: "src/app/admin/photos/page.tsx", find: 'aria-label="URL publique de la photo"', replace: 'aria-label="URL publique de la photo"\n              onFocus={() => undefined}', tests: ["src/test/architecture.test.ts"] },
+  { name: "admin : gestionnaire d'événement dans un Server Component (erreur 500)", file: "src/app/(admin)/admin/photos/page.tsx", find: 'aria-label="URL publique de la photo"', replace: 'aria-label="URL publique de la photo"\n              onFocus={() => undefined}', tests: ["src/test/architecture.test.ts"] },
+  // --- Langues (routage, traduction automatique, SEO multilingue) ---
+  { name: "langues : robots redirigés selon la langue (Googlebot n'indexerait que l'anglais)", file: "src/lib/i18n/routing.ts", find: "entering && !BOT.test(ua))", replace: "entering)", tests: [ROUTING] },
+  { name: "langues : redirection en navigation interne (impossible de revenir au français)", file: "src/lib/i18n/routing.ts", find: "const entering = !isSameOrigin(req);", replace: "const entering = true;", tests: [ROUTING] },
+  { name: "langues : /fr/… servi au lieu d'être redirigé (deux URL par page)", file: "src/lib/i18n/routing.ts", find: 'return { type: "redirect", location: `${rest}${search}`, status: 308 };', replace: 'return { type: "next" };', tests: [ROUTING] },
+  { name: "langues : langue non publiée servie (français sous /en)", file: "src/lib/i18n/routing.ts", find: "if (!enabled.includes(locale)) return", replace: "if (false) return", tests: [ROUTING] },
+  { name: "langues : cookie d'une langue non publiée suivi", file: "src/lib/i18n/routing.ts", find: "isLocale(req.cookie) && enabled.includes(req.cookie)", replace: "isLocale(req.cookie)", tests: [ROUTING] },
+  { name: "langues : mode identity permis en production (faux anglais publié)", file: "src/config/i18n.ts", find: ' && env.VERCEL_ENV !== "production"', replace: "", tests: [I18N] },
+  { name: "langues : hreflang sans x-default", file: "src/config/i18n.ts", find: 'languages["x-default"] = localePath(DEFAULT_LOCALE, pathIn(path, DEFAULT_LOCALE));', replace: "", tests: [I18N] },
+  { name: "langues : traduction qui présente l'ostéopathe comme médecin acceptée (règle 10)", file: "src/lib/i18n/translate.ts", find: "if (added.length > 0) {", replace: "if (false) {", tests: [TRANSLATE] },
+  { name: "langues : refus non expliqué au modèle lors du nouvel essai", file: "src/lib/i18n/translate.ts", find: "messages: [{ role: \"user\", content: request + feedback }]", replace: "messages: [{ role: \"user\", content: request }]", tests: [TRANSLATE] },
+  { name: "langues : texte refusé 3 fois publié tel que traduit (au lieu du français)", file: "src/lib/i18n/translate.ts", find: "rejected.has(k) ? batch[k]! : best.parsed[k]!", replace: "best.parsed[k] ?? batch[k]!", tests: [TRANSLATE] },
+  { name: "langues : « Dr Tchikaya » accepté dans une traduction (règle 10)", file: "src/lib/i18n/translate.ts", find: "if (hasTitleBeforeName(value, names) && !hasTitleBeforeName(text, names))", replace: "if (false)", tests: [TRANSLATE] },
+  { name: "langues : adjectif « médico » compté comme un médecin (traduction bloquée)", file: "src/lib/i18n/rules.ts", find: "|(?<=(?<!\\\\p{L})(?:${PT_DETERMINERS})\\\\s+)médic[oa]s?", replace: "|médic[oa]s?", tests: ["src/lib/i18n/rules.test.ts"] },
+  { name: "langues : traduction acceptée avec des balises perdues", file: "src/lib/i18n/translate.ts", find: "if (tagsOf(value).join() !== tagsOf(text).join())", replace: "if (false)", tests: [TRANSLATE] },
+  { name: "langues : refus de traduction ignoré", file: "src/lib/i18n/translate.ts", find: 'if (message.stop_reason === "refusal") throw', replace: 'if (false) throw', tests: [TRANSLATE] },
+  { name: "langues : avis traduit sans la mention « traduit »", file: "src/lib/i18n/localize-content.ts", find: "{ ...r, text, translated: true as const }", replace: "{ ...r, text }", tests: [LOCALIZE] },
+  { name: "langues : mention « traduit » absente de l'avis affiché", file: "src/components/sections/reviews.tsx", find: "{review.translated && <> · {copy.reviews.translated}</>}", replace: "", tests: [LOCALIZED] },
+  { name: "langues : lien Doctena laissé dans la langue de Notion", file: "src/lib/i18n/localize-content.ts", find: "  parts[1] = lang;", replace: "", tests: [LOCALIZE] },
+  { name: "langues : luxembourgeois envoyé vers une page Doctena inexistante", file: "src/config/i18n.ts", find: 'englishName: "Luxembourgish", bookingLang: "fr"', replace: 'englishName: "Luxembourgish", bookingLang: "lb"', tests: [LOCALIZE] },
+  { name: "langues : liens internes du corps des pages restés en français", file: "src/lib/i18n/localize-content.ts", find: 'href: localePath(locale, t.href)', replace: "href: t.href", tests: [LOCALIZE] },
+  { name: "langues : langue non publiée servie avec le texte français", file: "src/lib/content/get-site-content.ts", find: "if (locale !== DEFAULT_LOCALE && !ENABLED_LOCALES.includes(locale)) {", replace: "if (false) {", tests: ["src/lib/content/get-site-content.test.ts"] },
+  { name: "langues : lien des mentions légales resté en français", file: "src/components/layout/site-footer.tsx", find: '<Link href={localePath(locale, "/mentions-legales")}', replace: '<Link href="/mentions-legales"', tests: [LOCALIZED] },
+  { name: "langues : pages juridiques sans la mention « la version française fait foi »", file: "src/app/[locale]/mentions-legales/page.tsx", find: "{t.translationNote && <p", replace: "{false && <p", tests: [PAGES] },
+  { name: "langues : <html lang> figé en français", file: "src/app/[locale]/layout.tsx", find: "<html lang={LOCALE_META[c.locale].htmlLang}", replace: '<html lang="fr-LU"', tests: [LAYOUT_ROOT] },
+  { name: "langues : slug « en » accepté (masqué par la langue)", file: "src/config/site.ts", find: "  ...LOCALES, // préfixes de langue", replace: "  // préfixes de langue", tests: ["src/config/site.test.ts"] },
+  // --- Slugs traduits figés (Vercel Blob) ---
+  { name: "slugs : le plus récent de deux enregistrements retenu (adresse instable)", file: "src/lib/i18n/slugs.ts", find: "a.createdAt - b.createdAt", replace: "b.createdAt - a.createdAt", tests: ["src/lib/i18n/slugs.test.ts"] },
+  { name: "slugs : deux pages avec le même slug traduit", file: "src/lib/i18n/slugs.ts", find: "        taken.add(slug);\n", replace: "", tests: ["src/lib/i18n/slugs.test.ts"] },
+  { name: "slugs : création sans relecture préalable sans cache (doublons possibles)", file: "src/lib/i18n/slugs.ts", find: "    records = await store.list({ fresh: true });\n    const todo", replace: "    const todo", tests: ["src/lib/i18n/slugs.test.ts"] },
+  { name: "slugs : ancienne adresse en 404 au lieu d'une redirection", file: "src/app/[locale]/[slug]/page.tsx", find: "if (moved) permanentRedirect(moved);", replace: "", tests: [PAGES] },
+  { name: "slugs : liens du corps des pages vers l'ancien slug", file: "src/lib/i18n/localize-content.ts", find: "const to = target.get(path!);", replace: "const to = undefined as string | undefined;", tests: [LOCALIZE] },
+  { name: "LanguageSwitcher : clic extérieur sans effet", file: "src/components/layout/language-switcher.tsx", find: "details.open && !details.contains(e.target as Node)", replace: "false", tests: ["src/components/layout/language-switcher.test.tsx"] },
+  { name: "LanguageSwitcher : Échap sans effet", file: "src/components/layout/language-switcher.tsx", find: 'e.key !== "Escape" || ', replace: "true || ", tests: ["src/components/layout/language-switcher.test.tsx"] },
+  { name: "LanguageSwitcher : toutes les langues cochées", file: "src/components/layout/language-switcher.tsx", find: "{option.locale === current && <Check", replace: "{true && <Check", tests: ["src/components/layout/language-switcher.test.tsx"] },
+  { name: "slugs : sélecteur de langue vers le slug de la langue courante", file: "src/components/layout/language-switcher.tsx", find: "(page?.[locale] ? `/${page[locale]}` : path)", replace: "path", tests: ["src/components/layout/language-switcher.test.tsx"] },
+  { name: "slugs : écriture en échec ignorée (slug non enregistré)", file: "src/lib/i18n/slug-store.ts", find: "if (!(await listAll()).some((r) => slugPath(r) === pathname)) throw error;", replace: "", tests: ["src/lib/i18n/slug-store.test.ts"] },
+  { name: "slugs : jamais appliqués même avec un stockage", file: "src/lib/content/get-site-content.ts", find: "if (!store || ENABLED_LOCALES.length < 2) return null;", replace: "return null;", tests: ["src/lib/content/get-site-content.test.ts"] },
 ];
 
 const filter = process.argv[2] ?? "";

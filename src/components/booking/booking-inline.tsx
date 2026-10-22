@@ -2,7 +2,7 @@
 
 import Cal from "@calcom/embed-react";
 import { useEffect, useRef, useState } from "react";
-import { COPY } from "@/content/ui-copy";
+import type { UiCopy } from "@/content/ui-copy";
 import type { Booking } from "@/lib/content/types";
 import { CAL_CONFIG, CAL_INLINE_NAMESPACE, waitForCalScript } from "./cal";
 
@@ -14,7 +14,7 @@ type Status = "idle" | "loading" | "ready" | "failed";
  * prestataire (ex. Doctena), on n'essaie jamais d'intégrer un iframe non prévu pour ça —
  * un vrai lien vers l'agenda est affiché directement (règle 6).
  */
-export function BookingInline({ booking }: { booking: Booking }) {
+export function BookingInline({ booking, copy }: { booking: Booking; copy: UiCopy["bookingInline"] }) {
   const ref = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<Status>(booking.provider === "cal" ? "idle" : "failed");
 
@@ -53,15 +53,15 @@ export function BookingInline({ booking }: { booking: Booking }) {
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8 text-center text-slate-600">
           {status === "failed" ? (
             <>
-              <p>{COPY.bookingInline.failed}</p>
+              <p>{copy.failed}</p>
               <a href={booking.url} className="font-semibold text-sage-700 underline underline-offset-4">
-                {COPY.bookingInline.open}
+                {copy.open}
               </a>
             </>
           ) : (
             <>
               <div className="size-10 animate-pulse rounded-full bg-sage-100" aria-hidden="true" />
-              <p className="text-sm">{COPY.bookingInline.loading}</p>
+              <p className="text-sm">{copy.loading}</p>
             </>
           )}
         </div>

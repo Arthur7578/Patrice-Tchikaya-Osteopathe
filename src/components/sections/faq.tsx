@@ -3,7 +3,7 @@ import { BookingLink } from "@/components/booking/booking-link";
 import { buttonVariants } from "@/components/ui/button";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Section } from "@/components/ui/section";
-import { COPY } from "@/content/ui-copy";
+import { getCopy, type UiCopy } from "@/content/ui-copy";
 import type { FaqItem } from "@/lib/content/types";
 import type { SiteContent } from "@/lib/content/types";
 import { cn } from "@/lib/utils";
@@ -29,7 +29,7 @@ function FaqRow({ item, open }: { item: FaqItem; open?: boolean }) {
   );
 }
 
-export function FaqList({ items }: { items: FaqItem[] }) {
+export function FaqList({ items, copy }: { items: FaqItem[]; copy: UiCopy }) {
   const shown = items.slice(0, VISIBLE_COUNT);
   const more = items.slice(VISIBLE_COUNT);
   return (
@@ -40,7 +40,7 @@ export function FaqList({ items }: { items: FaqItem[] }) {
       {more.length > 0 && (
         <details className="faq-more group/more">
           <summary className="flex cursor-pointer list-none items-center justify-center gap-2 px-5 py-4 text-sm font-semibold text-sage-700 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sage-700 group-open/more:hidden [&::-webkit-details-marker]:hidden">
-            {COPY.faq.more(more.length)}
+            {copy.faq.more(more.length)}
             <ChevronDown aria-hidden="true" className="size-4" />
           </summary>
           <div className="divide-y divide-slate-200/80">
@@ -55,26 +55,27 @@ export function FaqList({ items }: { items: FaqItem[] }) {
 }
 
 export function Faq({ content }: { content: SiteContent }) {
+  const copy = getCopy(content.locale);
   const { faq, contact, booking } = content;
   if (faq.length === 0) return null;
 
   return (
     <Section id="faq" labelledBy="faq-title">
       <div className="max-w-2xl">
-        <Eyebrow>{COPY.faq.eyebrow}</Eyebrow>
+        <Eyebrow>{copy.faq.eyebrow}</Eyebrow>
         <h2 id="faq-title" className="mt-3 text-3xl font-bold tracking-tight text-balance text-ink md:text-4xl">
-          {COPY.faq.title}
+          {copy.faq.title}
         </h2>
       </div>
       <div className="mt-10 grid gap-10 lg:grid-cols-12">
         <div className="lg:col-span-8">
-          <FaqList items={faq} />
+          <FaqList items={faq} copy={copy} />
         </div>
         <div className="lg:sticky lg:top-24 lg:col-span-4">
           <div className="flex h-full flex-col justify-between gap-6 rounded-2xl border border-slate-200/80 bg-white p-6">
             <div>
-              <p className="font-semibold text-ink">{COPY.faq.helpTitle}</p>
-              <p className="mt-2 text-sm text-slate-600">{COPY.faq.helpText}</p>
+              <p className="font-semibold text-ink">{copy.faq.helpTitle}</p>
+              <p className="mt-2 text-sm text-slate-600">{copy.faq.helpText}</p>
               <a
                 href={`tel:${contact.phoneE164}`}
                 className="mt-4 flex items-center gap-2 font-semibold text-sage-700 underline underline-offset-4"
@@ -84,7 +85,7 @@ export function Faq({ content }: { content: SiteContent }) {
               </a>
             </div>
             <BookingLink booking={booking} placement="faq" className={cn(buttonVariants({ variant: "secondary" }), "w-full")}>
-              {COPY.cta.bookShort}
+              {copy.cta.bookShort}
             </BookingLink>
           </div>
         </div>

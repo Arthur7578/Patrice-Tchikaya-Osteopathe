@@ -1,5 +1,5 @@
 import { SITE_URL } from "@/config/site";
-import { COPY } from "@/content/ui-copy";
+import { COPY_FR as COPY } from "@/content/ui-copy";
 import { publishedPages } from "@/lib/content/published";
 import type { SiteContent } from "@/lib/content/types";
 
@@ -8,7 +8,8 @@ const oneLine = (s: string) => s.replace(/\s+/g, " ").trim();
 /**
  * Contenu de /llms.txt (format llmstxt.org : H1, résumé en citation, sections de liens).
  * Entièrement dérivé de SiteContent (Notion) : rien à maintenir à la main, il suit le site.
- * Ne contient que des faits déjà affichés sur la page ; les champs vides sont omis.
+ * Ne contient que des faits déjà affichés sur la page ; les champs vides sont omis. En français (langue source) :
+ * les assistants IA lisent le français et les pages traduites sont annoncées par hreflang.
  */
 export function buildLlmsTxt(c: SiteContent, siteUrl: string = SITE_URL): string {
   const L = COPY.llms;

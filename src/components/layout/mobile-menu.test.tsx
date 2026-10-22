@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { COPY, HOME_LINK, NAV } from "@/content/ui-copy";
+import { COPY_FR as COPY, homeLink, navLinks } from "@/content/ui-copy";
+
+const HOME_LINK = homeLink("fr");
+const NAV = navLinks("fr");
 
 vi.mock("next/link", () => ({
   default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => (
@@ -40,13 +43,13 @@ describe("MobileMenu", () => {
   const toggle = () => screen.getByRole("button", { name: COPY.menu.open });
 
   it("est fermé au départ (panneau hidden, aria-expanded=false)", () => {
-    render(<MobileMenu />);
+    render(<MobileMenu home={HOME_LINK} links={NAV} labels={COPY.menu} />);
     expect(toggle()).toHaveAttribute("aria-expanded", "false");
     expect(screen.queryByRole("navigation", { name: COPY.menu.label })).toBeNull(); // hidden => hors arbre a11y
   });
 
   it("s'ouvre au clic et liste l'accueil + toute la navigation", () => {
-    render(<MobileMenu />);
+    render(<MobileMenu home={HOME_LINK} links={NAV} labels={COPY.menu} />);
     fireEvent.click(toggle());
     const nav = screen.getByRole("navigation", { name: COPY.menu.label });
     expect(screen.getByRole("button", { name: COPY.menu.close })).toHaveAttribute("aria-expanded", "true");
@@ -55,14 +58,14 @@ describe("MobileMenu", () => {
   });
 
   it("les liens d'ancre sont des <a> natifs : <Link> ramène en haut de page quand l'ancre est déjà dans l'URL", () => {
-    render(<MobileMenu />);
+    render(<MobileMenu home={HOME_LINK} links={NAV} labels={COPY.menu} />);
     fireEvent.click(toggle());
     for (const item of NAV) expect(screen.getByRole("link", { name: item.label }), item.href).not.toHaveAttribute("data-next-link");
     expect(screen.getByRole("link", { name: HOME_LINK.label }), "« Accueil » reste un <Link>").toHaveAttribute("data-next-link");
   });
 
   it("Échap ferme le menu et rend le focus au bouton", () => {
-    render(<MobileMenu />);
+    render(<MobileMenu home={HOME_LINK} links={NAV} labels={COPY.menu} />);
     fireEvent.click(toggle());
     fireEvent.keyDown(document, { key: "Escape" });
     expect(toggle()).toHaveAttribute("aria-expanded", "false");
@@ -70,21 +73,21 @@ describe("MobileMenu", () => {
   });
 
   it("un clic à l'extérieur ferme le menu", () => {
-    render(<MobileMenu />);
+    render(<MobileMenu home={HOME_LINK} links={NAV} labels={COPY.menu} />);
     fireEvent.click(toggle());
     fireEvent.pointerDown(document.body);
     expect(toggle()).toHaveAttribute("aria-expanded", "false");
   });
 
   it("choisir un lien ferme le menu", () => {
-    render(<MobileMenu />);
+    render(<MobileMenu home={HOME_LINK} links={NAV} labels={COPY.menu} />);
     fireEvent.click(toggle());
     fireEvent.click(screen.getByRole("link", { name: HOME_LINK.label }));
     expect(toggle()).toHaveAttribute("aria-expanded", "false");
   });
 
   it("passer en largeur desktop (≥ 1024 px) ferme le menu", () => {
-    render(<MobileMenu />);
+    render(<MobileMenu home={HOME_LINK} links={NAV} labels={COPY.menu} />);
     fireEvent.click(toggle());
     mqMatches = true;
     act(() => mqListener?.());
@@ -92,7 +95,7 @@ describe("MobileMenu", () => {
   });
 
   it("une autre touche qu'Échap, ou un clic dans le menu, le laissent ouvert", () => {
-    render(<MobileMenu />);
+    render(<MobileMenu home={HOME_LINK} links={NAV} labels={COPY.menu} />);
     fireEvent.click(toggle());
     fireEvent.keyDown(document, { key: "Enter" });
     fireEvent.pointerDown(screen.getByRole("navigation", { name: COPY.menu.label }));
@@ -100,7 +103,7 @@ describe("MobileMenu", () => {
   });
 
   it("repasser sous 1024 px ne ferme pas le menu ; fermé, il ne réagit plus à Échap", () => {
-    render(<MobileMenu />);
+    render(<MobileMenu home={HOME_LINK} links={NAV} labels={COPY.menu} />);
     fireEvent.click(toggle());
     act(() => mqListener?.()); // mqMatches reste false
     expect(screen.getByRole("button", { name: COPY.menu.close })).toHaveAttribute("aria-expanded", "true");
@@ -113,7 +116,7 @@ describe("MobileMenu", () => {
 
   it("seuil desktop : (min-width: 1024px) ; à la fermeture, tous les écouteurs sont retirés", () => {
     const remove = vi.spyOn(document, "removeEventListener");
-    render(<MobileMenu />);
+    render(<MobileMenu home={HOME_LINK} links={NAV} labels={COPY.menu} />);
     fireEvent.click(toggle());
     expect(mqQuery).toBe("(min-width: 1024px)");
     expect(mqListener).toBeDefined();

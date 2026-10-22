@@ -307,6 +307,7 @@ export async function fetchSiteContent(notion: NotionClient): Promise<ContentRes
     .map((l) => l.trim())
     .filter(Boolean);
   const content: SiteContent = {
+    locale: "fr",
     practitioner: {
       name: required(g.text("Nom_Praticien"), F.practitioner.name, "Nom_Praticien"),
       title: required(g.text("Metier_Titre"), F.practitioner.title, "Metier_Titre"),

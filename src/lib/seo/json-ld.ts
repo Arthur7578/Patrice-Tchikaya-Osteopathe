@@ -1,8 +1,9 @@
 import type {
   BreadcrumbList, FAQPage, Graph, MedicalBusiness, MedicalWebPage, OpeningHoursSpecification, Person, WebPage, WebSite,
 } from "schema-dts";
+import { LOCALE_META, localePath, type Locale } from "@/config/i18n";
 import { SITE_URL } from "@/config/site";
-import { COPY } from "@/content/ui-copy";
+import { getCopy } from "@/content/ui-copy";
 import type { Motif, MotifPage, SiteContent } from "@/lib/content/types";
 import { googleMapsSearchUrl } from "@/lib/maps";
 
@@ -11,8 +12,11 @@ export const ids = {
   organization: `${SITE_URL}/#organization`,
   person: `${SITE_URL}/#person`,
   webpage: (path = "/") => `${SITE_URL}${path}#webpage`,
-  faq: `${SITE_URL}/#faq`,
+  faq: (homePath = "/") => `${SITE_URL}${homePath}#faq`,
 };
+
+/** URL absolue d'une page dans une langue. */
+const absolute = (locale: Locale, path: string) => `${SITE_URL}${localePath(locale, path)}`;
 
 const DAY_URI = {
   Mo: "https://schema.org/Monday", Tu: "https://schema.org/Tuesday", We: "https://schema.org/Wednesday",
@@ -22,6 +26,7 @@ const DAY_URI = {
 
 /** Graphe global (layout) : WebSite + cabinet (MedicalBusiness) + praticien (Person). */
 export function buildSiteGraph(c: SiteContent): Graph {
+  const copy = getCopy(c.locale);
   const images = [c.images.hero.src, c.images.cabinet.src, c.images.portrait.src].filter(
     (s): s is string => Boolean(s),
   );
@@ -64,19 +69,19 @@ export function buildSiteGraph(c: SiteContent): Graph {
     sameAs: c.sameAs.length > 0 ? c.sameAs : undefined,
     potentialAction: {
       "@type": "ReserveAction",
-      name: "Prendre rendez-vous en ligne",
+      name: copy.cta.book,
       target: c.booking.url,
     },
     hasOfferCatalog: {
       "@type": "OfferCatalog",
-      name: "Motifs de consultation",
+      name: copy.motifs.eyebrow,
       itemListElement: c.motifs.map((m) => ({
         "@type": "Offer",
         itemOffered: {
           "@type": "Service",
           name: m.title,
           description: m.description,
-          url: m.page ? `${SITE_URL}/${m.slug}` : undefined, // page détaillée publiée (phase 9)
+          url: m.page ? absolute(c.locale, `/${m.slug}`) : undefined, // page détaillée publiée (phase 9)
         },
       })),
     },
@@ -93,7 +98,7 @@ export function buildSiteGraph(c: SiteContent): Graph {
     image: c.images.portrait.src ?? undefined,
     worksFor: { "@id": ids.organization },
     workLocation: { "@id": ids.organization },
-    knowsAbout: ["Ostéopathie", ...c.motifs.map((m) => m.title), "Troubles musculo-squelettiques", "Handball"],
+    knowsAbout: [copy.meta.knowsAbout.osteopathy, ...c.motifs.map((m) => m.title), copy.meta.knowsAbout.msd, copy.meta.knowsAbout.handball],
     knowsLanguage: c.languages.length > 0 ? c.languages : undefined,
     sameAs: c.sameAs.filter((u) => u !== c.googleBusinessUrl),
   };
@@ -102,8 +107,8 @@ export function buildSiteGraph(c: SiteContent): Graph {
     "@type": "WebSite",
     "@id": ids.website,
     url: SITE_URL,
-    name: `${c.practitioner.name} – Ostéopathe à ${c.contact.locality}`,
-    inLanguage: "fr-LU",
+    name: copy.meta.websiteName(c.practitioner.name, c.contact.locality),
+    inLanguage: LOCALE_META[c.locale].htmlLang,
     publisher: { "@id": ids.organization },
   };
 
@@ -112,13 +117,14 @@ export function buildSiteGraph(c: SiteContent): Graph {
 
 /** Graphe de la page d'accueil : WebPage + FAQPage (FAQ = contenu visible uniquement). */
 export function buildHomeGraph(c: SiteContent, meta: { title: string; description: string }): Graph {
+  const home = localePath(c.locale, "/");
   const webpage: WebPage = {
     "@type": "WebPage",
-    "@id": ids.webpage("/"),
-    url: `${SITE_URL}/`,
+    "@id": ids.webpage(home),
+    url: `${SITE_URL}${home}`,
     name: meta.title,
     description: meta.description,
-    inLanguage: "fr-LU",
+    inLanguage: LOCALE_META[c.locale].htmlLang,
     isPartOf: { "@id": ids.website },
     about: { "@id": ids.organization },
     primaryImageOfPage: c.images.hero.src ? { "@type": "ImageObject", url: c.images.hero.src } : undefined,
@@ -127,8 +133,8 @@ export function buildHomeGraph(c: SiteContent, meta: { title: string; descriptio
   if (c.faq.length > 0) {
     graph.push({
       "@type": "FAQPage",
-      "@id": ids.faq,
-      isPartOf: { "@id": ids.webpage("/") },
+      "@id": ids.faq(home),
+      isPartOf: { "@id": ids.webpage(home) },
       mainEntity: c.faq.map((f) => ({
         "@type": "Question",
         name: f.question,
@@ -159,7 +165,7 @@ function buildPageGraph(
     url,
     name: meta.title,
     description: meta.description,
-    inLanguage: "fr-LU",
+    inLanguage: LOCALE_META[c.locale].htmlLang,
     isPartOf: { "@id": ids.website },
     publisher: { "@id": ids.organization },
     reviewedBy: { "@id": ids.person },
@@ -170,7 +176,7 @@ function buildPageGraph(
     "@type": "BreadcrumbList",
     "@id": breadcrumbId,
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: COPY.motifPage.home, item: `${SITE_URL}/` },
+      { "@type": "ListItem", position: 1, name: getCopy(c.locale).motifPage.home, item: absolute(c.locale, "/") },
       { "@type": "ListItem", position: 2, name: entry.title, item: url },
     ],
   };
@@ -187,10 +193,11 @@ export const buildGuideGraph = (c: SiteContent, guide: Motif, page: MotifPage, m
 
 /** Graphe de /articles : CollectionPage (liste des pages publiées) + fil d'Ariane identique à l'affichage. */
 export function buildArticlesGraph(
+  locale: Locale,
   pages: Motif[],
   meta: { title: string; description: string },
 ): Graph {
-  const path = "/articles";
+  const path = localePath(locale, "/articles");
   const url = `${SITE_URL}${path}`;
   const breadcrumbId = `${url}#breadcrumb`;
   const collection = {
@@ -199,20 +206,20 @@ export function buildArticlesGraph(
     url,
     name: meta.title,
     description: meta.description,
-    inLanguage: "fr-LU",
+    inLanguage: LOCALE_META[locale].htmlLang,
     isPartOf: { "@id": ids.website },
     publisher: { "@id": ids.organization },
     breadcrumb: { "@id": breadcrumbId },
     mainEntity: {
       "@type": "ItemList",
-      itemListElement: pages.map((p, i) => ({ "@type": "ListItem", position: i + 1, name: p.title, url: `${SITE_URL}/${p.slug}` })),
+      itemListElement: pages.map((p, i) => ({ "@type": "ListItem", position: i + 1, name: p.title, url: absolute(locale, `/${p.slug}`) })),
     },
   } as unknown as WebPage;
   const breadcrumb: BreadcrumbList = {
     "@type": "BreadcrumbList",
     "@id": breadcrumbId,
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: COPY.motifPage.home, item: `${SITE_URL}/` },
+      { "@type": "ListItem", position: 1, name: getCopy(locale).motifPage.home, item: absolute(locale, "/") },
       { "@type": "ListItem", position: 2, name: meta.title, item: url },
     ],
   };

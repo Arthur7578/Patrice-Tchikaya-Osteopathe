@@ -3,20 +3,22 @@ import Link from "next/link";
 import { Reveal } from "@/components/ui/reveal";
 import { Section } from "@/components/ui/section";
 import { Eyebrow } from "@/components/ui/eyebrow";
-import { COPY } from "@/content/ui-copy";
+import { localePath } from "@/config/i18n";
+import { getCopy } from "@/content/ui-copy";
 import { MOTIF_ICONS, type MotifIconName } from "@/lib/icons";
 import type { SiteContent } from "@/lib/content/types";
 
 export function Motifs({ content }: { content: SiteContent }) {
+  const copy = getCopy(content.locale);
   const { motifs, contact } = content;
 
   return (
     <Section id="motifs" labelledBy="motifs-title">
-      <Eyebrow>{COPY.motifs.eyebrow}</Eyebrow>
+      <Eyebrow>{copy.motifs.eyebrow}</Eyebrow>
       <h2 id="motifs-title" className="mt-3 text-3xl font-bold tracking-tight text-balance text-ink md:text-4xl">
-        {COPY.motifs.title(contact.locality)}
+        {copy.motifs.title(contact.locality)}
       </h2>
-      <p className="mt-4 max-w-2xl text-lg text-pretty text-slate-600">{COPY.motifs.intro(contact.locality)}</p>
+      <p className="mt-4 max-w-2xl text-lg text-pretty text-slate-600">{copy.motifs.intro(contact.locality)}</p>
 
       <ul className="mt-10 grid gap-6 sm:grid-cols-2">
         {motifs.map((motif, i) => {
@@ -32,10 +34,10 @@ export function Motifs({ content }: { content: SiteContent }) {
                   <p className="mt-2 leading-relaxed text-slate-600">{motif.description}</p>
                   {motif.page && (
                     <Link
-                      href={`/${motif.slug}`}
+                      href={localePath(content.locale, `/${motif.slug}`)}
                       className="mt-auto inline-flex items-center gap-1.5 self-start pt-5 font-semibold text-sage-700 underline-offset-4 hover:underline"
                     >
-                      {COPY.motifs.discover(motif.title)}
+                      {copy.motifs.discover(motif.title)}
                       <ArrowRight aria-hidden="true" className="size-4" />
                     </Link>
                   )}
@@ -47,7 +49,7 @@ export function Motifs({ content }: { content: SiteContent }) {
       </ul>
 
       <p className="mt-8 text-slate-600">
-        {COPY.motifs.helpLine}{" "}
+        {copy.motifs.helpLine}{" "}
         <a href={`tel:${contact.phoneE164}`} className="font-semibold text-sage-700 underline underline-offset-4">
           {contact.phoneDisplay}
         </a>

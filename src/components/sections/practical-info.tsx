@@ -25,7 +25,8 @@ import { ImagePlaceholder } from "@/components/ui/image-placeholder";
 import { InfoRow } from "@/components/ui/info-row";
 import { Section } from "@/components/ui/section";
 import { SiteImage } from "@/components/ui/site-image";
-import { COPY } from "@/content/ui-copy";
+import { localePath } from "@/config/i18n";
+import { getCopy } from "@/content/ui-copy";
 import type { AccessRowId, InfoRowId } from "@/lib/content/rows";
 import type { SiteContent } from "@/lib/content/types";
 import { googleMapsDirectionsUrl, googleMapsSearchUrl } from "@/lib/maps";
@@ -44,8 +45,9 @@ const isEssential = (id: InfoRowId) => (ESSENTIAL_IDS as readonly InfoRowId[]).i
  * suit Notion (Infos_Ordre pour les blocs, Acces_Ordre pour les lignes de transport).
  */
 export function PracticalInfo({ content }: { content: SiteContent }) {
+  const copy = getCopy(content.locale);
   const { contact, consultation, payment, openingHoursLines, languages, images, booking, rowOrder } = content;
-  const { labels } = COPY.infos;
+  const { labels } = copy.infos;
   const foldedLabels: Record<FoldedId, string> = {
     train: labels.train,
     bus: labels.bus,
@@ -94,10 +96,10 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
       <InfoRow icon={Wallet} label={labels.payment}>
         <p className="text-slate-600">{payment.info}</p>
         <Link
-          href="/paiement"
+          href={localePath(content.locale, "/paiement")}
           className="mt-1 inline-block text-sm font-semibold text-sage-700 underline underline-offset-4"
         >
-          {COPY.infos.paymentLink}
+          {copy.infos.paymentLink}
         </Link>
       </InfoRow>
     ),
@@ -135,9 +137,9 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
               />
             </div>
           )}
-          <Eyebrow>{COPY.infos.eyebrow}</Eyebrow>
+          <Eyebrow>{copy.infos.eyebrow}</Eyebrow>
           <h2 id="infos-title" className="mt-3 text-3xl font-bold tracking-tight text-balance text-ink md:text-4xl">
-            {COPY.infos.title}
+            {copy.infos.title}
           </h2>
           <dl className={`mt-8 ${DL}`}>
             {rowOrder.infos.filter(isEssential).map((id) => (
@@ -146,13 +148,13 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
           </dl>
           <div className="mt-8 divide-y divide-slate-200/80 border-y border-slate-200/80">
             <Folded
-              title={COPY.infos.transportTitle}
+              title={copy.infos.transportTitle}
               rows={rowOrder.access
                 .filter((id) => id !== "adresse")
                 .map((id) => ({ id, label: foldedLabels[id], node: accessRow(id, content) }))}
             />
             <Folded
-              title={COPY.infos.moreTitle}
+              title={copy.infos.moreTitle}
               rows={rowOrder.infos
                 .filter((id) => !isEssential(id))
                 .map((id) => ({ id, label: foldedLabels[id as FoldedId], node: blocks[id] }))}
@@ -161,12 +163,12 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
         </div>
 
         <div id="rendez-vous">
-          <h3 className="text-lg font-semibold text-ink">{COPY.infos.bookingTitle}</h3>
+          <h3 className="text-lg font-semibold text-ink">{copy.infos.bookingTitle}</h3>
           {booking.provider === "cal" ? (
             <>
-              <p className="mt-2 text-slate-600">{COPY.infos.bookingText}</p>
+              <p className="mt-2 text-slate-600">{copy.infos.bookingText}</p>
               <div className="mt-4">
-                <BookingInline booking={booking} />
+                <BookingInline booking={booking} copy={copy.bookingInline} />
               </div>
               <a
                 href={booking.url}
@@ -174,15 +176,15 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
                 rel="noopener"
                 className="mt-4 inline-block font-semibold text-sage-700 underline underline-offset-4"
               >
-                {COPY.infos.bookingFallback}
-                <span className="sr-only">{COPY.newTab}</span>
+                {copy.infos.bookingFallback}
+                <span className="sr-only">{copy.newTab}</span>
               </a>
             </>
           ) : (
             // Prestataire sans agenda intégrable (ex. Doctena) : un seul parcours, le lien vers sa page de réservation
             // (docs/DECISIONS.md, 21/10/2026). Jamais le message d'échec de l'agenda intégré.
             <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white p-6 md:p-8">
-              <p className="text-slate-600">{COPY.infos.bookingExternalText}</p>
+              <p className="text-slate-600">{copy.infos.bookingExternalText}</p>
               <div className="mt-6 flex flex-col gap-3">
                 <BookingLink
                   booking={booking}
@@ -190,11 +192,11 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
                   className={cn(buttonVariants({ size: "lg" }), "max-sm:whitespace-normal max-sm:text-center")}
                 >
                   <CalendarDays aria-hidden="true" />
-                  {COPY.cta.book}
+                  {copy.cta.book}
                 </BookingLink>
                 <a href={`tel:${contact.phoneE164}`} className={buttonVariants({ variant: "secondary", size: "lg" })}>
                   <Phone aria-hidden="true" />
-                  {COPY.cta.call(contact.phoneDisplay)}
+                  {copy.cta.call(contact.phoneDisplay)}
                 </a>
               </div>
             </div>
@@ -234,7 +236,8 @@ function Folded({ title, rows }: { title: string; rows: { id: string; label: str
 /** Une ligne du bloc Accès ; null tant que la valeur Notion est vide ou « [À …] ». */
 function accessRow(id: AccessRowId, content: SiteContent): ReactNode {
   const { contact, access, googleBusinessUrl } = content;
-  const { labels } = COPY.infos;
+  const copy = getCopy(content.locale);
+  const { labels } = copy.infos;
   const text = (icon: typeof Bus, label: string, value: string | null) =>
     value && (
       <InfoRow icon={icon} label={label}>
@@ -259,8 +262,8 @@ function accessRow(id: AccessRowId, content: SiteContent): ReactNode {
               className="inline-flex items-center gap-1 font-semibold text-sage-700 underline underline-offset-4"
             >
               <Navigation aria-hidden="true" className="size-4" />
-              {COPY.infos.directions}
-              <span className="sr-only">{COPY.newTab}</span>
+              {copy.infos.directions}
+              <span className="sr-only">{copy.newTab}</span>
             </a>
             <a
               href={googleBusinessUrl ?? googleMapsSearchUrl(content)}
@@ -268,8 +271,8 @@ function accessRow(id: AccessRowId, content: SiteContent): ReactNode {
               rel="noopener"
               className="font-semibold text-sage-700 underline underline-offset-4"
             >
-              {COPY.infos.map}
-              <span className="sr-only">{COPY.newTab}</span>
+              {copy.infos.map}
+              <span className="sr-only">{copy.newTab}</span>
             </a>
           </div>
         </InfoRow>
