@@ -51,7 +51,10 @@ export async function resolveSlugs({ pages, locales, store, translate, reserved 
       const taken = new Set([...reserved, ...records.filter((r) => r.locale === locale).map((r) => r.slug)]);
       for (const page of forLocale) {
         const others = new Set(pages.filter((p) => p.pageKey !== page.pageKey).map((p) => p.frSlug));
-        const base = normalizeSlug(out[`slug.${page.frSlug}`] ?? "") ?? page.frSlug;
+        const translatedSlug = out[`slug.${page.frSlug}`];
+        // Pas de traduction (refusée 3 fois) : rien n'est figé, la page garde son slug français et sera redemandée.
+        if (translatedSlug === undefined) continue;
+        const base = normalizeSlug(translatedSlug) ?? page.frSlug;
         let slug = base;
         for (let n = 2; (taken.has(slug) && !ownedBy(records, slug, locale, page)) || others.has(slug); n++) slug = `${base}-${n}`;
         taken.add(slug);

@@ -42,6 +42,16 @@ describe("resolveSlugs", () => {
     expect(store.list).toHaveBeenLastCalledWith({ fresh: true }); // relecture finale sans cache
   });
 
+  it("slug non traduit (refusé 3 fois) : rien n'est figé, slug français pour cette fois, redemandé ensuite", async () => {
+    const { store, records } = memoryStore();
+    const refusing = vi.fn(async (batch: Record<string, string>, locale: string) => (locale === "de" ? {} : translate(batch, locale)));
+    const map = await resolveSlugs({ ...base, translate: refusing, pages: [SPORT], store });
+    expect(map.get(SPORT.frSlug)!.slugs.de).toBe(SPORT.frSlug);
+    expect(records.map((r) => r.locale)).toEqual(["en"]);
+    await resolveSlugs({ ...base, pages: [SPORT], store });
+    expect(records.map((r) => r.locale)).toEqual(["en", "de"]);
+  });
+
   it("ensuite : relu tel quel, sans traduction ni écriture (une nouvelle traduction ne change jamais l'adresse)", async () => {
     const { store } = memoryStore();
     await resolveSlugs({ ...base, pages: [SPORT], store });

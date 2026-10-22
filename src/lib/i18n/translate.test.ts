@@ -88,7 +88,7 @@ describe("createClaudeTranslator", () => {
     expect(params.system).toMatch(/translate those mentions faithfully/);
     expect(JSON.stringify(params.messages)).toContain("Target language: Luxembourgish");
     expect(params.output_config).toEqual({
-      effort: "high",
+      effort: "low", // la réflexion est facturée : traduire n'en demande pas beaucoup
       format: {
         type: "json_schema",
         schema: { type: "object", properties: { a: { type: "string" }, b: { type: "string" } }, required: ["a", "b"], additionalProperties: false },
@@ -118,17 +118,28 @@ describe("createClaudeTranslator", () => {
     const { client, calls } = fakeClient([{ text: JSON.stringify({ a: "Your doctor" }) }, { text: JSON.stringify({ a: "Your osteopath" }) }]);
     expect(await createClaudeTranslator(client)({ a: "Votre ostéopathe" }, "en")).toEqual({ a: "Your osteopath" });
     const retry = JSON.stringify(calls[1]!.messages);
-    expect(retry).toContain("previous translation of this batch was rejected");
+    expect(retry).toContain("previous translation of these texts was rejected");
     expect(retry).toContain('id \\"a\\"');
     expect(retry).toContain("doctor");
     expect(JSON.stringify(calls[0]!.messages)).not.toContain("rejected");
   });
 
-  it("3 essais refusés pour un texte : celui-là reste en français, les autres sont traduits (la page n'est pas bloquée)", async () => {
-    const bad = JSON.stringify({ a: "Your doctor", b: "Hello" });
-    const { client } = fakeClient([{ text: bad }, { text: bad }, { text: bad }]);
-    expect(await createClaudeTranslator(client)({ a: "Votre ostéopathe", b: "Bonjour" }, "en")).toEqual({ a: "Votre ostéopathe", b: "Hello" });
+  it("3 essais refusés pour un texte : celui-là est absent du résultat (reste en français, redemandé plus tard), les autres sont traduits", async () => {
+    const { client } = fakeClient([{ text: JSON.stringify({ a: "Your doctor", b: "Hello" }) }, { text: JSON.stringify({ a: "Your doctor" }) }, { text: JSON.stringify({ a: "Your doctor" }) }]);
+    expect(await createClaudeTranslator(client)({ a: "Votre ostéopathe", b: "Bonjour" }, "en")).toEqual({ b: "Hello" });
     expect(console.warn).toHaveBeenLastCalledWith(expect.stringContaining("laissé(s) en français"));
+  });
+
+  it("nouvel essai : seuls les textes rejetés sont redemandés (les textes acceptés ne sont pas refacturés)", async () => {
+    const { client, calls } = fakeClient([{ text: JSON.stringify({ a: "Your doctor", b: "Hello" }) }, { text: JSON.stringify({ a: "Your osteopath" }) }]);
+    expect(await createClaudeTranslator(client)({ a: "Votre ostéopathe", b: "Bonjour" }, "en")).toEqual({ a: "Your osteopath", b: "Hello" });
+    expect(JSON.stringify(calls[1]!.messages)).not.toContain("Bonjour");
+    expect((calls[1]!.output_config as { format: { schema: { required: string[] } } }).format.schema.required).toEqual(["a"]);
+  });
+
+  it("une réponse lisible puis deux illisibles : les textes déjà acceptés sont gardés", async () => {
+    const { client } = fakeClient([{ text: JSON.stringify({ a: "Your doctor", b: "Hello" }) }, { text: "pas du json" }, { text: "toujours pas" }]);
+    expect(await createClaudeTranslator(client)({ a: "Votre ostéopathe", b: "Bonjour" }, "en")).toEqual({ b: "Hello" });
   });
 
   it("journal d'un refus : la clé, la raison et les deux textes", async () => {
