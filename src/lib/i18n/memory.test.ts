@@ -23,6 +23,7 @@ const memory = (env: Record<string, string> = { BLOB_STORE_ID: "store_x" }) => m
 beforeEach(() => {
   files.clear();
   vi.restoreAllMocks();
+  vi.spyOn(console, "info").mockImplementation(() => {});
 });
 
 describe("memoryKey", () => {

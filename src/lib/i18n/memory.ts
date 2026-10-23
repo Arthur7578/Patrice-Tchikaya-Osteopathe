@@ -55,6 +55,7 @@ export function blobTranslationMemory(env: NodeJS.ProcessEnv = process.env): Tra
       try {
         // Nom = empreinte du contenu : réécrire un fichier, c'est réécrire le même contenu (deux processus du build).
         await put(`${PREFIX}${name}.json`, body, { access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json" });
+        console.info(`[i18n] mémoire de traduction : ${Object.keys(entries).length} traduction(s) enregistrée(s)`);
       } catch (error) {
         // Une mémoire non enregistrée coûte seulement une retraduction plus tard : la page est publiée quand même.
         console.warn(`[i18n] mémoire de traduction non enregistrée : ${error instanceof Error ? error.message : error}`);
