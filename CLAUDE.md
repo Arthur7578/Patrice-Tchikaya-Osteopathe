@@ -5,7 +5,8 @@
 Landing page SEO local : Next.js 16 (App Router) + TypeScript + Tailwind CSS v4, contenu Notion (lecture seule),
 prise de RDV Cal.com (compte UE `cal.eu`) ou Doctena, déploiement Vercel. Site en 5 langues : français (source, sans
 préfixe), `/de`, `/en`, `/lb`, `/pt`, traduites automatiquement depuis le français (`src/lib/i18n`, API Claude,
-`ANTHROPIC_API_KEY` ; sans elle, français seul). Slugs des pages détaillées traduits une fois puis figés dans
+`ANTHROPIC_API_KEY` ; sans elle, français seul), effort bas, chaque texte traduit une seule fois (mémoire de traduction
+dans Vercel Blob, `src/lib/i18n/memory.ts`, partagée par la production et les previews). Slugs des pages détaillées traduits une fois puis figés dans
 Vercel Blob (`src/lib/i18n/slugs.ts` ; anciennes adresses redirigées) ; sans store Blob (dev, CI), slugs français.
 Voir `docs/DECISIONS.md` (21/10/2026).
 

@@ -2,15 +2,16 @@ import Anthropic from "@anthropic-ai/sdk";
 import { LOCALE_META, type Locale } from "@/config/i18n";
 import { countDoctorMentions, doctorMentions, hasTitleBeforeName } from "./rules";
 
-/** Lot de textes : clé → texte. Le traducteur renvoie les mêmes clés. */
+/** Lot de textes : clé → texte. Le traducteur renvoie les mêmes clés, sauf les textes qu'il n'a pas pu traduire. */
 export type TextBatch = Record<string, string>;
 /** `names` : noms du praticien, auxquels aucun titre de docteur ne doit être accolé (vérification). */
 export type Translator = (batch: TextBatch, locale: Locale, names?: string[]) => Promise<TextBatch>;
 
 /**
- * Modèle de traduction : Claude Opus 5.5, en effort élevé (choix d'Arthur : Claude Fable 5.1, plus capable, est trop
- * cher). Le volume est faible : un lot n'est retraduit que si son texte français change. Surchargeable par
- * TRANSLATION_MODEL.
+ * Modèle de traduction : Claude Opus 5.5 (choix d'Arthur : Claude Fable 5.1, plus capable, est trop cher), en effort
+ * bas : traduire ne demande pas de longue réflexion, et la réflexion est facturée comme du texte produit (c'était
+ * l'essentiel du coût en effort élevé). Chaque texte n'est traduit qu'une fois (mémoire de traduction, memory.ts).
+ * Surchargeable par TRANSLATION_MODEL.
  */
 export const TRANSLATION_MODEL = process.env.TRANSLATION_MODEL || "claude-opus-5-5";
 
@@ -87,36 +88,36 @@ const describe = (p: Problem, source: TextBatch, translated: unknown) => {
 };
 
 /**
- * Traducteur Claude : un appel par lot, réponse JSON contrainte par schéma, vérifiée. Une réponse rejetée est
- * redemandée (2 fois au plus) en expliquant au modèle ce qui ne va pas. Après 3 essais, les textes encore refusés
- * restent en français (les autres sont publiés traduits) plutôt que de bloquer la page entière ; seule une réponse
- * inexploitable (refus, réponse tronquée ou illisible) lève une erreur.
+ * Traducteur Claude : un appel par lot, réponse JSON contrainte par schéma, vérifiée. Seuls les textes rejetés sont
+ * redemandés (2 fois au plus), en expliquant au modèle ce qui ne va pas. Après 3 essais, les textes encore refusés sont
+ * absents du résultat (ils restent en français à l'affichage et seront redemandés plus tard) plutôt que de bloquer la
+ * page entière ; seule une réponse inexploitable (refus, réponse tronquée, ou jamais lisible) lève une erreur.
  */
 export function createClaudeTranslator(client: Anthropic = new Anthropic()): Translator {
   return async (batch, locale, names = []) => {
-    const keys = Object.keys(batch);
-    if (keys.length === 0) return {};
-    const schema = {
-      type: "object",
-      properties: Object.fromEntries(keys.map((k) => [k, { type: "string" }])),
-      required: keys,
-      additionalProperties: false,
-    };
-    const request = `Target language: ${LOCALE_META[locale].englishName}.\n\n${JSON.stringify(batch, null, 2)}`;
+    let pending = Object.keys(batch);
+    if (pending.length === 0) return {};
+    const accepted: TextBatch = {};
     let feedback = "";
-    let best: { parsed: TextBatch; problems: Problem[] } | null = null;
-    for (let attempt = 1; attempt <= 3; attempt++) {
+    let readable = false;
+    for (let attempt = 1; attempt <= 3 && pending.length > 0; attempt++) {
+      const sub = Object.fromEntries(pending.map((k) => [k, batch[k]!]));
+      const schema = {
+        type: "object",
+        properties: Object.fromEntries(pending.map((k) => [k, { type: "string" }])),
+        required: pending,
+        additionalProperties: false,
+      };
       const message = await client.beta.messages
         .stream({
           model: TRANSLATION_MODEL,
           max_tokens: 64000,
-          // Effort élevé : la qualité prime, le volume est faible.
-          output_config: { effort: "high", format: { type: "json_schema", schema } },
+          output_config: { effort: "low", format: { type: "json_schema", schema } },
           // Si le modèle refusait le texte (faux positif des filtres), l'API relance la requête sur un autre modèle.
           betas: ["server-side-fallback-2026-07-01"],
           fallbacks: "default",
           system: SYSTEM_PROMPT,
-          messages: [{ role: "user", content: request + feedback }],
+          messages: [{ role: "user", content: `Target language: ${LOCALE_META[locale].englishName}.\n\n${JSON.stringify(sub, null, 2)}${feedback}` }],
         })
         .finalMessage();
       if (message.stop_reason === "refusal") throw new TranslationError(`traduction refusée (${locale})`);
@@ -128,23 +129,22 @@ export function createClaudeTranslator(client: Anthropic = new Anthropic()): Tra
       } catch {
         parsed = null;
       }
-      const problems = validateTranslation(batch, parsed, names);
-      if (problems.length === 0) {
-        const out = parsed as TextBatch;
-        return Object.fromEntries(keys.map((k) => [k, out[k]!]));
+      const problems = validateTranslation(sub, parsed, names);
+      if (problems.every((p) => p.key !== null)) {
+        readable = true;
+        const rejected = new Set(problems.map((p) => p.key));
+        for (const k of pending) if (!rejected.has(k)) accepted[k] = (parsed as TextBatch)[k]!;
+        pending = pending.filter((k) => rejected.has(k));
       }
-      console.warn(`[i18n] traduction ${locale} rejetée (essai ${attempt}/3) : ${problems.map((p) => describe(p, batch, parsed)).join(" ; ")}`);
-      if (problems.every((p) => p.key !== null) && (!best || problems.length <= best.problems.length)) {
-        best = { parsed: parsed as TextBatch, problems };
-      }
+      if (problems.length === 0) break;
+      console.warn(`[i18n] traduction ${locale} rejetée (essai ${attempt}/3) : ${problems.map((p) => describe(p, sub, parsed)).join(" ; ")}`);
       feedback =
-        "\n\nA previous translation of this batch was rejected for these reasons; fix them in your new translation:\n" +
+        "\n\nA previous translation of these texts was rejected for these reasons; fix them in your new translation:\n" +
         problems.map((p) => `- ${p.key === null ? "whole reply" : `id "${p.key}"`}: ${p.reason}`).join("\n");
     }
-    if (!best) throw new TranslationError(`traduction ${locale} illisible après 3 essais`);
-    const rejected = new Set(best.problems.map((p) => p.key));
-    console.warn(`[i18n] traduction ${locale} : ${rejected.size} texte(s) laissé(s) en français après 3 essais : ${[...rejected].join(", ")}`);
-    return Object.fromEntries(keys.map((k) => [k, rejected.has(k) ? batch[k]! : best.parsed[k]!]));
+    if (!readable) throw new TranslationError(`traduction ${locale} illisible après 3 essais`);
+    if (pending.length > 0) console.warn(`[i18n] traduction ${locale} : ${pending.length} texte(s) laissé(s) en français après 3 essais : ${pending.join(", ")}`);
+    return accepted;
   };
 }
 
