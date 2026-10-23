@@ -10,8 +10,8 @@ const list = vi.fn(async ({ prefix }: { prefix: string; cursor?: string; limit: 
 const get = vi.fn(async (pathname: string) =>
   files.has(pathname) ? { statusCode: 200, stream: new Response(files.get(pathname)).body } : null,
 );
-const put = vi.fn(async (pathname: string, body: string) => {
-  if (files.has(pathname)) throw new Error("This blob already exists");
+const put = vi.fn(async (pathname: string, body: string, options: { allowOverwrite?: boolean }) => {
+  if (files.has(pathname) && !options.allowOverwrite) throw new Error("This blob already exists");
   files.set(pathname, body);
   return {};
 });
@@ -43,10 +43,12 @@ describe("blobTranslationMemory", () => {
     const m = memory()!;
     await m.save({ k1: "Hello" });
     await m.save({ k2: "Bye" });
-    await m.save({ k1: "Hello" }); // même contenu : même fichier, déjà là (sans erreur)
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await m.save({ k1: "Hello" }); // même contenu : même fichier, réécrit à l'identique (deux processus), sans erreur
+    expect(warn).not.toHaveBeenCalled();
     expect(files.size).toBe(2);
     expect([...files.keys()].every((p) => /^i18n\/translations\/[0-9a-f]{64}\.json$/.test(p))).toBe(true);
-    expect(put).toHaveBeenCalledWith(expect.any(String), expect.any(String), expect.objectContaining({ addRandomSuffix: false }));
+    expect(put).toHaveBeenCalledWith(expect.any(String), expect.any(String), expect.objectContaining({ addRandomSuffix: false, allowOverwrite: true }));
     expect(await m.load()).toEqual(new Map([["k1", "Hello"], ["k2", "Bye"]]));
   });
 

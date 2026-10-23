@@ -29,25 +29,62 @@ const getMemory = () => {
   return memory;
 };
 
+/** Empreintes connues de la mémoire dans ce processus (lues ou enregistrées) : évite les écritures en double. */
+const inMemory = new Set<string>();
+
+/** Sépare un lot entre textes déjà en mémoire (traduits) et textes jamais traduits. */
+function split(batch: TextBatch, locale: Locale, known: Array<[string, string]>) {
+  const map = new Map(known);
+  for (const hash of map.keys()) inMemory.add(hash);
+  const hits: TextBatch = {};
+  const missing: TextBatch = {};
+  for (const [key, text] of Object.entries(batch)) {
+    const found = map.get(memoryKey(locale, text));
+    if (found === undefined) missing[key] = text;
+    else hits[key] = found;
+  }
+  return { hits, missing };
+}
+
 /**
  * Traduction d'un lot avec la mémoire : seuls les textes jamais traduits partent à l'API, et chaque traduction validée
- * y est enregistrée. Un texte que le traducteur n'a pas pu traduire n'est pas enregistré : il sera redemandé.
+ * y est enregistrée. Avant tout appel payant, la mémoire est relue sans cache (un autre build vient peut-être de les
+ * traduire). Un texte que le traducteur n'a pas pu traduire n'est pas enregistré : il sera redemandé.
  */
 async function translateWithMemory(batch: TextBatch, locale: Locale, names: string[]): Promise<TextBatch> {
   const mem = translationMode() === "claude" ? getMemory() : null;
   if (!mem) return translator()(batch, locale, names);
-  const known = new Map(await mem.load());
-  const hits: TextBatch = {};
-  const missing: TextBatch = {};
-  for (const [key, text] of Object.entries(batch)) {
-    const found = known.get(memoryKey(locale, text));
-    if (found === undefined) missing[key] = text;
-    else hits[key] = found;
-  }
+  let { hits, missing } = split(batch, locale, await mem.load());
+  if (Object.keys(missing).length > 0) ({ hits, missing } = split(batch, locale, [...(await mem.store.load())]));
   if (Object.keys(missing).length === 0) return hits;
   const fresh = await translator()(missing, locale, names);
-  await mem.store.save(Object.fromEntries(Object.entries(fresh).map(([key, text]) => [memoryKey(locale, missing[key]!), text])));
+  const entries = Object.fromEntries(Object.entries(fresh).map(([key, text]) => [memoryKey(locale, missing[key]!), text]));
+  await mem.store.save(entries);
+  for (const hash of Object.keys(entries)) inMemory.add(hash);
   return { ...hits, ...fresh };
+}
+
+/**
+ * Recopie dans la mémoire les traductions servies par un cache (disque du build, cache de données Next) et qu'elle
+ * n'a pas encore : sans cela, une traduction faite avant la mémoire, ou restée dans le cache d'une preview, serait
+ * refaite par le build de production. Un texte identique au français n'est pas recopié (texte peut-être laissé en
+ * français après 3 refus, par l'ancien code). Une erreur ne bloque jamais la page.
+ */
+async function backfillMemory(batch: TextBatch, locale: Locale, result: TextBatch): Promise<void> {
+  const mem = translationMode() === "claude" ? getMemory() : null;
+  if (!mem) return;
+  const candidates = Object.entries(result).flatMap(([key, text]) =>
+    batch[key] !== undefined && text !== batch[key] ? [[memoryKey(locale, batch[key]!), text] as const] : [],
+  );
+  if (candidates.every(([hash]) => inMemory.has(hash))) return;
+  try {
+    for (const [hash] of await mem.load()) inMemory.add(hash);
+    const entries = Object.fromEntries(candidates.filter(([hash]) => !inMemory.has(hash)));
+    await mem.store.save(entries);
+    for (const hash of Object.keys(entries)) inMemory.add(hash);
+  } catch (error) {
+    console.warn(`[i18n] mémoire de traduction non complétée : ${error instanceof Error ? error.message : error}`);
+  }
 }
 
 /** Traductions en cours dans ce processus : une page régénérée en même temps qu'une autre attend le même appel. */
@@ -70,7 +107,10 @@ function translateBatch(batch: TextBatch, locale: Locale, names: string[]): Prom
     pending = unstable_cache(() => sharedOnDisk(hash, () => translateWithMemory(batch, locale, names)), ["translation", hash], {
       revalidate: false,
       tags: [TRANSLATIONS_TAG],
-    })();
+    })().then(async (result) => {
+      await backfillMemory(batch, locale, result);
+      return result;
+    });
     inFlight.set(hash, pending);
     pending.catch(() => {}).finally(() => inFlight.delete(hash));
   }

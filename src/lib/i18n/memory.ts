@@ -26,8 +26,8 @@ const PREFIX = "i18n/translations/";
 /**
  * Mémoire de traduction dans Vercel Blob, partagée par tous les builds et toutes les régénérations, en production comme
  * en preview : un texte n'est traduit qu'une fois dans chaque langue, quel que soit le cache du build (le build de
- * production ne récupère pas celui des previews). Fichiers JSON jamais réécrits, nommés par l'empreinte de leur
- * contenu : deux processus qui enregistrent en même temps ne s'écrasent pas. Sans store (dev, CI) : null.
+ * production ne récupère pas celui des previews). Fichiers JSON nommés par l'empreinte de leur contenu : deux
+ * processus qui enregistrent en même temps ne s'écrasent pas. Sans store (dev, CI) : null.
  */
 export function blobTranslationMemory(env: NodeJS.ProcessEnv = process.env): TranslationMemory | null {
   if (!env.BLOB_STORE_ID && !env.BLOB_READ_WRITE_TOKEN) return null;
@@ -53,10 +53,10 @@ export function blobTranslationMemory(env: NodeJS.ProcessEnv = process.env): Tra
       const body = JSON.stringify(entries);
       const name = createHash("sha256").update(body).digest("hex");
       try {
-        await put(`${PREFIX}${name}.json`, body, { access: "public", addRandomSuffix: false, contentType: "application/json" });
+        // Nom = empreinte du contenu : réécrire un fichier, c'est réécrire le même contenu (deux processus du build).
+        await put(`${PREFIX}${name}.json`, body, { access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json" });
       } catch (error) {
-        // Même contenu déjà enregistré (autre processus) : rien à faire. Une mémoire non enregistrée coûte seulement
-        // une retraduction plus tard : la page est publiée quand même.
+        // Une mémoire non enregistrée coûte seulement une retraduction plus tard : la page est publiée quand même.
         console.warn(`[i18n] mémoire de traduction non enregistrée : ${error instanceof Error ? error.message : error}`);
       }
     },
