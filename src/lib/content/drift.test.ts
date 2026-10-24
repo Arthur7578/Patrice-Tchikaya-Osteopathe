@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { contentDrift } from "./drift";
+import { contentDrift, criticalDrift } from "./drift";
 import { FALLBACK_CONTENT } from "./fallback";
 import type { SiteContent } from "./types";
 
@@ -59,5 +59,29 @@ describe("contentDrift", () => {
     expect(line.startsWith("about.longBio : secours ")).toBe(true);
     expect(line).toContain("…");
     expect(line.length).toBeLessThan(260);
+  });
+});
+
+describe("criticalDrift", () => {
+  it("garde le lien de RDV et les coordonnées, pas les textes", () => {
+    const live = clone();
+    live.booking = { url: "https://cal.eu/exemple/consultation", provider: "cal", calLink: "exemple/consultation", calOrigin: "https://app.cal.eu" };
+    live.contact.phoneDisplay = "+352 00 00 00";
+    live.access.bus = "Arrêt déplacé.";
+    live.seo.h1 = "Autre titre";
+    const critical = criticalDrift(contentDrift(FALLBACK_CONTENT, live));
+    expect(critical.map((line) => line.split(" : ")[0]).sort()).toEqual([
+      "booking.calLink",
+      "booking.calOrigin",
+      "booking.provider",
+      "booking.url",
+      "contact.phoneDisplay",
+    ]);
+  });
+
+  it("aucun écart critique : liste vide", () => {
+    const live = clone();
+    live.access.bus = "Arrêt déplacé.";
+    expect(criticalDrift(contentDrift(FALLBACK_CONTENT, live))).toEqual([]);
   });
 });

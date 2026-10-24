@@ -40,6 +40,8 @@ test.describe("langues", () => {
   test("pages juridiques traduites : mention « la version française fait foi », lien depuis le pied de page", async ({ page }) => {
     await page.goto("/de");
     await page.locator('footer a[href="/de/mentions-legales"]').click();
+    // Attendre la navigation : sinon le <h1> lu peut encore être celui de l'accueil.
+    await expect(page).toHaveURL(/\/de\/mentions-legales$/);
     await expect(page.locator("h1")).toHaveText("Impressum");
     await expect(page.locator("main")).toContainText("französischen Fassung");
   });

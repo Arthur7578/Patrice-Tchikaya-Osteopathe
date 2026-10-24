@@ -202,9 +202,13 @@ describe("Reviews : avis et note Google", () => {
 
 describe("PracticalInfo : bloc de réservation selon le prestataire", () => {
   const doctena = { ...C, booking: { url: "https://www.doctena.lu/fr/rdv", provider: "generic", calLink: null, calOrigin: null } } as SiteContent;
+  const cal = {
+    ...C,
+    booking: { url: "https://cal.eu/exemple/consultation", provider: "cal", calLink: "exemple/consultation", calOrigin: "https://app.cal.eu" },
+  } as SiteContent;
 
   it("Cal.com : agenda intégré et lien de secours dans un nouvel onglet", () => {
-    const root = render(<PracticalInfo content={C} />);
+    const root = render(<PracticalInfo content={cal} />);
     const text = visibleText(root.querySelector("#rendez-vous")!);
     expect(text).toContain(COPY.infos.bookingText);
     expect(text).toContain(COPY.infos.bookingFallback);
