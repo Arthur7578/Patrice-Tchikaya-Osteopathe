@@ -4,7 +4,7 @@ import { axeViolations, blockExternal, bookingCtas, frenchPathsAndHomes, recordE
 
 /**
  * e2e sur le build de production servi par `next start`, avec le contenu de secours (fallback.ts, sans NOTION_TOKEN).
- * Aucun service externe n'est requis : Cal.com & co sont bloqués quand un test en dépend (comme un bloqueur de contenu).
+ * Aucun service externe n'est requis : Doctena & co sont bloqués quand un test en dépend (comme un bloqueur de contenu).
  */
 
 test.describe("toutes les pages du sitemap", () => {
@@ -154,23 +154,23 @@ test.describe("accueil", () => {
     expect(hrefs[0]).toMatch(/^https:\/\/[^/]+\/.+/);
   });
 
-  test("Cal.com n'est demandé qu'à l'intention sur un CTA (règle 5)", async ({ page, baseURL }) => {
+  // Contenu de secours = Doctena (lien simple, aucun embed) : rien d'externe, même à l'intention sur un CTA.
+  test("aucun script de réservation chargé, même au focus d'un CTA (règle 5)", async ({ page, baseURL }) => {
     await blockExternal(page, baseURL!);
     const external = recordExternalRequests(page, baseURL!);
     await page.goto("/");
     await page.waitForLoadState("networkidle");
-    expect(external, "rien avant interaction").toEqual([]);
     await page.locator("#hero-cta a").first().focus();
-    await expect
-      .poll(() => external.filter((url) => /(^|\.)cal\.(com|eu)$/.test(new URL(url).hostname)), { message: "embed.js demandé au focus" })
-      .not.toEqual([]);
+    await page.waitForLoadState("networkidle");
+    expect(external).toEqual([]);
   });
 
-  test("Cal.com indisponible : un clic sur le CTA ouvre quand même l'agenda (repli, règle 6)", async ({ page, baseURL }) => {
+  test("avec JavaScript : un clic sur le CTA ouvre la réservation dans le même onglet (règle 6)", async ({ page, baseURL }) => {
     await blockExternal(page, baseURL!);
     await page.goto("/");
     const cta = page.locator("#hero-cta a").first();
     const href = await cta.getAttribute("href");
+    expect(await cta.getAttribute("target")).toBeNull();
     const navigation = page.waitForRequest((r) => r.url() === href && r.isNavigationRequest(), { timeout: 15_000 });
     await cta.click();
     await navigation;
@@ -189,16 +189,16 @@ test.describe("accueil", () => {
     await context.close();
   });
 
-  test("agenda intégré indisponible : lien de repli vers l'agenda à sa place (règle 6)", async ({ page, baseURL }) => {
-    test.setTimeout(60_000);
-    await blockExternal(page, baseURL!);
+  test("bloc de rendez-vous : bouton vers la réservation et appel du cabinet, sans agenda intégré", async ({ page }) => {
     await page.goto("/");
-    const agenda = page.locator("#rendez-vous");
-    await agenda.scrollIntoViewIfNeeded();
-    await expect(agenda.getByText("Chargement de l'agenda…")).toBeVisible();
-    const fallback = agenda.getByRole("link", { name: "Ouvrir l'agenda de réservation" });
-    await expect(fallback).toBeVisible({ timeout: 20_000 });
-    expect(await fallback.getAttribute("href")).toBe(await page.locator("#hero-cta a").first().getAttribute("href"));
+    const block = page.locator("#rendez-vous");
+    await block.scrollIntoViewIfNeeded();
+    const book = block.getByRole("link", { name: "Prendre rendez-vous en ligne" });
+    await expect(book).toBeVisible();
+    expect(await book.getAttribute("href")).toBe(await page.locator("#hero-cta a").first().getAttribute("href"));
+    await expect(block.locator('a[href^="tel:"]')).toHaveCount(1);
+    await expect(block.getByText("Chargement de l'agenda…")).toHaveCount(0);
+    await expect(page.locator("h1")).toHaveCount(1);
   });
 
   test("clavier : le premier Tab atteint le lien d'évitement, qui mène au contenu", async ({ page, isMobile }) => {

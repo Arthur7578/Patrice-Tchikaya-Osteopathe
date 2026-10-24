@@ -184,10 +184,10 @@ export const FALLBACK_CONTENT: SiteContent = {
     email: "patrice.tchikaya.pro@gmail.com",
   },
   booking: {
-    url: "https://cal.eu/patrice-tchikaya-pro/consultation",
-    provider: "cal",
-    calLink: "patrice-tchikaya-pro/consultation",
-    calOrigin: "https://app.cal.eu",
+    url: "https://www.doctena.lu/fr/booking-form/calendar/05c69bbb-4a62-480a-8dfd-dcc963c0b3f1",
+    provider: "generic",
+    calLink: null,
+    calOrigin: null,
   },
   googleBusinessUrl: "https://g.page/r/CY0QxWkj7WfJEBM",
   consultation: {

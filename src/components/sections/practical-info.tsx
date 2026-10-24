@@ -194,7 +194,10 @@ export function PracticalInfo({ content }: { content: SiteContent }) {
                   <CalendarDays aria-hidden="true" />
                   {copy.cta.book}
                 </BookingLink>
-                <a href={`tel:${contact.phoneE164}`} className={buttonVariants({ variant: "secondary", size: "lg" })}>
+                <a
+                  href={`tel:${contact.phoneE164}`}
+                  className={cn(buttonVariants({ variant: "secondary", size: "lg" }), "max-sm:whitespace-normal max-sm:text-center")}
+                >
                   <Phone aria-hidden="true" />
                   {copy.cta.call(contact.phoneDisplay)}
                 </a>

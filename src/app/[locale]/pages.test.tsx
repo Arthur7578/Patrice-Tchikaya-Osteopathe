@@ -231,6 +231,10 @@ describe("confidentialité : prise de rendez-vous", () => {
     (await renderPage(Confidentialite)).querySelectorAll("main p").map((p) => p.text.replace(/\s+/g, " ")).join(" | ");
 
   it("Cal.com : service chargé à l'initiative du visiteur", async () => {
+    getSiteContent.mockResolvedValue({
+      ...C,
+      booking: { url: "https://cal.eu/exemple/consultation", provider: "cal", calLink: "exemple/consultation", calOrigin: "https://app.cal.eu" },
+    });
     expect(await bookingSection()).toContain("chargé uniquement à votre initiative");
   });
 
