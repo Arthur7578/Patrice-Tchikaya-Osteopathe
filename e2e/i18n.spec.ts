@@ -40,6 +40,8 @@ test.describe("langues", () => {
   test("pages juridiques traduites : mention « la version française fait foi », lien depuis le pied de page", async ({ page }) => {
     await page.goto("/de");
     await page.locator('footer a[href="/de/mentions-legales"]').click();
+    // Attendre la navigation : sur l'accueil, l'agenda Cal.com ajoute son propre <h1> (échec immédiat en mode strict).
+    await expect(page).toHaveURL(/\/de\/mentions-legales$/);
     await expect(page.locator("h1")).toHaveText("Impressum");
     await expect(page.locator("main")).toContainText("französischen Fassung");
   });
