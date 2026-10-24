@@ -39,6 +39,7 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
 - CI : `.github/workflows/ci.yml` (lint, typecheck, couverture, build, `seo:smoke`, e2e Chromium + WebKit, `test:mutants`) ;
   `smoke-production.yml` lance `seo:smoke` chaque matin sur la production (secret `NOTION_TOKEN` recommandé) ; en cas
   d'échec, issue assignée au propriétaire du dépôt (étiquette `production-smoke`), fermée au premier contrôle vert.
+  Lien de RDV ou coordonnées de `fallback.ts` différents de Notion : issue à part (étiquette `fallback-drift`), sans échec.
 
 ## Environnement cloud
 

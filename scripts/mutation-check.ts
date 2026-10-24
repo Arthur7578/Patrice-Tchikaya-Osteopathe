@@ -57,6 +57,8 @@ const MUTANTS: Mutant[] = [
   { name: "upload : taille non contrôlée", file: "src/app/api/admin/upload/route.ts", find: "file.size > MAX_BYTES", replace: "false", tests: [UPLOAD] },
   { name: "upload : fichier public sans suffixe aléatoire", file: "src/app/api/admin/upload/route.ts", find: "addRandomSuffix: true", replace: "addRandomSuffix: false", tests: [UPLOAD] },
   // --- Contenu Notion / repli ---
+  { name: "drift : coordonnées non critiques", file: "src/lib/content/drift.ts", find: "booking|contact", replace: "booking", tests: ["src/lib/content/drift.test.ts"] },
+  { name: "drift : tout écart devient critique", file: "src/lib/content/drift.ts", find: 'CRITICAL.test(line.split(" : ")[0]!)', replace: "true", tests: ["src/lib/content/drift.test.ts"] },
   { name: "getSiteContent : repli servi en production", file: "src/lib/content/get-site-content.ts", find: 'process.env.VERCEL_ENV === "production"', replace: "false", tests: ["src/lib/content/get-site-content.test.ts"] },
   { name: "getGoogleRating : appel sans clé", file: "src/lib/google/get-google-rating.ts", find: "if (!apiKey || !placeId) return null;", replace: "", tests: ["src/lib/google/get-google-rating.test.ts"] },
   // --- Pages motifs ---

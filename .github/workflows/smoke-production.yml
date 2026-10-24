@@ -14,6 +14,10 @@ name: Contrôle du site en production
 # assignée au propriétaire du dépôt (e-mail et application GitHub), avec les contrôles en échec ; chaque nouvel échec
 # y ajoute un commentaire. Au premier contrôle de nouveau vert, l'issue est fermée avec un commentaire. Les
 # avertissements (textes d'attente, lien de RDV qui répond autre chose que 404/410) ne notifient pas.
+#
+# Contenu de secours (fallback.ts, utilisé par la CI) : si le lien de RDV ou les coordonnées diffèrent de Notion, une
+# issue à part « Contenu de secours à mettre à jour » (étiquette fallback-drift) est ouverte ou mise à jour, puis
+# fermée quand l'écart disparaît. Ce n'est pas une panne : le contrôle reste vert (docs/DECISIONS.md, 24/10/2026).
 on:
   schedule:
     - cron: "43 5 * * *"
@@ -45,12 +49,34 @@ jobs:
         run: |
           printf 'NOTION_TOKEN=%s\n' "$NOTION_TOKEN" > .env.local
           npm run notion:check
+        env:
+          FALLBACK_DRIFT_FILE: fallback-drift.txt
       - name: Contrôles SEO et lien de rendez-vous (seo:smoke)
         run: |
           set -o pipefail
           npm run seo:smoke -- https://osteopathe-tchikaya.lu 2>&1 | tee smoke.log
         env:
           SMOKE_CHECK_BOOKING: "1"
+      - name: Contenu de secours en retard (issue à part, sans échec)
+        # Fichier absent (Notion illisible, secret absent) : rien n'est décidé.
+        if: ${{ !cancelled() && hashFiles('fallback-drift.txt') != '' }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          open="$(gh issue list --label fallback-drift --state open --json number --jq '.[0].number')"
+          if [ ! -s fallback-drift.txt ]; then
+            [ -z "$open" ] || gh issue close "$open" --comment "Contenu de secours de nouveau à jour le $(date -u '+%d/%m/%Y')."
+            exit 0
+          fi
+          body="$(printf 'Le lien de RDV ou les coordonnées de `src/lib/content/fallback.ts` ne correspondent plus à Notion (constaté le %s).\n\nLe site en ligne n'"'"'est pas touché (il lit Notion), mais la CI et le dev testent ce contenu de secours : à recopier depuis Notion.\n\n```\n%s\n```\n\nCette issue se fermera toute seule quand l'"'"'écart aura disparu.' "$(date -u '+%d/%m/%Y')" "$(cat fallback-drift.txt)")"
+          if [ -n "$open" ]; then
+            gh issue edit "$open" --body "$body"
+          else
+            gh label create fallback-drift --color FBCA04 --description "Contenu de secours en retard sur Notion" --force
+            gh issue create --title "Contenu de secours à mettre à jour" --label fallback-drift \
+              --assignee "${{ github.repository_owner }}" --body "$body"
+          fi
       - name: Alerte (issue assignée au propriétaire du dépôt)
         if: failure()
         env:

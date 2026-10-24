@@ -26,3 +26,11 @@ export function contentDrift(fallback: unknown, live: unknown, path = ""): strin
   }
   return JSON.stringify(fallback) === JSON.stringify(live) ? [] : [`${path} : secours ${show(fallback)} ≠ Notion ${show(live)}`];
 }
+
+/**
+ * Écarts qui changent le parcours testé par la CI (lien de RDV et son prestataire, coordonnées du cabinet) : signalés
+ * dans une issue à part par le contrôle quotidien, sans le faire échouer (docs/DECISIONS.md, 24/10/2026).
+ */
+const CRITICAL = /^(booking|contact)(\.|$)/;
+
+export const criticalDrift = (drift: string[]) => drift.filter((line) => CRITICAL.test(line.split(" : ")[0]!));

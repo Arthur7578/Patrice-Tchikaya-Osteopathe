@@ -2,7 +2,8 @@
  * Vérifie l'accès Notion + la qualité du contenu, sans lancer Next.
  * Usage : npm run notion:check   (lit NOTION_TOKEN depuis .env.local)
  */
-import { contentDrift } from "@/lib/content/drift";
+import { writeFileSync } from "node:fs";
+import { contentDrift, criticalDrift } from "@/lib/content/drift";
 import { FALLBACK_CONTENT } from "@/lib/content/fallback";
 import { createNotionClient } from "@/lib/notion/client";
 import { fetchSiteContent } from "@/lib/notion/fetch-content";
@@ -36,6 +37,10 @@ async function main() {
       if (drift.length > 25) console.warn(`  … et ${drift.length - 25} autre(s)`);
       if (process.env.GITHUB_ACTIONS) console.log(`::warning title=Contenu de secours en retard::${summary}`);
     }
+    // Contrôle quotidien : écarts critiques (lien de RDV, coordonnées) écrits pour l'issue « contenu de secours »
+    // (fichier vide = aucun écart : l'issue ouverte est fermée).
+    const criticalFile = process.env.FALLBACK_DRIFT_FILE;
+    if (criticalFile) writeFileSync(criticalFile, criticalDrift(drift).join("\n"));
   } catch (error) {
     console.error("✗ Échec de lecture Notion :", error instanceof Error ? error.message : error);
     console.error("  → L'intégration est-elle connectée à la page « Site web Ostéopathie Dudelange » ?");
