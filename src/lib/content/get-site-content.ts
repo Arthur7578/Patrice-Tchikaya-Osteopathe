@@ -5,8 +5,8 @@ import { DEFAULT_LOCALE, ENABLED_LOCALES, type Locale } from "@/config/i18n";
 import { RESERVED_SLUGS, SITE_CONTENT_TAG } from "@/config/site";
 import { localizeContent, translateTexts } from "@/lib/i18n/localize";
 import { applySlugs, localizeBooking } from "@/lib/i18n/localize-content";
-import { blobSlugStore, type SlugStore } from "@/lib/i18n/slug-store";
-import { resolveSlugs, type SlugMap } from "@/lib/i18n/slugs";
+import { blobSlugStore } from "@/lib/i18n/slug-store";
+import { resolveSlugs, type SlugMap, type SlugPage } from "@/lib/i18n/slugs";
 import { publishedPages } from "./published";
 import { createNotionClient } from "@/lib/notion/client";
 import { fetchSiteContent } from "@/lib/notion/fetch-content";
@@ -49,14 +49,26 @@ const getFrenchContent = cache(async (): Promise<SiteContent> => {
   return readNotionContent();
 });
 
-/** Stockage des slugs traduits, avec une lecture en cache (5 min) ; `fresh` relit sans cache avant toute création. */
-function cachedSlugStore(store: SlugStore): SlugStore {
-  const cachedList = unstable_cache(() => store.list(), ["translated-slugs"], { revalidate: 300, tags: [TRANSLATED_SLUGS_TAG] });
-  return { list: (options) => (options?.fresh ? store.list() : cachedList()), create: (record) => store.create(record) };
-}
-
-/** Étiquette de la lecture des slugs traduits. */
+/** Étiquette de la table des slugs traduits. */
 export const TRANSLATED_SLUGS_TAG = "translated-slugs";
+
+/**
+ * Table des slugs traduits, mise en cache sans expiration sous la liste des pages publiées (argument de la fonction,
+ * donc clé de cache) : le store Blob n'est lu (`list`, opération « avancée » facturée) qu'à l'ajout ou au renommage
+ * d'une page dans Notion, jamais à chaque régénération (offre Hobby : 2 000 opérations avancées par mois pour tout le
+ * compte, voir DECISIONS 02/11). Une erreur n'est jamais mise en cache. Un slug refusé 3 fois par le traducteur reste
+ * en français jusqu'au prochain changement de pages : sa traduction partielle est elle-même en cache sans expiration,
+ * la redemander à chaque rendu ne changerait rien (et relisait le store à chaque fois).
+ */
+const resolveSlugEntries = unstable_cache(
+  async (pages: SlugPage[]) => {
+    const store = blobSlugStore();
+    if (!store) throw new Error("Stockage des slugs traduits indisponible.");
+    return [...(await resolveSlugs({ pages, locales: ENABLED_LOCALES, store, translate: translateTexts, reserved: RESERVED_SLUGS }))];
+  },
+  ["translated-slugs-v2", ENABLED_LOCALES.join(","), [...RESERVED_SLUGS].sort().join(",")],
+  { revalidate: false, tags: [TRANSLATED_SLUGS_TAG] },
+);
 
 /**
  * Slugs traduits et figés des pages publiées (src/lib/i18n/slugs.ts), par rendu. null (slugs français dans toutes les
@@ -64,10 +76,9 @@ export const TRANSLATED_SLUGS_TAG = "translated-slugs";
  * changer, et avec lui l'adresse de la page. Erreur du stockage : levée (comme Notion ; ISR garde la dernière page).
  */
 const getSlugMap = cache(async (): Promise<SlugMap | null> => {
-  const store = blobSlugStore();
-  if (!store || ENABLED_LOCALES.length < 2) return null;
+  if (!blobSlugStore() || ENABLED_LOCALES.length < 2) return null;
   const pages = publishedPages(await getFrenchContent()).map((m) => ({ pageKey: m.notionPageId ?? `slug-${m.slug}`, frSlug: m.slug }));
-  return resolveSlugs({ pages, locales: ENABLED_LOCALES, store: cachedSlugStore(store), translate: translateTexts, reserved: RESERVED_SLUGS });
+  return new Map(await resolveSlugEntries(pages));
 });
 
 /**
