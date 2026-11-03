@@ -30,6 +30,7 @@ vi.mock("@/lib/notion/client", () => ({ createNotionClient: vi.fn(() => ({})) })
 const { getSiteContent } = await import("./get-site-content");
 // Appel fait à l'import du module : relevé avant que les mocks soient réinitialisés entre les tests.
 const cacheArgs = unstableCache.mock.calls[0]!.slice(1);
+const slugCacheArgs = unstableCache.mock.calls.find((c) => (c[1] as string[] | undefined)?.[0] === "translated-slugs-v2")?.slice(1);
 
 describe("getSiteContent", () => {
   beforeEach(() => {
@@ -102,10 +103,15 @@ describe("getSiteContent", () => {
     expect(options.locales).toEqual(["fr", "en"]);
     expect(options.translate).toBe(translateTexts);
     expect(options.pages).toContainEqual({ pageKey: `slug-${published.slug}`, frSlug: published.slug }); // pas d'id Notion dans le contenu de secours
-    // Lecture en cache, relecture directe avec `fresh` (avant toute création).
-    await options.store.list({ fresh: true });
-    expect(store.list).toHaveBeenCalled();
+    expect(options.store).toBe(store); // lectures directes : c'est la table entière qui est en cache
     blobSlugStore.mockReturnValue(null);
+  });
+
+  it("table des slugs en cache sans expiration, sous la liste des pages (store relu seulement quand elle change)", () => {
+    expect(slugCacheArgs).toBeDefined();
+    expect(slugCacheArgs![1]).toEqual({ revalidate: false, tags: ["translated-slugs"] });
+    // Pages = argument de la fonction (clé de cache) ; langues publiées dans la clé (fermeture de la fonction).
+    expect(slugCacheArgs![0]).toContain("fr,en");
   });
 
   it("sans stockage : aucun slug traduit (contenu de secours renvoyé tel quel)", async () => {

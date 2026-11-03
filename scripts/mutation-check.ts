@@ -148,6 +148,10 @@ const MUTANTS: Mutant[] = [
   { name: "langues : traductions des caches jamais recopiées dans la mémoire (production retraduit tout)", file: "src/lib/i18n/localize.ts", find: "await backfillMemory(batch, locale, result);", replace: "", tests: ["src/lib/i18n/localize-memory.test.ts"] },
   { name: "langues : texte laissé en français recopié comme traduction", file: "src/lib/i18n/localize.ts", find: "text !== batch[key] ?", replace: "true ?", tests: ["src/lib/i18n/localize-memory.test.ts"] },
   { name: "langues : recopie en double après chaque traduction", file: "src/lib/i18n/localize.ts", find: "if (candidates.every(([hash]) => inMemory.has(hash))) return;", replace: "", tests: ["src/lib/i18n/localize-memory.test.ts"] },
+  { name: "langues : mémoire relue toutes les 5 min (quota Blob Hobby dépassé)", file: "src/lib/i18n/localize.ts", find: "{ revalidate: false, tags: [TRANSLATION_MEMORY_TAG] }", replace: "{ revalidate: 300, tags: [TRANSLATION_MEMORY_TAG] }", tests: ["src/lib/i18n/localize-memory.test.ts"] },
+  { name: "langues : recopie dans la mémoire à l'exécution (liste Blob à chaque instance)", file: "src/lib/i18n/localize.ts", find: "if (process.env.NEXT_PHASE !== PHASE_PRODUCTION_BUILD) return;", replace: "", tests: ["src/lib/i18n/localize-memory.test.ts"] },
+  { name: "langues : recopie sur lecture en cache périmée (réécrit ce qui est déjà en mémoire)", file: "src/lib/i18n/localize.ts", find: "if (candidates.some(([hash]) => !inMemory.has(hash))) for", replace: "if (false) for", tests: ["src/lib/i18n/localize-memory.test.ts"] },
+  { name: "slugs : table relue toutes les 5 min (quota Blob Hobby dépassé)", file: "src/lib/content/get-site-content.ts", find: "{ revalidate: false, tags: [TRANSLATED_SLUGS_TAG] }", replace: "{ revalidate: 300, tags: [TRANSLATED_SLUGS_TAG] }", tests: ["src/lib/content/get-site-content.test.ts"] },
   { name: "langues : fichiers de mémoire écrasables (perte entre processus)", file: "src/lib/i18n/memory.ts", find: "addRandomSuffix: false", replace: "addRandomSuffix: true", tests: ["src/lib/i18n/memory.test.ts"] },
   { name: "slugs : slug non traduit figé en français", file: "src/lib/i18n/slugs.ts", find: "if (translatedSlug === undefined) continue;", replace: "", tests: ["src/lib/i18n/slugs.test.ts"] },
   { name: "langues : « Dr Tchikaya » accepté dans une traduction (règle 10)", file: "src/lib/i18n/translate.ts", find: "if (hasTitleBeforeName(value, names) && !hasTitleBeforeName(text, names))", replace: "if (false)", tests: [TRANSLATE] },
@@ -175,7 +179,7 @@ const MUTANTS: Mutant[] = [
   { name: "LanguageSwitcher : toutes les langues cochées", file: "src/components/layout/language-switcher.tsx", find: "{option.locale === current && <Check", replace: "{true && <Check", tests: ["src/components/layout/language-switcher.test.tsx"] },
   { name: "slugs : sélecteur de langue vers le slug de la langue courante", file: "src/components/layout/language-switcher.tsx", find: "(page?.[locale] ? `/${page[locale]}` : path)", replace: "path", tests: ["src/components/layout/language-switcher.test.tsx"] },
   { name: "slugs : écriture en échec ignorée (slug non enregistré)", file: "src/lib/i18n/slug-store.ts", find: "if (!(await listAll()).some((r) => slugPath(r) === pathname)) throw error;", replace: "", tests: ["src/lib/i18n/slug-store.test.ts"] },
-  { name: "slugs : jamais appliqués même avec un stockage", file: "src/lib/content/get-site-content.ts", find: "if (!store || ENABLED_LOCALES.length < 2) return null;", replace: "return null;", tests: ["src/lib/content/get-site-content.test.ts"] },
+  { name: "slugs : jamais appliqués même avec un stockage", file: "src/lib/content/get-site-content.ts", find: "if (!blobSlugStore() || ENABLED_LOCALES.length < 2) return null;", replace: "return null;", tests: ["src/lib/content/get-site-content.test.ts"] },
 ];
 
 const filter = process.argv[2] ?? "";
