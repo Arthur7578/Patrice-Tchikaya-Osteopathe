@@ -58,6 +58,7 @@ describe("traduction avec la mémoire (partagée par tous les déploiements)", (
     expect(translator).toHaveBeenCalledTimes(1);
     expect(translator.mock.calls[0]![0]).toEqual({ b: "Merci" });
     expect(save).toHaveBeenCalledTimes(1); // pas de recopie en double après la traduction
+    expect(load).toHaveBeenCalledTimes(2); // lecture en cache, puis sans cache avant l'API ; pas de relecture pour la recopie
     expect(save).toHaveBeenCalledWith({ [memoryKey("de", "Merci")]: "[de]Merci" });
   });
 
