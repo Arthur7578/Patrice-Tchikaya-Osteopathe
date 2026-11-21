@@ -16,6 +16,11 @@ on:
   schedule:
     - cron: "17 14 * * *" # 14:17 UTC : le jour Vercel se termine à 08:00 UTC (07:00 en été)
   workflow_dispatch:
+    inputs:
+      test_alerte:
+        description: "Tester l'alerte : ouvre l'issue même sous le seuil (le contrôle suivant la ferme)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -30,6 +35,7 @@ jobs:
       VERCEL_TEAM_ID: team_SSMc5m5uktVCe5ZFG1PoBWLA
       VERCEL_PROJECT_ID: prj_SxVQQzhvFUW6hZFsvcsGrqPfGtMZ
       BLOB_REPORT_FILE: blob-report.md
+      BLOB_FORCE_ALERT: ${{ inputs.test_alerte && '1' || '' }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5

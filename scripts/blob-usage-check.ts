@@ -3,6 +3,7 @@
  * Usage : VERCEL_TOKEN=… VERCEL_TEAM_ID=team_… VERCEL_PROJECT_ID=prj_… npm run blob:check
  * Écrit le rapport (Markdown) sur la sortie et dans BLOB_REPORT_FILE s'il est défini.
  * Code de sortie : 0 sous le seuil, 1 dépassement le dernier jour terminé, 2 erreur (API, variable manquante).
+ * BLOB_FORCE_ALERT=1 : sortie 1 même sous le seuil, pour tester l'alerte (rapport marqué « TEST »).
  */
 import { writeFileSync } from "node:fs";
 import {
@@ -31,11 +32,12 @@ async function main() {
   ]);
   const days = blobDays(rows, now);
   const verdicts = days.map((d) => judgeDay(d, countDeployments(deployTimes, d.start, d.end)));
-  const report = renderReport(verdicts, monthToDate(days));
+  const forced = process.env.BLOB_FORCE_ALERT === "1";
+  const report = `${forced ? "**TEST d'alerte** (lancé à la main, pas un vrai dépassement).\n\n" : ""}${renderReport(verdicts, monthToDate(days))}`;
 
   console.log(report);
   if (process.env.BLOB_REPORT_FILE) writeFileSync(process.env.BLOB_REPORT_FILE, report);
-  if (verdicts.at(-1)?.over) process.exit(1);
+  if (forced || verdicts.at(-1)?.over) process.exit(1);
 }
 
 main().catch((error: unknown) => {
