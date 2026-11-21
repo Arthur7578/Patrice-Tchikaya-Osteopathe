@@ -1,0 +1,76 @@
+name: Suivi des opérations Vercel Blob
+
+# Chaque jour, ou à la demande : nombre d'opérations Blob « avancées » (list, put…) du dernier jour terminé, pour tout le
+# compte Vercel (quota Hobby de 2 000 par mois, commun à tous les projets), via l'API de facturation de Vercel.
+# Seuils : plus de 30 sur un jour sans déploiement du site, plus de 80 sur un jour avec au moins un déploiement
+# (previews comprises). Le rapport (7 derniers jours, détail par projet) est dans le résumé de chaque exécution.
+# Remplace la routine Claude du 02/11, qui n'avait pas accès à Vercel (docs/DECISIONS.md, 21/11/2026).
+#
+# Secret requis : VERCEL_TOKEN (Vercel > Account Settings > Tokens, portée limitée à l'équipe ;
+# puis Settings > Secrets and variables > Actions du dépôt). Lecture seule en pratique : le script ne fait que des GET.
+#
+# Notification : un dépassement, ou un contrôle impossible (jeton absent ou refusé, API en panne), ouvre une issue
+# « Vercel Blob : consommation à surveiller » (étiquette blob-usage) assignée au propriétaire du dépôt ; chaque nouvel
+# échec y ajoute un commentaire. Au premier jour de nouveau sous le seuil, l'issue est fermée.
+on:
+  schedule:
+    - cron: "17 14 * * *" # 14:17 UTC : le jour Vercel se termine à 08:00 UTC (07:00 en été)
+  workflow_dispatch:
+    inputs:
+      test_alerte:
+        description: "Tester l'alerte : ouvre l'issue même sous le seuil (le contrôle suivant la ferme)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  blob-usage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_TEAM_ID: team_SSMc5m5uktVCe5ZFG1PoBWLA
+      VERCEL_PROJECT_ID: prj_SxVQQzhvFUW6hZFsvcsGrqPfGtMZ
+      BLOB_REPORT_FILE: blob-report.md
+      BLOB_DEBUG: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
+      BLOB_FORCE_ALERT: ${{ inputs.test_alerte && '1' || '' }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Opérations Blob du dernier jour (blob:check)
+        run: |
+          npm run --silent blob:check
+      - name: Rapport dans le résumé de l'exécution
+        if: ${{ !cancelled() && hashFiles('blob-report.md') != '' }}
+        run: cat blob-report.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Alerte (issue assignée au propriétaire du dépôt)
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create blob-usage --color D93F0B --description "Consommation Vercel Blob au-dessus du seuil" --force
+          report="$(cat blob-report.md 2>/dev/null || echo "(pas de rapport : échec avant le contrôle, voir le journal)")"
+          body="$(printf 'Contrôle du %s.\n\n%s\n\nJournal : %s\n\nCette issue se fermera toute seule au premier jour de nouveau sous le seuil.' "$(date -u '+%d/%m/%Y')" "$report" "$RUN_URL")"
+          open="$(gh issue list --label blob-usage --state open --json number --jq '.[0].number')"
+          if [ -n "$open" ]; then
+            gh issue comment "$open" --body "$body"
+          else
+            gh issue create --title "Vercel Blob : consommation à surveiller" --label blob-usage \
+              --assignee "${{ github.repository_owner }}" --body "$body"
+          fi
+      - name: Fin d'alerte (de nouveau sous le seuil)
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for n in $(gh issue list --label blob-usage --state open --json number --jq '.[].number'); do
+            gh issue close "$n" --comment "Sous le seuil le $(date -u '+%d/%m/%Y') : alerte levée.$(printf '\n\n')$(head -1 blob-report.md)"
+          done

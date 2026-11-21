@@ -180,6 +180,9 @@ const MUTANTS: Mutant[] = [
   { name: "slugs : sélecteur de langue vers le slug de la langue courante", file: "src/components/layout/language-switcher.tsx", find: "(page?.[locale] ? `/${page[locale]}` : path)", replace: "path", tests: ["src/components/layout/language-switcher.test.tsx"] },
   { name: "slugs : écriture en échec ignorée (slug non enregistré)", file: "src/lib/i18n/slug-store.ts", find: "if (!(await listAll()).some((r) => slugPath(r) === pathname)) throw error;", replace: "", tests: ["src/lib/i18n/slug-store.test.ts"] },
   { name: "slugs : jamais appliqués même avec un stockage", file: "src/lib/content/get-site-content.ts", find: "if (!blobSlugStore() || ENABLED_LOCALES.length < 2) return null;", replace: "return null;", tests: ["src/lib/content/get-site-content.test.ts"] },
+  // --- Suivi Vercel Blob (workflow blob-usage.yml) ---
+  { name: "blob : seuil sans déploiement ignoré", file: "src/lib/monitoring/blob-usage.ts", find: "deployments > 0 ? DAILY_LIMIT.withDeployment : DAILY_LIMIT.withoutDeployment", replace: "DAILY_LIMIT.withDeployment", tests: ["src/lib/monitoring/blob-usage.test.ts"] },
+  { name: "blob : autres services comptés", file: "src/lib/monitoring/blob-usage.ts", find: "const advanced = row.ServiceName === BLOB_ADVANCED_SERVICE;", replace: "const advanced = true;", tests: ["src/lib/monitoring/blob-usage.test.ts"] },
 ];
 
 const filter = process.argv[2] ?? "";
