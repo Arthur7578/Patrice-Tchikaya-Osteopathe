@@ -107,7 +107,8 @@ const dayLabel = (v: BlobDay) => {
   return `${String(d.getUTCDate()).padStart(2, "0")}/${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 };
 
-/** Ligne de verdict (format du brief) : « Blob OK : ~N ops, X builds » ou « Blob : ~N ops avancées le JJ/MM, … ». */
+/** Ligne de verdict (format du brief, plus la date et le seuil) : « Blob OK : ~N ops le JJ/MM, X builds (seuil S) »
+ * ou « Blob : ~N ops avancées le JJ/MM, X builds, seuil dépassé (S) ». */
 export function verdictLine(v: DayVerdict): string {
   return v.over
     ? `Blob : ~${fmt(v.total)} ops avancées le ${dayLabel(v)}, ${v.deployments} builds, seuil dépassé (${v.limit})`
