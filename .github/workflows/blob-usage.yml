@@ -35,6 +35,7 @@ jobs:
       VERCEL_TEAM_ID: team_SSMc5m5uktVCe5ZFG1PoBWLA
       VERCEL_PROJECT_ID: prj_SxVQQzhvFUW6hZFsvcsGrqPfGtMZ
       BLOB_REPORT_FILE: blob-report.md
+      BLOB_DEBUG: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
       BLOB_FORCE_ALERT: ${{ inputs.test_alerte && '1' || '' }}
     steps:
       - uses: actions/checkout@v5

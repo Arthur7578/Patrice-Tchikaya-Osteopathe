@@ -3,6 +3,7 @@
  * Usage : VERCEL_TOKEN=… VERCEL_TEAM_ID=team_… VERCEL_PROJECT_ID=prj_… npm run blob:check
  * Écrit le rapport (Markdown) sur la sortie et dans BLOB_REPORT_FILE s'il est défini.
  * Code de sortie : 0 sous le seuil, 1 dépassement le dernier jour terminé, 2 erreur (API, variable manquante).
+ * BLOB_DEBUG=1 : affiche aussi 3 lignes brutes de l'API par service Blob (sans le jeton), pour caler le script.
  * BLOB_FORCE_ALERT=1 : sortie 1 même sous le seuil, pour tester l'alerte (rapport marqué « TEST »).
  */
 import { writeFileSync } from "node:fs";
@@ -30,6 +31,12 @@ async function main() {
     fetchCharges(fetch, token, teamId, from, to),
     fetchDeploymentTimes(fetch, token, teamId, projectId, new Date(from.getTime() - 86_400_000)),
   ]);
+  if (process.env.BLOB_DEBUG === "1") {
+    for (const service of ["Blob Advanced Operations", "Blob Simple Operations"]) {
+      const sample = rows.filter((r) => r.ServiceName === service).slice(-3);
+      console.log(`Lignes brutes « ${service} » (${sample.length} dernières) :\n${JSON.stringify(sample, null, 1)}`);
+    }
+  }
   const days = blobDays(rows, now);
   const verdicts = days.map((d) => judgeDay(d, countDeployments(deployTimes, d.start, d.end)));
   const forced = process.env.BLOB_FORCE_ALERT === "1";

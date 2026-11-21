@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   BLOB_ADVANCED_SERVICE,
+  BLOB_SIMPLE_SERVICE,
   blobDays,
   countDeployments,
   fetchCharges,
@@ -9,6 +10,7 @@ import {
   monthToDate,
   parseJsonl,
   renderReport,
+  verdictLine,
   type ChargeRow,
 } from "./blob-usage";
 
@@ -19,6 +21,7 @@ const site = { ProjectId: "prj_1", ProjectName: "site" };
 const row = (period: typeof D1, quantity: number | string, tags: ChargeRow["Tags"] = site): ChargeRow => ({
   ServiceName: BLOB_ADVANCED_SERVICE,
   ConsumedQuantity: quantity,
+  EffectiveCost: 0,
   Tags: tags,
   ...period,
 });
@@ -34,20 +37,23 @@ describe("blobDays", () => {
   it("additionne par jour et par projet, seulement le service Blob avancé et les jours terminés", () => {
     const days = blobDays(
       [
-        row(D2, 10),
+        { ...row(D2, 10), EffectiveCost: "0.0000106" },
+        { ...row(D2, 7), ServiceName: BLOB_SIMPLE_SERVICE },
+        { ...row(D2, 1), ServiceName: BLOB_SIMPLE_SERVICE, ConsumedQuantity: undefined },
         row(D1, "4"),
         row(D1, 3, { ProjectName: "autre" }),
         row(D1, 2, null),
         row(D1, null as unknown as number),
-        { ...row(D1, 99), ServiceName: "Blob Simple Operations" },
+        { ...row(D1, 99), ServiceName: "Blob Data Transfer" },
+        { ...row(D1, 1), EffectiveCost: null },
         { ServiceName: BLOB_ADVANCED_SERVICE, ConsumedQuantity: 5 },
         row(D3, 50), // jour pas encore terminé
       ],
       NOW,
     );
     expect(days).toEqual([
-      { start: D1.ChargePeriodStart, end: D1.ChargePeriodEnd, total: 9, byProject: { site: 4, autre: 3, "(sans projet)": 2 } },
-      { start: D2.ChargePeriodStart, end: D2.ChargePeriodEnd, total: 10, byProject: { site: 10 } },
+      { start: D1.ChargePeriodStart, end: D1.ChargePeriodEnd, total: 10, byProject: { site: 5, autre: 3, "(sans projet)": 2 }, simple: 0, cost: 0 },
+      { start: D2.ChargePeriodStart, end: D2.ChargePeriodEnd, total: 10, byProject: { site: 10 }, simple: 7, cost: 0.0000106 },
     ]);
   });
 
@@ -65,7 +71,7 @@ describe("countDeployments", () => {
 });
 
 describe("judgeDay", () => {
-  const day = (total: number) => ({ start: "s", end: "e", total, byProject: {} });
+  const day = (total: number) => ({ start: "s", end: "e", total, byProject: {}, simple: 0, cost: 0 });
   it("seuil 30 sans déploiement, strictement au-dessus", () => {
     expect(judgeDay(day(30), 0)).toMatchObject({ limit: 30, over: false });
     expect(judgeDay(day(31), 0)).toMatchObject({ limit: 30, over: true, deployments: 0 });
@@ -78,26 +84,34 @@ describe("judgeDay", () => {
 
 describe("monthToDate", () => {
   it("additionne les jours qui finissent dans le mois du dernier jour", () => {
-    const d = (end: string, total: number) => ({ start: "", end, total, byProject: {} });
+    const d = (end: string, total: number) => ({ start: "", end, total, byProject: {}, simple: 0, cost: 0 });
     expect(monthToDate([d("2026-10-31T08:00:00Z", 100), d("2026-11-01T08:00:00Z", 5), d("2026-11-02T08:00:00Z", 7)])).toBe(12);
     expect(monthToDate([])).toBe(0);
   });
 });
 
-describe("renderReport", () => {
-  const v = (total: number, deployments: number, byProject: Record<string, number> = {}) =>
-    judgeDay({ start: D1.ChargePeriodStart, end: D1.ChargePeriodEnd, total, byProject }, deployments);
+describe("verdictLine et renderReport", () => {
+  const v = (total: number, deployments: number, byProject: Record<string, number> = {}, cost = 0) =>
+    judgeDay({ start: D1.ChargePeriodStart, end: D1.ChargePeriodEnd, total, byProject, simple: 12, cost }, deployments);
 
-  it("signale le dépassement du dernier jour, avec le détail trié par projet", () => {
-    const text = renderReport([v(5, 0), v(31.456, 0, { a: 1, site: 30.456 })], 36);
-    expect(text).toMatch(/^\*\*Dépassement\*\* .*31\.46 opérations avancées \(seuil 30, 0 déploiement/);
-    expect(text).toContain("| 2026-11-18 08:00 | 31.46 ⚠ | 0 | 30 | site : 30.46, a : 1 |");
-    expect(text).toContain("| 5 | 0 | 30 | — |");
+  it("lignes de verdict au format du brief", () => {
+    expect(verdictLine(v(31, 0))).toBe("Blob : ~31 ops avancées le 18/11, 0 builds, seuil dépassé (30)");
+    expect(verdictLine(v(12, 2))).toBe("Blob OK : ~12 ops le 18/11, 2 builds (seuil 80)");
+  });
+
+  it("signale le dépassement du dernier jour, avec les pistes et le détail trié par projet", () => {
+    const text = renderReport([v(5, 0), v(31.456, 0, { a: 1, site: 30.456 }, 0.000159)], 36);
+    expect(text).toMatch(/^\*\*Blob : ~31\.46 ops avancées le 18\/11, 0 builds, seuil dépassé \(30\)\*\*\n\nPistes : /);
+    expect(text).toContain("src/lib/i18n/memory.ts");
+    expect(text).toContain("| 18/11 | 31.46 ⚠ | ~30 | 12 | 0 | 30 | site : 30.46, a : 1 |");
+    expect(text).toContain("| 18/11 | 5 | ~0 | 12 | 0 | 30 | — |");
     expect(text).toContain("Total depuis le 1er du mois (indicatif) : 36 / 2000.");
   });
 
-  it("dit quand le dernier jour est sous le seuil, ou quand il n'y a aucune donnée", () => {
-    expect(renderReport([v(50, 0), v(12, 1)], 62)).toMatch(/^Dernier jour .* 12 opérations avancées, sous le seuil de 80\./);
+  it("sous le seuil : ligne OK sans pistes ; aucune donnée : le dit", () => {
+    const text = renderReport([v(50, 0), v(12, 1)], 62);
+    expect(text).toMatch(/^Blob OK : ~12 ops le 18\/11, 1 builds \(seuil 80\)\n/);
+    expect(text).not.toContain("Pistes");
     expect(renderReport([], 0)).toMatch(/^Aucune ligne/);
   });
 });

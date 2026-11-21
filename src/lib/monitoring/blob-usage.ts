@@ -9,6 +9,9 @@
  */
 
 export const BLOB_ADVANCED_SERVICE = "Blob Advanced Operations";
+export const BLOB_SIMPLE_SERVICE = "Blob Simple Operations";
+/** Prix déduit de la routine du 03/11 (5 à 5,3 $ le million), **non confirmé** : contre-vérification seulement. */
+export const ADVANCED_UNIT_PRICE = 0.0000053;
 export const API = "https://api.vercel.com";
 
 /** Seuils par jour (demande d'Arthur) : au-delà, alerte. Un jour avec déploiement a droit aux lectures du build. */
@@ -17,6 +20,7 @@ export const DAILY_LIMIT = { withoutDeployment: 30, withDeployment: 80 } as cons
 export type ChargeRow = {
   ServiceName?: string;
   ConsumedQuantity?: number | string | null;
+  EffectiveCost?: number | string | null;
   ChargePeriodStart?: string;
   ChargePeriodEnd?: string;
   Tags?: Record<string, string> | null;
@@ -29,6 +33,10 @@ export type BlobDay = {
   total: number;
   /** Par nom de projet ; « (sans projet) » si la ligne n'en porte pas. */
   byProject: Record<string, number>;
+  /** Opérations simples (lectures), tout le compte : indicatif. */
+  simple: number;
+  /** Coût effectif des opérations avancées ($) : sert à l'estimation de contre-vérification. */
+  cost: number;
 };
 
 export type DayVerdict = BlobDay & { deployments: number; limit: number; over: boolean };
@@ -47,19 +55,27 @@ export function parseJsonl(text: string): ChargeRow[] {
 export function blobDays(rows: ChargeRow[], now: Date): BlobDay[] {
   const days = new Map<string, BlobDay>();
   for (const row of rows) {
-    if (row.ServiceName !== BLOB_ADVANCED_SERVICE || !row.ChargePeriodStart || !row.ChargePeriodEnd) continue;
-    if (Date.parse(row.ChargePeriodEnd) > now.getTime()) continue;
+    const advanced = row.ServiceName === BLOB_ADVANCED_SERVICE;
+    if (!advanced && row.ServiceName !== BLOB_SIMPLE_SERVICE) continue;
+    if (!row.ChargePeriodStart || !row.ChargePeriodEnd || Date.parse(row.ChargePeriodEnd) > now.getTime()) continue;
     const quantity = Number(row.ConsumedQuantity ?? 0) || 0;
     const day = days.get(row.ChargePeriodStart) ?? {
       start: row.ChargePeriodStart,
       end: row.ChargePeriodEnd,
       total: 0,
       byProject: {},
+      simple: 0,
+      cost: 0,
     };
+    days.set(row.ChargePeriodStart, day);
+    if (!advanced) {
+      day.simple += quantity;
+      continue;
+    }
+    day.cost += Number(row.EffectiveCost ?? 0) || 0;
     const project = row.Tags?.ProjectName ?? "(sans projet)";
     day.total += quantity;
     day.byProject[project] = (day.byProject[project] ?? 0) + quantity;
-    days.set(row.ChargePeriodStart, day);
   }
   return [...days.values()].sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
 }
@@ -85,27 +101,43 @@ export function monthToDate(days: BlobDay[]): number {
 }
 
 const fmt = (n: number) => String(Math.round(n * 100) / 100);
+/** « JJ/MM » du jour Vercel (date UTC de sa fin moins un jour = date du jour en heure du Pacifique). */
+const dayLabel = (v: BlobDay) => {
+  const d = new Date(Date.parse(v.end) - 86_400_000);
+  return `${String(d.getUTCDate()).padStart(2, "0")}/${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+};
+
+/** Ligne de verdict (format du brief) : « Blob OK : ~N ops, X builds » ou « Blob : ~N ops avancées le JJ/MM, … ». */
+export function verdictLine(v: DayVerdict): string {
+  return v.over
+    ? `Blob : ~${fmt(v.total)} ops avancées le ${dayLabel(v)}, ${v.deployments} builds, seuil dépassé (${v.limit})`
+    : `Blob OK : ~${fmt(v.total)} ops le ${dayLabel(v)}, ${v.deployments} builds (seuil ${v.limit})`;
+}
+
+export const DIAGNOSTIC_HINTS = [
+  "Pistes : lectures `list()` de `src/lib/i18n/memory.ts` et `src/lib/i18n/slugs.ts` ;",
+  "cache de données non persistant entre déploiements ; route `/api/revalidate` (docs/DECISIONS.md, 02/11/2026).",
+].join(" ");
 
 export function renderReport(verdicts: DayVerdict[], monthTotal: number): string {
   const latest = verdicts.at(-1);
   const lines = [
-    "| Jour (début UTC) | Opérations avancées | Déploiements | Seuil | Détail par projet |",
-    "| --- | ---: | ---: | ---: | --- |",
+    "| Jour | Opérations avancées | Estimation par le coût | Opérations simples | Builds | Seuil | Détail par projet |",
+    "| --- | ---: | ---: | ---: | ---: | ---: | --- |",
     ...verdicts.map((v) => {
       const detail = Object.entries(v.byProject)
         .sort(([, a], [, b]) => b - a)
         .map(([name, n]) => `${name} : ${fmt(n)}`)
         .join(", ");
-      return `| ${v.start.slice(0, 16).replace("T", " ")} | ${fmt(v.total)}${v.over ? " ⚠" : ""} | ${v.deployments} | ${v.limit} | ${detail || "—"} |`;
+      const estimate = fmt(v.cost / ADVANCED_UNIT_PRICE);
+      return `| ${dayLabel(v)} | ${fmt(v.total)}${v.over ? " ⚠" : ""} | ~${estimate} | ${fmt(v.simple)} | ${v.deployments} | ${v.limit} | ${detail || "—"} |`;
     }),
     "",
     `Total depuis le 1er du mois (indicatif) : ${fmt(monthTotal)} / 2000.`,
+    "Jours Vercel de 08:00 à 08:00 UTC (07:00 en été). Estimation par le coût : prix unitaire non confirmé, contre-vérification seulement.",
   ];
-  const head = !latest
-    ? "Aucune ligne « Blob Advanced Operations » sur la période : rien à juger."
-    : latest.over
-      ? `**Dépassement** le jour commençant le ${latest.start} : ${fmt(latest.total)} opérations avancées (seuil ${latest.limit}, ${latest.deployments} déploiement(s) du projet ce jour-là).`
-      : `Dernier jour (${latest.start}) : ${fmt(latest.total)} opérations avancées, sous le seuil de ${latest.limit}.`;
+  if (!latest) return "Aucune ligne Blob sur la période : rien à juger.";
+  const head = latest.over ? `**${verdictLine(latest)}**\n\n${DIAGNOSTIC_HINTS}` : verdictLine(latest);
   return [head, "", ...lines].join("\n");
 }
 
