@@ -14,6 +14,7 @@
     "test": "vitest run",
     "notion:check": "tsx --env-file=.env.local scripts/notion-check.ts",
     "seo:smoke": "tsx scripts/seo-smoke.ts",
+    "blob:check": "tsx scripts/blob-usage-check.ts",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:mutants": "tsx scripts/mutation-check.ts",

@@ -40,6 +40,8 @@ Toute décision non couverte par le plan va dans `docs/DECISIONS.md` (date, déc
   `smoke-production.yml` lance `seo:smoke` chaque matin sur la production (secret `NOTION_TOKEN` recommandé) ; en cas
   d'échec, issue assignée au propriétaire du dépôt (étiquette `production-smoke`), fermée au premier contrôle vert.
   Lien de RDV ou coordonnées de `fallback.ts` différents de Notion : issue à part (étiquette `fallback-drift`), sans échec.
+  `blob-usage.yml` (`npm run blob:check`, secret `VERCEL_TOKEN`) : opérations Blob avancées du dernier jour, issue
+  `blob-usage` au-delà de 30 (80 si déploiement ce jour-là).
 
 ## Environnement cloud
 
