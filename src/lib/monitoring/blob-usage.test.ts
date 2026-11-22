@@ -188,7 +188,7 @@ describe("httpHint", () => {
   it.each([
     [401, "Jeton refusé"],
     [403, "sans accès à cette équipe"],
-    [404, "introuvable"],
+    [404, "Plan not found"],
     [429, "Trop de requêtes"],
     [500, "Panne côté Vercel"],
     [503, "Panne côté Vercel"],
