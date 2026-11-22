@@ -10,6 +10,7 @@ import { writeFileSync } from "node:fs";
 import {
   blobDays,
   countDeployments,
+  diagnoseToken,
   fetchCharges,
   fetchDeploymentTimes,
   judgeDay,
@@ -31,12 +32,25 @@ async function main() {
   const from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - DAYS));
 
   console.log(`Période demandée : ${from.toISOString()} → ${to.toISOString()}.`);
-  const [rows, deployTimes] = await Promise.all([
+  const [charges, deployments] = await Promise.allSettled([
     fetchCharges(fetch, token, teamId, from, to),
     fetchDeploymentTimes(fetch, token, teamId, projectId, new Date(from.getTime() - 86_400_000)),
   ]);
+  // Chaque appel est journalisé à part : un échec de la facturation n'efface plus le résultat des déploiements.
+  console.log(
+    deployments.status === "fulfilled"
+      ? `Déploiements : OK (${deployments.value.length}).`
+      : `Déploiements : échec, ${String(deployments.reason)}`,
+  );
+  if (charges.status === "rejected") {
+    console.log(`Facturation : échec. Diagnostic du jeton : ${await diagnoseToken(fetch, token, teamId)}`);
+    throw charges.reason;
+  }
+  if (deployments.status === "rejected") throw deployments.reason;
+  const rows = charges.value;
+  const deployTimes = deployments.value;
   const blobRows = rows.filter((r) => r.ServiceName?.startsWith("Blob ")).length;
-  console.log(`Facturation : ${rows.length} lignes, dont ${blobRows} Blob. Déploiements du projet : ${deployTimes.length}.`);
+  console.log(`Facturation : OK (${rows.length} lignes, dont ${blobRows} Blob).`);
   if (process.env.BLOB_DEBUG === "1") {
     for (const service of ["Blob Advanced Operations", "Blob Simple Operations"]) {
       const sample = rows.filter((r) => r.ServiceName === service).slice(-3);

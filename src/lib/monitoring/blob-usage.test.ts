@@ -4,6 +4,7 @@ import {
   BLOB_SIMPLE_SERVICE,
   blobDays,
   countDeployments,
+  diagnoseToken,
   fetchCharges,
   fetchDeploymentTimes,
   httpHint,
@@ -193,4 +194,20 @@ describe("httpHint", () => {
     [503, "Panne côté Vercel"],
     [418, "Réponse inattendue"],
   ])("HTTP %i", (status, text) => expect(httpHint(status)).toContain(text));
+});
+
+describe("diagnoseToken", () => {
+  it("équipe visible : nom et plan, sans rien d'autre", async () => {
+    const fetchFn = vi.fn(async () => ok(JSON.stringify({ slug: "equipe", billing: { plan: "hobby" }, id: "secret?" })));
+    expect(await diagnoseToken(fetchFn, "t", "team_1")).toBe("le jeton voit l'équipe « equipe » (plan : hobby).");
+    expect((fetchFn.mock.calls[0] as unknown as [string])[0]).toBe("https://api.vercel.com/v2/teams/team_1");
+  });
+  it("plan ou nom absents", async () => {
+    const fetchFn = vi.fn(async () => ok(JSON.stringify({ billing: null })));
+    expect(await diagnoseToken(fetchFn, "t", "team_1")).toBe("le jeton voit l'équipe « ? » (plan : non renvoyé).");
+  });
+  it("équipe invisible : suggère un jeton à la portée de l'équipe", async () => {
+    const fetchFn = vi.fn(async () => new Response("", { status: 403 }));
+    expect(await diagnoseToken(fetchFn, "t", "team_1")).toMatch(/^le jeton ne voit pas l'équipe \(GET \/v2\/teams : HTTP 403\)/);
+  });
 });

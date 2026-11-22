@@ -161,7 +161,7 @@ export function httpHint(status: number): string {
   if (status === 401) return `Jeton refusé (invalide, expiré ou supprimé). ${SECRET_HELP}`;
   if (status === 403)
     return "Jeton valide mais sans accès à cette équipe ou à cette donnée (portée du jeton, ou rôle sans accès à la facturation).";
-  if (status === 404) return "Ressource introuvable (identifiant d'équipe ou de projet faux, ou données pas encore prêtes).";
+  if (status === 404) return "Introuvable : identifiant faux, données pas prêtes, ou jeton sans accès à la facturation de l'équipe (« Plan not found » : voir le diagnostic du jeton).";
   if (status === 429) return "Trop de requêtes : relancer plus tard.";
   if (status >= 500) return "Panne côté Vercel : relancer plus tard.";
   return "Réponse inattendue de l'API Vercel.";
@@ -208,4 +208,19 @@ export async function fetchDeploymentTimes(
     if (until === null || data.deployments.length === 0) return times;
   }
   throw new Error("/v6/deployments : plus de 20 pages, pagination interrompue");
+}
+
+/**
+ * Diagnostic du jeton quand la facturation échoue : que voit-il de l'équipe ? (aucune valeur secrète affichée)
+ * `GET /v2/teams/{teamId}` : 200 = le jeton voit l'équipe ; 403/404 = jeton limité à un projet ou à une autre portée.
+ */
+export async function diagnoseToken(fetchFn: Fetch, token: string, teamId: string): Promise<string> {
+  const res = await fetchFn(`${API}/v2/teams/${encodeURIComponent(teamId)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    return `le jeton ne voit pas l'équipe (GET /v2/teams : HTTP ${res.status}) : jeton limité à un projet ou à une autre portée ? Recréer un jeton avec la portée « ${teamId} » (l'équipe, pas un projet).`;
+  }
+  const team = (await res.json()) as { slug?: string; billing?: { plan?: string } | null };
+  return `le jeton voit l'équipe « ${team.slug ?? "?"} » (plan : ${team.billing?.plan ?? "non renvoyé"}).`;
 }
