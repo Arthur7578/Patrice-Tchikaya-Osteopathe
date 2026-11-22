@@ -12,4 +12,6 @@ logique testée dans `src/lib/monitoring/blob-usage.ts`. Décision : `docs/DECIS
   le seuil (une seule issue ouverte à la fois ; le contrôle normal suivant la ferme).
 - **Changer les seuils** : `DAILY_LIMIT` dans `src/lib/monitoring/blob-usage.ts` (30 sans déploiement, 80 avec), puis
   adapter `blob-usage.test.ts`.
+- **En cas d'échec** : le message est en tête de l'exécution (annotation) et dans l'issue. Il nomme la variable
+  manquante ou explique le code HTTP de Vercel (401 jeton refusé, 403 portée insuffisante, 404 identifiant faux…).
 - **En local** : `VERCEL_TOKEN=… VERCEL_TEAM_ID=team_… VERCEL_PROJECT_ID=prj_… BLOB_DEBUG=1 npm run blob:check`.

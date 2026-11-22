@@ -13,6 +13,7 @@ import {
   fetchCharges,
   fetchDeploymentTimes,
   judgeDay,
+  missingEnvMessage,
   monthToDate,
   renderReport,
 } from "@/lib/monitoring/blob-usage";
@@ -20,17 +21,22 @@ import {
 const DAYS = 9; // une semaine affichée + marge pour le décalage de fuseau et le délai des données
 
 async function main() {
-  const { VERCEL_TOKEN: token, VERCEL_TEAM_ID: teamId, VERCEL_PROJECT_ID: projectId } = process.env;
-  if (!token || !teamId || !projectId) throw new Error("VERCEL_TOKEN, VERCEL_TEAM_ID et VERCEL_PROJECT_ID sont requis");
+  const missing = missingEnvMessage(process.env);
+  if (missing) throw new Error(missing);
+  const { VERCEL_TOKEN: token = "", VERCEL_TEAM_ID: teamId = "", VERCEL_PROJECT_ID: projectId = "" } = process.env;
+  console.log(`Équipe ${teamId}, projet ${projectId}, jeton présent (${token.length} caractères, valeur masquée).`);
 
   const now = new Date();
   const to = new Date(Math.floor(now.getTime() / 3_600_000) * 3_600_000);
   const from = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - DAYS));
 
+  console.log(`Période demandée : ${from.toISOString()} → ${to.toISOString()}.`);
   const [rows, deployTimes] = await Promise.all([
     fetchCharges(fetch, token, teamId, from, to),
     fetchDeploymentTimes(fetch, token, teamId, projectId, new Date(from.getTime() - 86_400_000)),
   ]);
+  const blobRows = rows.filter((r) => r.ServiceName?.startsWith("Blob ")).length;
+  console.log(`Facturation : ${rows.length} lignes, dont ${blobRows} Blob. Déploiements du projet : ${deployTimes.length}.`);
   if (process.env.BLOB_DEBUG === "1") {
     for (const service of ["Blob Advanced Operations", "Blob Simple Operations"]) {
       const sample = rows.filter((r) => r.ServiceName === service).slice(-3);
@@ -38,6 +44,7 @@ async function main() {
     }
   }
   const days = blobDays(rows, now);
+  if (days.length === 0) console.log("::warning::Aucun jour terminé avec des lignes Blob : rien à juger.");
   const verdicts = days.map((d) => judgeDay(d, countDeployments(deployTimes, d.start, d.end)));
   const forced = process.env.BLOB_FORCE_ALERT === "1";
   const report = `${forced ? "**TEST d'alerte** (lancé à la main, pas un vrai dépassement).\n\n" : ""}${renderReport(verdicts, monthToDate(days))}`;
@@ -49,7 +56,8 @@ async function main() {
 
 main().catch((error: unknown) => {
   const message = `Contrôle impossible : ${error instanceof Error ? error.message : String(error)}`;
-  console.error(message);
+  // « ::error:: » : GitHub affiche le message en tête de l'exécution (annotation), pas seulement dans le journal.
+  console.error(process.env.GITHUB_ACTIONS ? `::error::${message}` : message);
   if (process.env.BLOB_REPORT_FILE) writeFileSync(process.env.BLOB_REPORT_FILE, message);
   process.exit(2);
 });

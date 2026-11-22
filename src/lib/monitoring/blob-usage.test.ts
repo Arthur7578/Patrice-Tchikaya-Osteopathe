@@ -6,7 +6,9 @@ import {
   countDeployments,
   fetchCharges,
   fetchDeploymentTimes,
+  httpHint,
   judgeDay,
+  missingEnvMessage,
   monthToDate,
   parseJsonl,
   renderReport,
@@ -132,7 +134,9 @@ describe("fetchCharges", () => {
 
   it("lève une erreur lisible sur une réponse en échec", async () => {
     const fetchFn = vi.fn(async () => new Response("forbidden", { status: 403 }));
-    await expect(fetchCharges(fetchFn, "t", "team", NOW, NOW)).rejects.toThrow("/v1/billing/charges : HTTP 403 forbidden");
+    await expect(fetchCharges(fetchFn, "t", "team", NOW, NOW)).rejects.toThrow(
+      "/v1/billing/charges : HTTP 403 forbidden → Jeton valide mais sans accès",
+    );
   });
 });
 
@@ -161,4 +165,32 @@ describe("fetchDeploymentTimes", () => {
     const fetchFn = vi.fn(async () => ok(JSON.stringify({ deployments: [{ createdAt: 1 }], pagination: { next: 1 } })));
     await expect(fetchDeploymentTimes(fetchFn, "t", "x", "p", new Date(0))).rejects.toThrow("plus de 20 pages");
   });
+});
+
+describe("missingEnvMessage", () => {
+  const full = { VERCEL_TOKEN: "t", VERCEL_TEAM_ID: "team", VERCEL_PROJECT_ID: "prj" };
+  it("null quand tout est là", () => expect(missingEnvMessage(full)).toBeNull());
+  it("ne nomme que le jeton quand seul le jeton manque, avec la marche à suivre", () => {
+    const text = missingEnvMessage({ ...full, VERCEL_TOKEN: "" });
+    expect(text).toMatch(/^variable\(s\) manquante\(s\) : VERCEL_TOKEN\. Secret GitHub VERCEL_TOKEN absent/);
+    expect(text).toContain("Account Settings → Tokens");
+    expect(text).toContain("New repository secret");
+  });
+  it("identifiants manquants : renvoie au workflow", () => {
+    expect(missingEnvMessage({ VERCEL_TOKEN: "t" })).toBe(
+      "variable(s) manquante(s) : VERCEL_TEAM_ID, VERCEL_PROJECT_ID. Identifiants écrits dans .github/workflows/blob-usage.yml (env).",
+    );
+  });
+});
+
+describe("httpHint", () => {
+  it.each([
+    [401, "Jeton refusé"],
+    [403, "sans accès à cette équipe"],
+    [404, "introuvable"],
+    [429, "Trop de requêtes"],
+    [500, "Panne côté Vercel"],
+    [503, "Panne côté Vercel"],
+    [418, "Réponse inattendue"],
+  ])("HTTP %i", (status, text) => expect(httpHint(status)).toContain(text));
 });

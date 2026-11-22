@@ -142,11 +142,36 @@ export function renderReport(verdicts: DayVerdict[], monthTotal: number): string
   return [head, "", ...lines].join("\n");
 }
 
+const SECRET_HELP =
+  "Créer le jeton : Vercel → Account Settings → Tokens (portée : l'équipe du site), puis GitHub → Settings → " +
+  "Secrets and variables → Actions → onglet Secrets → New repository secret, nom exact VERCEL_TOKEN.";
+
+/** Variables d'environnement manquantes, avec la marche à suivre ; null si tout est là. */
+export function missingEnvMessage(env: Record<string, string | undefined>): string | null {
+  const missing = ["VERCEL_TOKEN", "VERCEL_TEAM_ID", "VERCEL_PROJECT_ID"].filter((name) => !env[name]);
+  if (missing.length === 0) return null;
+  const help = missing.includes("VERCEL_TOKEN")
+    ? ` Secret GitHub VERCEL_TOKEN absent ou vide (secret non créé, nom différent, ou créé ailleurs que dans les « Repository secrets » d'Actions). ${SECRET_HELP}`
+    : " Identifiants écrits dans .github/workflows/blob-usage.yml (env).";
+  return `variable(s) manquante(s) : ${missing.join(", ")}.${help}`;
+}
+
+/** Explication d'un code HTTP de l'API Vercel, pour les logs et l'issue. */
+export function httpHint(status: number): string {
+  if (status === 401) return `Jeton refusé (invalide, expiré ou supprimé). ${SECRET_HELP}`;
+  if (status === 403)
+    return "Jeton valide mais sans accès à cette équipe ou à cette donnée (portée du jeton, ou rôle sans accès à la facturation).";
+  if (status === 404) return "Ressource introuvable (identifiant d'équipe ou de projet faux, ou données pas encore prêtes).";
+  if (status === 429) return "Trop de requêtes : relancer plus tard.";
+  if (status >= 500) return "Panne côté Vercel : relancer plus tard.";
+  return "Réponse inattendue de l'API Vercel.";
+}
+
 async function getOk(fetchFn: Fetch, url: string, token: string): Promise<Response> {
   const res = await fetchFn(url, { headers: { Authorization: `Bearer ${token}` } });
   if (!res.ok) {
     const body = (await res.text()).slice(0, 300);
-    throw new Error(`${new URL(url).pathname} : HTTP ${res.status} ${body}`);
+    throw new Error(`${new URL(url).pathname} : HTTP ${res.status} ${body} → ${httpHint(res.status)}`);
   }
   return res;
 }
