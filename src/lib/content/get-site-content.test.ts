@@ -107,6 +107,19 @@ describe("getSiteContent", () => {
     blobSlugStore.mockReturnValue(null);
   });
 
+  it("table des slugs : un seul calcul pour les pages rendues en même temps (unstable_cache ne regroupe pas)", async () => {
+    blobSlugStore.mockReturnValue({ list: vi.fn(async () => []), create: vi.fn() });
+    resolveSlugs.mockReset();
+    let release!: () => void;
+    resolveSlugs.mockImplementation(() => new Promise((resolve) => (release = () => resolve(new Map()))));
+    const pages = Promise.all([getSiteContent("en"), getSiteContent(), getSiteContent("en")]);
+    await vi.waitFor(() => expect(resolveSlugs).toHaveBeenCalled());
+    release();
+    await pages;
+    expect(resolveSlugs).toHaveBeenCalledTimes(1);
+    blobSlugStore.mockReturnValue(null);
+  });
+
   it("table des slugs en cache sans expiration, sous la liste des pages (store relu seulement quand elle change)", () => {
     expect(slugCacheArgs).toBeDefined();
     expect(slugCacheArgs![1]).toEqual({ revalidate: false, tags: ["translated-slugs"] });

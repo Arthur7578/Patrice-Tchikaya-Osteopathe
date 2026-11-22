@@ -53,6 +53,17 @@ describe("blobTranslationMemory", () => {
     expect(await m.load()).toEqual(new Map([["k1", "Hello"], ["k2", "Bye"]]));
   });
 
+  it("lectures simultanées : une seule liste Blob (facturée), puis relue normalement une fois réglée", async () => {
+    files.set("i18n/translations/a.json", JSON.stringify({ k: "v" }));
+    const m = memory()!;
+    list.mockClear();
+    const all = await Promise.all([m.load(), m.load(), m.load()]);
+    expect(all.every((map) => map.get("k") === "v")).toBe(true);
+    expect(list).toHaveBeenCalledTimes(1);
+    await m.load(); // lecture sans cache : jamais gardée
+    expect(list).toHaveBeenCalledTimes(2);
+  });
+
   it("rien à enregistrer : aucune écriture", async () => {
     await memory()!.save({});
     expect(put).not.toHaveBeenCalled();

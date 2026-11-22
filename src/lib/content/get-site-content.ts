@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { DEFAULT_LOCALE, ENABLED_LOCALES, type Locale } from "@/config/i18n";
 import { RESERVED_SLUGS, SITE_CONTENT_TAG } from "@/config/site";
+import { isBuild, shareInFlight } from "@/lib/i18n/in-flight";
 import { localizeContent, translateTexts } from "@/lib/i18n/localize";
 import { applySlugs, localizeBooking } from "@/lib/i18n/localize-content";
 import { blobSlugStore } from "@/lib/i18n/slug-store";
@@ -58,16 +59,21 @@ export const TRANSLATED_SLUGS_TAG = "translated-slugs";
  * d'une page dans Notion, jamais à chaque régénération (offre Hobby : 2 000 opérations avancées par mois pour tout le
  * compte, voir DECISIONS 02/11). Une erreur n'est jamais mise en cache. Un slug refusé 3 fois par le traducteur reste
  * en français jusqu'au prochain changement de pages : sa traduction partielle est elle-même en cache sans expiration,
- * la redemander à chaque rendu ne changerait rien (et relisait le store à chaque fois).
+ * la redemander à chaque rendu ne changerait rien (et relisait le store à chaque fois). Un seul calcul en cours par
+ * liste de pages et par processus, gardé jusqu'à la fin du build (`unstable_cache` ne regroupe pas les appels
+ * simultanés : chaque page rendue en parallèle relisait le store, DECISIONS 22/11).
  */
-const resolveSlugEntries = unstable_cache(
-  async (pages: SlugPage[]) => {
-    const store = blobSlugStore();
-    if (!store) throw new Error("Stockage des slugs traduits indisponible.");
-    return [...(await resolveSlugs({ pages, locales: ENABLED_LOCALES, store, translate: translateTexts, reserved: RESERVED_SLUGS }))];
-  },
-  ["translated-slugs-v2", ENABLED_LOCALES.join(","), [...RESERVED_SLUGS].sort().join(",")],
-  { revalidate: false, tags: [TRANSLATED_SLUGS_TAG] },
+const resolveSlugEntries = shareInFlight(
+  unstable_cache(
+    async (pages: SlugPage[]) => {
+      const store = blobSlugStore();
+      if (!store) throw new Error("Stockage des slugs traduits indisponible.");
+      return [...(await resolveSlugs({ pages, locales: ENABLED_LOCALES, store, translate: translateTexts, reserved: RESERVED_SLUGS }))];
+    },
+    ["translated-slugs-v2", ENABLED_LOCALES.join(","), [...RESERVED_SLUGS].sort().join(",")],
+    { revalidate: false, tags: [TRANSLATED_SLUGS_TAG] },
+  ),
+  { key: (pages) => JSON.stringify(pages), keep: isBuild },
 );
 
 /**

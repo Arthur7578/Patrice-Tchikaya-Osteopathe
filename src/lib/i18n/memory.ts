@@ -2,6 +2,8 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { get, list, put } from "@vercel/blob";
 import type { Locale } from "@/config/i18n";
+import { countBlobOp } from "./blob-ops";
+import { shareInFlight } from "./in-flight";
 import type { TextBatch } from "./translate";
 
 /**
@@ -27,15 +29,17 @@ const PREFIX = "i18n/translations/";
  * Mémoire de traduction dans Vercel Blob, partagée par tous les builds et toutes les régénérations, en production comme
  * en preview : un texte n'est traduit qu'une fois dans chaque langue, quel que soit le cache du build (le build de
  * production ne récupère pas celui des previews). Fichiers JSON nommés par l'empreinte de leur contenu : deux
- * processus qui enregistrent en même temps ne s'écrasent pas. Sans store (dev, CI) : null.
+ * processus qui enregistrent en même temps ne s'écrasent pas. Lectures simultanées regroupées (une seule liste en
+ * cours par processus). Sans store (dev, CI) : null.
  */
 export function blobTranslationMemory(env: NodeJS.ProcessEnv = process.env): TranslationMemory | null {
   if (!env.BLOB_STORE_ID && !env.BLOB_READ_WRITE_TOKEN) return null;
   return {
-    async load() {
+    load: shareInFlight(async () => {
       const pathnames: string[] = [];
       let cursor: string | undefined;
       do {
+        countBlobOp("list", PREFIX);
         const page = await list({ prefix: PREFIX, cursor, limit: 1000 });
         pathnames.push(...page.blobs.map((b) => b.pathname));
         cursor = page.hasMore ? page.cursor : undefined;
@@ -47,13 +51,14 @@ export function blobTranslationMemory(env: NodeJS.ProcessEnv = process.env): Tra
         }),
       );
       return new Map(files.flatMap((f) => Object.entries(f)));
-    },
+    }),
     async save(entries) {
       if (Object.keys(entries).length === 0) return;
       const body = JSON.stringify(entries);
       const name = createHash("sha256").update(body).digest("hex");
       try {
         // Nom = empreinte du contenu : réécrire un fichier, c'est réécrire le même contenu (deux processus du build).
+        countBlobOp("put", `${PREFIX}${name}.json`); // compté à la tentative, comme dans slug-store.ts
         await put(`${PREFIX}${name}.json`, body, { access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/json" });
         console.info(`[i18n] mémoire de traduction : ${Object.keys(entries).length} traduction(s) enregistrée(s)`);
       } catch (error) {

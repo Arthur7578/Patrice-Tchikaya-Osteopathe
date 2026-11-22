@@ -1,10 +1,10 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { unstable_cache } from "next/cache";
-import { PHASE_PRODUCTION_BUILD } from "next/constants";
 import { translationMode, type Locale } from "@/config/i18n";
 import type { SiteContent } from "@/lib/content/types";
 import { sharedOnDisk } from "./file-cache";
+import { isBuild, shareInFlight } from "./in-flight";
 import { applyTranslations, collectTranslatable, type TranslationGroups } from "./localize-content";
 import { blobTranslationMemory, memoryKey, type TranslationMemory } from "./memory";
 import { createClaudeTranslator, identityTranslator, PROMPT_VERSION, TRANSLATION_MODEL, type TextBatch, type Translator } from "./translate";
@@ -20,7 +20,9 @@ const translator = (): Translator =>
  * Lecture de la mémoire de traduction, en cache sans expiration : chaque relecture coûte une liste Blob (opération
  * « avancée », 2 000 par mois sur l'offre Hobby pour tout le compte ; en cache 5 min, la production en faisait des
  * centaines par jour, voir DECISIONS 02/11). Une lecture périmée ne fausse rien : un texte absent est relu sans cache
- * avant tout appel à l'API (translateWithMemory).
+ * avant tout appel à l'API (translateWithMemory). Une seule lecture en cours par processus (`unstable_cache` ne regroupe
+ * pas les appels simultanés), gardée jusqu'à la fin du build : sans cela, chaque lot de chaque langue relisait la
+ * mémoire au début du build (DECISIONS 22/11).
  */
 const TRANSLATION_MEMORY_TAG = "translation-memory";
 let memory: { store: TranslationMemory; load: () => Promise<Array<[string, string]>> } | null | undefined;
@@ -29,7 +31,10 @@ const getMemory = () => {
     const store = blobTranslationMemory();
     memory = store && {
       store,
-      load: unstable_cache(async () => [...(await store.load())], ["translation-memory"], { revalidate: false, tags: [TRANSLATION_MEMORY_TAG] }),
+      load: shareInFlight(
+        unstable_cache(async () => [...(await store.load())], ["translation-memory"], { revalidate: false, tags: [TRANSLATION_MEMORY_TAG] }),
+        { keep: isBuild },
+      ),
     };
   }
   return memory;
@@ -79,13 +84,12 @@ async function translateWithMemory(batch: TextBatch, locale: Locale, names: stri
 async function backfillMemory(batch: TextBatch, locale: Locale, result: TextBatch): Promise<void> {
   // Au build seulement : à l'exécution, chaque instance neuve relisait la mémoire (liste Blob facturée) à chaque
   // régénération. Les traductions faites à l'exécution sont enregistrées par translateWithMemory.
-  if (process.env.NEXT_PHASE !== PHASE_PRODUCTION_BUILD) return;
+  if (!isBuild()) return;
   const mem = translationMode() === "claude" ? getMemory() : null;
   if (!mem) return;
   const candidates = Object.entries(result).flatMap(([key, text]) =>
     batch[key] !== undefined && text !== batch[key] ? [[memoryKey(locale, batch[key]!), text] as const] : [],
   );
-  if (candidates.every(([hash]) => inMemory.has(hash))) return;
   try {
     for (const [hash] of await mem.load()) inMemory.add(hash);
     // Lecture en cache périmée (sans expiration) : relue sans cache plutôt que de réécrire des traductions déjà là.

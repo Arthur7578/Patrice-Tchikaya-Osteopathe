@@ -1,6 +1,7 @@
 import "server-only";
 import { list, put } from "@vercel/blob";
 import { isLocale, type Locale } from "@/config/i18n";
+import { countBlobOp } from "./blob-ops";
 
 /**
  * Slug traduit, enregistré une fois pour toutes : page (`pageKey` : identifiant Notion), slug français au moment de
@@ -38,6 +39,7 @@ export function blobSlugStore(env: NodeJS.ProcessEnv = process.env): SlugStore |
     const records: SlugRecord[] = [];
     let cursor: string | undefined;
     do {
+      countBlobOp("list", PREFIX);
       const page = await list({ prefix: PREFIX, cursor, limit: 1000 });
       for (const blob of page.blobs) {
         const record = parseSlugPath(blob.pathname, new Date(blob.uploadedAt));
@@ -52,6 +54,7 @@ export function blobSlugStore(env: NodeJS.ProcessEnv = process.env): SlugStore |
     async create(record) {
       const pathname = slugPath(record);
       try {
+        countBlobOp("put", pathname); // compté à la tentative (facturation d'un échec inconnue)
         await put(pathname, "1", { access: "public", addRandomSuffix: false, contentType: "text/plain" });
       } catch (error) {
         // Déjà créé (par un autre processus du build, par exemple) : rien à faire. Toute autre erreur est levée.

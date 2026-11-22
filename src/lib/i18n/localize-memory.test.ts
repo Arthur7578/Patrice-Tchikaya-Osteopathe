@@ -58,7 +58,7 @@ describe("traduction avec la mémoire (partagée par tous les déploiements)", (
     expect(translator).toHaveBeenCalledTimes(1);
     expect(translator.mock.calls[0]![0]).toEqual({ b: "Merci" });
     expect(save).toHaveBeenCalledTimes(1); // pas de recopie en double après la traduction
-    expect(load).toHaveBeenCalledTimes(2); // lecture en cache, puis sans cache avant l'API ; pas de relecture pour la recopie
+    expect(load).toHaveBeenCalledTimes(2); // lecture en cache (gardée au build : la recopie ne relit pas), puis sans cache avant l'API
     expect(save).toHaveBeenCalledWith({ [memoryKey("de", "Merci")]: "[de]Merci" });
   });
 
@@ -102,6 +102,28 @@ describe("traduction avec la mémoire (partagée par tous les déploiements)", (
     await (await fresh())({ a: "Merci" }, "de");
     const call = unstableCache.mock.calls.find((c) => (c[1] as string[] | undefined)?.[0] === "translation-memory");
     expect(call?.[2]).toEqual({ revalidate: false, tags: ["translation-memory"] });
+  });
+
+  it("au build : une seule lecture de la mémoire par processus, même pour des lots simultanés (liste Blob facturée)", async () => {
+    saved.set(memoryKey("de", "Bonjour"), "Guten Tag");
+    saved.set(memoryKey("de", "Merci"), "Danke");
+    saved.set(memoryKey("de", "Oui"), "Ja");
+    const translateTexts = await fresh();
+    await Promise.all([translateTexts({ a: "Bonjour" }, "de"), translateTexts({ b: "Merci" }, "de")]);
+    await translateTexts({ c: "Oui" }, "de"); // lot suivant : lecture gardée jusqu'à la fin du build
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(translator).not.toHaveBeenCalled();
+  });
+
+  it("à l'exécution : lectures simultanées regroupées, mais pas gardées (une purge doit pouvoir s'appliquer)", async () => {
+    vi.stubEnv("NEXT_PHASE", "");
+    saved.set(memoryKey("de", "Bonjour"), "Guten Tag");
+    saved.set(memoryKey("de", "Merci"), "Danke");
+    const translateTexts = await fresh();
+    await Promise.all([translateTexts({ a: "Bonjour" }, "de"), translateTexts({ b: "Merci" }, "de")]);
+    expect(load).toHaveBeenCalledTimes(1);
+    await translateTexts({ c: "Bonjour", d: "Merci" }, "de");
+    expect(load).toHaveBeenCalledTimes(2);
   });
 
   it("recopie : jamais à l'exécution (chaque instance neuve relisait la mémoire, liste Blob facturée)", async () => {
