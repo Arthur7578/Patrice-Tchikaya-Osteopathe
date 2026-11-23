@@ -31,7 +31,7 @@ export type BlobDay = {
   end: string;
   /** Total du compte (le quota est commun à tous les projets). */
   total: number;
-  /** Par nom de projet ; « (sans projet) » si la ligne n'en porte pas. */
+  /** Par nom de projet ; « (sans projet) » si la ligne n'en porte pas (cas de toutes les lignes Blob au 22/11/2026). */
   byProject: Record<string, number>;
   /** Opérations simples (lectures), tout le compte : indicatif. */
   simple: number;
@@ -143,7 +143,7 @@ export function renderReport(verdicts: DayVerdict[], monthTotal: number): string
 }
 
 const SECRET_HELP =
-  "Créer le jeton : Vercel → Account Settings → Tokens (portée : l'équipe du site), puis GitHub → Settings → " +
+  "Créer le jeton : Vercel → Account Settings → Tokens (portée : tout le compte, pas un projet), puis GitHub → Settings → " +
   "Secrets and variables → Actions → onglet Secrets → New repository secret, nom exact VERCEL_TOKEN.";
 
 /** Variables d'environnement manquantes, avec la marche à suivre ; null si tout est là. */
@@ -219,7 +219,7 @@ export async function diagnoseToken(fetchFn: Fetch, token: string, teamId: strin
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) {
-    return `le jeton ne voit pas l'équipe (GET /v2/teams : HTTP ${res.status}) : jeton limité à un projet ou à une autre portée ? Recréer un jeton avec la portée « ${teamId} » (l'équipe, pas un projet).`;
+    return `le jeton ne voit pas l'équipe (GET /v2/teams : HTTP ${res.status}) : jeton limité à un projet ou à une autre portée ? Recréer un jeton avec la portée « tout le compte » (pas un projet).`;
   }
   const team = (await res.json()) as { slug?: string; billing?: { plan?: string } | null };
   return `le jeton voit l'équipe « ${team.slug ?? "?"} » (plan : ${team.billing?.plan ?? "non renvoyé"}).`;

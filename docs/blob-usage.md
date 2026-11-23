@@ -3,7 +3,7 @@
 Workflow `.github/workflows/blob-usage.yml`, script `scripts/blob-usage-check.ts` (`npm run blob:check`),
 logique testée dans `src/lib/monitoring/blob-usage.ts`. Décision : `docs/DECISIONS.md` (21/11/2026).
 
-- **Secret requis** : `VERCEL_TOKEN` (Vercel → Account Settings → Tokens, portée limitée à l'équipe), à ajouter dans
+- **Secret requis** : `VERCEL_TOKEN` (Vercel → Account Settings → Tokens, portée **tout le compte** : limité au projet, la facturation répond « Plan not found » ; date d'expiration conseillée, jeton réservé à cet usage), à ajouter dans
   GitHub → Settings → Secrets and variables → Actions. Le script ne fait que des lectures et n'affiche jamais le jeton.
 - **Tester** : Actions → « Suivi des opérations Vercel Blob » → Run workflow. Le résumé de l'exécution montre la ligne
   de verdict (`Blob OK : ~N ops le JJ/MM, X builds (seuil S)` ou

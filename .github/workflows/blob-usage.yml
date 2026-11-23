@@ -6,7 +6,8 @@ name: Suivi des opérations Vercel Blob
 # (previews comprises). Le rapport (7 derniers jours, détail par projet) est dans le résumé de chaque exécution.
 # Remplace la routine Claude du 02/11, qui n'avait pas accès à Vercel (docs/DECISIONS.md, 21/11/2026).
 #
-# Secret requis : VERCEL_TOKEN (Vercel > Account Settings > Tokens, portée limitée à l'équipe ;
+# Secret requis : VERCEL_TOKEN (Vercel > Account Settings > Tokens, portée « tout le compte » : limité au projet,
+# la facturation répond 404 « Plan not found » ;
 # puis Settings > Secrets and variables > Actions du dépôt). Lecture seule en pratique : le script ne fait que des GET.
 #
 # Notification : un dépassement, ou un contrôle impossible (jeton absent ou refusé, API en panne), ouvre une issue
